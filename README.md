@@ -16,7 +16,7 @@ Render manifests (to a "build" dir). This calls the renderer (i.e. Jinja, Helm, 
 $ adeploy render <render_opts> [--build-dir=./build]
 ```
 (*) Sometimes, there is no need to render i.e. for Kustomize. In this case, it is just copied to the build dir and the
-user has the chance to set another abstraction layer on Kustomize deployments i.e. using Jinja etc..
+user has the chance to set another abstraction layer on Kustomize deployments i.e. using Jinja or Wildcards etc..
 
 #### Linting
 Runs linting on the rendered manifests. This gives the user a chance to hook in and make custom checks i.e. no secrets, 
