@@ -13,7 +13,7 @@ $ adeploy --help
 #### Rendering
 Render manifests (to a "build" dir). This calls the renderer (i.e. Jinja, Helm, Kustomize*, ...)
 ```bash
-$ adeploy render <render_opts> [--build-dir=./build]
+$ adeploy build <build_opts> [--build-dir=./build]
 ```
 (*) Sometimes, there is no need to render i.e. for Kustomize. In this case, it is just copied to the build dir and the
 user has the chance to set another abstraction layer on Kustomize deployments i.e. using Jinja or Wildcards etc..

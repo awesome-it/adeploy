@@ -2,8 +2,6 @@ from __future__ import print_function
 import sys
 import logging
 import argparse
-import os
-import pkgutil
 
 from colorama import init, Style, Fore
 from importlib.metadata import version, PackageNotFoundError
@@ -11,46 +9,47 @@ from importlib.metadata import version, PackageNotFoundError
 from . import steps
 from . import common
 
+log = logging.getLogger('adeploy')
+
 
 def main():
+    init(autoreset=True)
     parser = setup_parser()
-    args = parser.parse_args()
+
+    # Pass --help to a provider if a provider was already specified
+    if ('--help' in sys.argv or '-h' in sys.argv) and '--type' in sys.argv:
+        real_args = list(filter(lambda x: x not in ['--help', '-h'], sys.argv))
+        args, unknown_args = parser.parse_known_args(real_args[1:])
+        unknown_args.append('--help')
+    else:
+        args, unknown_args = parser.parse_known_args()
+
     setup_logging(args)
+    module = None
 
     try:
+
         if args.version:
             try:
-                print(version(__name__))
+                print(version('adeploy'))
             except PackageNotFoundError:
                 print('0.0.0')
             sys.exit(0)
 
-        # Initialize classes for deployment steps
-        for (module, action_class) in get_action_classes():
-            if action_class.__name__ != steps.__class__.__name__:
-                action_class(args, logging.getLogger(f'adeploy.{steps.__class__.__name__}'))
+        # Execute steps
+        for (module, _, class_name) in common.get_submodules(steps):
+            if class_name.__name__ != steps.__class__.__name__:
+                class_name(args, unknown_args, logging.getLogger(f'adeploy.{class_name.__name__}'))
 
     except common.InputError as e:
-        log.error(Fore.RED + Style.BRIGHT + "Input error in module \"%s\": %s" % (module, str(e)))
+        log.error(f'{Fore.RED}{Style.BRIGHT} Input error in module "{module}": {str(e)}')
         sys.exit(1)
     except common.Error as e:
-        log.error(Fore.RED + Style.BRIGHT + "Error in module \"%s\": %s" % (module, str(e)))
+        log.error(f'{Fore.RED}{Style.BRIGHT} Error in module "{module}": {str(e)}')
         sys.exit(1)
 
     parser.print_help()
     sys.exit(1)
-
-
-def get_action_classes():
-    action_classes = []
-    pkgpath = os.path.dirname(steps.__file__)
-    for modname in [name for _, name, _ in pkgutil.iter_modules([pkgpath])]:
-        if f'lib.steps.{modname}' in sys.modules:
-            module = sys.modules[f'lib.steps.{modname}']
-            class_name = modname.title()
-            action_classes.append((modname, getattr(module, class_name)))
-
-    return action_classes
 
 
 def setup_parser():
@@ -61,15 +60,16 @@ def setup_parser():
     parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('--version', action="store_true", help="Print version and exit")
 
+    parser.add_argument("--build-dir", dest="build_dir", help="Build directory for output", default="./build")
+
     subparsers = parser.add_subparsers()
 
-    for (module, action_class) in get_action_classes():
-        setup_parser_method = getattr(action_class, "setup_parser")
+    for (module, _, class_name) in common.get_submodules(steps):
+        setup_parser_method = getattr(class_name, "setup_parser")
         if callable(setup_parser_method):
             setup_parser_method(subparsers.add_parser(module,
-                                                      help="Call module \"%s\", type: %s %s --help for more options" % (
-                                                      module, sys.argv[0], module)))
-
+                                                      help=f"Call module \"{module}\", "
+                                                           f"type: {sys.argv[0]} {module} --help for more options"))
     return parser
 
 
@@ -80,10 +80,15 @@ def setup_logging(args):
         loglevel = logging.INFO
 
     if args.logfile:
-        logging.basicConfig(level=loglevel, filename=args.logfile,
+        logging.basicConfig(level=loglevel,
+                            filename=args.logfile,
                             format='%(asctime)s %(levelname)-8s %(name)-10s %(message)s')
     else:
-        logging.basicConfig(level=loglevel, format='%(asctime)s %(levelname)-8s %(name)-10s %(message)s')
+        logging.basicConfig(level=loglevel,
+                            format=f'{Fore.LIGHTBLACK_EX}%(asctime)s '
+                                   f'%(levelname)-8s '
+                                   f'{Style.BRIGHT}%(name)-10s{Style.RESET_ALL}{Fore.RESET} '
+                                   f'%(message)s')
 
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("requests").setLevel(logging.WARNING)
