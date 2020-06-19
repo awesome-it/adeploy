@@ -5,6 +5,7 @@ from colorama import init, Style, Fore
 from .. import common
 from .. import providers
 
+
 class Render:
 
     @staticmethod
