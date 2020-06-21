@@ -15,6 +15,6 @@ setup(
     install_requires=open('%s/requirements.txt' % here, 'r',).readlines(),
     entry_points={
         'console_scripts': [
-            'adeploy=lib.main:main',
+            'adeploy=adeploy.main:main',
         ],
     })

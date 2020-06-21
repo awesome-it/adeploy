@@ -9,7 +9,7 @@ from .. import providers
 def get_submodules(pkg):
     pkgpath = os.path.dirname(pkg.__file__)
     modules = []
-    prefix = pkgpath.split("adeploy")[1][1:].replace("/", ".")
+    prefix = ".".join(pkgpath.split("/")[-2:])
     for modname in [name for _, name, _ in pkgutil.iter_modules([pkgpath])]:
         if f'{prefix}.{modname}' in sys.modules:
             module = sys.modules[f'{prefix}.{modname}']
