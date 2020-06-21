@@ -9,7 +9,7 @@ class Renderer:
         self.args = args
 
     def get_parser(self):
-        parser = argparse.ArgumentParser(description='Dummy k8s renderer for developing purpose',
+        parser = argparse.ArgumentParser(description='Jinja renderer for k8s manifests written in Jinja',
                                          usage=argparse.SUPPRESS)
 
         parser.add_argument("--var", dest="var", help="Testing purpose")
