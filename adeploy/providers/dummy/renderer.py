@@ -10,7 +10,6 @@ class Renderer:
 
     def get_parser(self):
         parser = argparse.ArgumentParser(description='Dummy k8s renderer for developing purpose',
-                                         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                          usage=argparse.SUPPRESS)
 
         parser.add_argument("--var", dest="var", help="Testing purpose")
@@ -23,7 +22,7 @@ class Renderer:
         #    os.mkdir(self.args.build_dir)
 
         #shutil.copy(source_dir, self.args.build_dir)
-        print(src_dir)
-        print(var)
+        #print(src_dir)
+        #print(var)
 
         return True
