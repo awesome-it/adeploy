@@ -2,26 +2,56 @@ import os
 import sys
 import argparse
 
+from kubernetes import client
+
 from .. import common
 from .. import providers
-from ..common import colors, RenderError
+from ..common import colors, TestError
 
 
 class Test:
-    parser = None
 
-    @staticmethod
-    def setup_parser(parser):
-
-        parser.add_argument("--test", default=True, help=argparse.SUPPRESS)
-
-        Test.parser = parser
-
-    def __init__(self, args, test_args, log):
+    def __init__(self, provider, args, test_args, log):
         self.args = args
         self.log = log
 
         if 'test' in self.args:
+
+            num_warnings = 0
+
+            for src_dir in self.args.src_dirs:
+
+                if not os.path.isdir(src_dir):
+                    self.log.warning(colors.orange(f'"{src_dir}" is not a directory, skip'))
+                    num_warnings += 1
+                    continue
+
+                self.log.info(
+                    colors.green_bold('Testing ') + colors.bold(src_dir) + ' in ' +
+                    colors.bold(self.args.build_dir) + ' using the provider ' +
+                    colors.bold(self.args.provider)
+                )
+
+                try:
+                    Tester = getattr(provider, 'Tester')
+
+                    tester = Tester(
+                        src_dir=src_dir,
+                        args=self.args,
+                        log=self.log,
+                        **vars(Tester.get_parser().parse_args(test_args)))
+
+                    tester.run()
+
+                except TestError as e:
+                    self.log.error(colors.red(f'Test failed in source directory "{src_dir}":'))
+                    self.log.error(colors.red_bold(str(e)))
+                    sys.exit(1)
+
+            if num_warnings > 0:
+                self.log.warning(colors.orange(f'Testing finished with {num_warnings} warnings'))
+            else:
+                self.log.info(colors.green_bold(f'Testing finished'))
 
             sys.exit(0)
 

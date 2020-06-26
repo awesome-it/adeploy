@@ -77,7 +77,6 @@ class Renderer:
         self.log.debug(f'Loading defaults from "{defaults_file}" ...')
         return yaml.load(open(defaults_file), Loader=yaml.FullLoader)
 
-
     def load_deployments(self, deployment_name, defaults=None, extensions=None):
 
         if defaults is None:

@@ -13,5 +13,10 @@ class RenderError(Error):
     pass
 
 
+class TestError(Error):
+    """ Exception raised for errors in the tester."""
+    pass
+
+
 if __name__ == '__main__':
     pass

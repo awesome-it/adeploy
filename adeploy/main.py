@@ -16,9 +16,17 @@ log = logging.getLogger('adeploy')
 
 def main():
     init(autoreset=True)
+
     parser = setup_parser()
 
-    args, unknown_args = parser.parse_known_args()
+    # Pass --help to a provider if a provider was already specified
+    if ('--help' in sys.argv or '-h' in sys.argv) and ('--provider' in sys.argv or '-p' in sys.argv):
+        real_args = list(filter(lambda x: x not in ['--help', '-h'], sys.argv))
+        args, unknown_args = parser.parse_known_args(real_args[1:])
+        unknown_args.append('--help')
+    else:
+        args, unknown_args = parser.parse_known_args()
+
     setup_logging(args)
     module = None
 
@@ -78,17 +86,18 @@ def setup_parser():
     subparsers = parser.add_subparsers(title=f'Available build steps', metavar='build_step')
 
     for (module_name, _, class_name) in common.get_submodules(steps):
-        setup_parser_method = getattr(class_name, 'setup_parser')
-        if callable(setup_parser_method):
-            setup_parser_method(
-                subparsers.add_parser(module_name,
-                                      help=f'Call module "{module_name}", '
-                                           f'type: {sys.argv[0]} {module_name} --help for more options'))
+        subparser = subparsers.add_parser(module_name,
+                                          help=f'Call module "{module_name}", '
+                                               f'type: {sys.argv[0]} {module_name} --help for more options')
+        subparser.add_argument("src_dirs",
+                               help="Directory containing deployment sources i.e. Kustomize or Helm Chart",
+                               nargs='+', metavar='dir')
+        subparser.add_argument(f'--{module_name}', default=True, help=argparse.SUPPRESS)
+
     return parser
 
 
 def setup_logging(args):
-
     colors.skip_colors(args.skip_colors)
 
     if args.debug:

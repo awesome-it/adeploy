@@ -6,17 +6,6 @@ from ..common import colors, RenderError
 
 
 class Render:
-    parser = None
-
-    @staticmethod
-    def setup_parser(parser):
-
-        parser.add_argument("--render", default=True, help=argparse.SUPPRESS)
-
-        parser.add_argument("src_dirs", help="Directory containing deployment sources i.e. Kustomize or Helm Chart",
-                            nargs='+', metavar='dir')
-
-        Render.parser = parser
 
     def __init__(self, provider, args, render_args, log):
         self.args = args
