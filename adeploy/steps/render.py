@@ -5,7 +5,7 @@ import argparse
 from colorama import init, Style, Fore
 from .. import common
 from .. import providers
-from ..common import colors
+from ..common import colors, RenderError
 
 
 class Render:
@@ -47,9 +47,6 @@ class Render:
                           f'Type "--providers" to get a list of supported providers.')
                 sys.exit(1)
 
-            renderer = getattr(provider, 'Renderer')(self.args, self.log)
-            render_args = renderer.get_parser().parse_args(render_args)
-
             num_warnings = 0
 
             for src_dir in self.args.src_dirs:
@@ -60,27 +57,38 @@ class Render:
                     continue
 
                 self.log.info(
-                    colors.blue('Rendering ') + colors.bold(src_dir) + ' in ' +
+                    colors.green_bold('Rendering ') + colors.bold(src_dir) + ' in ' +
                     colors.bold(self.args.build_dir) + ' using the provider ' +
                     colors.bold(self.args.provider)
                 )
 
-                if not renderer.run(src_dir=src_dir, **vars(render_args)):
-                    self.log.error(colors.red(f'"Rendering error in source directory {src_dir}'))
+                try:
+                    Renderer = getattr(provider, 'Renderer')
+
+                    renderer = Renderer(
+                        src_dir=src_dir,
+                        args=self.args,
+                        log=self.log,
+                        **vars(Renderer.get_parser().parse_args(render_args)))
+
+                    renderer.run()
+
+                except RenderError as e:
+                    self.log.error(colors.red(f'Render error in source directory "{src_dir}":'))
+                    self.log.error(colors.red_bold(str(e)))
                     sys.exit(1)
 
             if num_warnings > 0:
                 self.log.warning(colors.orange(f'Rendering finished with {num_warnings} warnings'))
             else:
-                self.log.info(colors.green(f'Rendering finished'))
+                self.log.info(colors.green_bold(f'Rendering finished'))
 
             sys.exit(0)
 
     def list_providers(self):
         self.log.info('Providers:')
         for (name, module, _) in common.get_submodules(providers):
-            renderer = getattr(module, 'Renderer')(self.args, self.log)
-            description = renderer.get_parser().format_help().split('\n').pop(0)
+            description = getattr(module, 'Renderer').get_parser().format_help().split('\n').pop(0)
             self.log.info(colors.bold(colors.blue(name)) + ': ' + description)
 
 

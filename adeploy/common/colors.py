@@ -24,10 +24,21 @@ def orange(text):
     return f'{Fore.YELLOW}{text}{Fore.RESET}' if not _skip_colors else text
 
 
-
 def gray(text):
     return f'{Fore.LIGHTBLACK_EX}{text}{Fore.RESET}' if not _skip_colors else text
 
 
 def bold(text):
     return f'{Style.BRIGHT}{text}{Style.NORMAL}' if not _skip_colors else text
+
+
+def red_bold(text):
+    return bold(red(text))
+
+
+def green_bold(text):
+    return bold(green(text))
+
+
+def blue_bold(text):
+    return bold(blue(text))

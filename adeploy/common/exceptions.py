@@ -4,7 +4,12 @@ class Error(Exception):
 
 
 class InputError(Error):
-    """Exception raised for errors in the input."""
+    """Exception raised for errors in the user input."""
+    pass
+
+
+class RenderError(Error):
+    """ Exception raised for errors in the renderer."""
     pass
 
 
