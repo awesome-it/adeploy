@@ -6,6 +6,7 @@ import argparse
 from colorama import init, Style, Fore
 from importlib.metadata import version, PackageNotFoundError
 
+from . import providers
 from . import steps
 from . import common
 from .common import colors
@@ -17,18 +18,15 @@ def main():
     init(autoreset=True)
     parser = setup_parser()
 
-    # Pass --help to a provider if a provider was already specified
-    if ('--help' in sys.argv or '-h' in sys.argv) and ('--provider' in sys.argv or '-p' in sys.argv):
-        real_args = list(filter(lambda x: x not in ['--help', '-h'], sys.argv))
-        args, unknown_args = parser.parse_known_args(real_args[1:])
-        unknown_args.append('--help')
-    else:
-        args, unknown_args = parser.parse_known_args()
-
+    args, unknown_args = parser.parse_known_args()
     setup_logging(args)
     module = None
 
     try:
+
+        if args.list_providers:
+            list_providers()
+            sys.exit(0)
 
         if args.version:
             try:
@@ -37,10 +35,18 @@ def main():
                 print('0.0.0')
             sys.exit(0)
 
+        # Load renderer from provider
+        provider = common.get_provider(args.provider)
+
+        if provider is None:
+            log.error(colors.red(f'Cannot find supported provider type "{args.provider}". ') +
+                      f'Type "--providers" to get a list of supported providers.')
+            sys.exit(1)
+
         # Execute steps
         for (module, _, class_name) in common.get_submodules(steps):
             if class_name.__name__ != steps.__class__.__name__:
-                class_name(args, unknown_args, logging.getLogger(f'adeploy.{class_name.__name__}'))
+                class_name(provider, args, unknown_args, logging.getLogger(f'adeploy.{class_name.__name__}'))
 
     except common.InputError as e:
         log.error(colors.red(colors.bold(f'Input error in module "{module}": {str(e)}')))
@@ -60,6 +66,11 @@ def setup_parser():
     parser.add_argument('-l', '--log', dest='logfile', help='Path to logfile')
     parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('-s', '--skip-colors', dest='skip_colors', action='store_true')
+    parser.add_argument("-p", "--provider", dest="provider",
+                        help="The provider to use, type --providers to get a list of supported providers.",
+                        required='--providers' not in sys.argv)
+    parser.add_argument("--providers", dest="list_providers", action="store_true",
+                        help="A list of supported providers")
     parser.add_argument('--version', action='store_true', help='Print version and exit')
 
     parser.add_argument('--build-dir', dest='build_dir', help='Build directory for output', default="./build")
@@ -94,3 +105,10 @@ def setup_logging(args):
 
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("requests").setLevel(logging.WARNING)
+
+
+def list_providers():
+    log.info(colors.bold('Providers:'))
+    for (name, module, _) in common.get_submodules(providers):
+        description = getattr(module, 'Renderer').get_parser().format_help().split('\n').pop(0)
+        log.info(colors.bold(colors.blue(name)) + ': ' + description)

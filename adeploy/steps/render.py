@@ -2,9 +2,6 @@ import os
 import sys
 import argparse
 
-from colorama import init, Style, Fore
-from .. import common
-from .. import providers
 from ..common import colors, RenderError
 
 
@@ -16,36 +13,16 @@ class Render:
 
         parser.add_argument("--render", default=True, help=argparse.SUPPRESS)
 
-        if '--providers' not in sys.argv:
-            parser.add_argument("src_dirs", help="Directory containing deployment sources i.e. Kustomize or Helm Chart",
-                                nargs='+', metavar='dir')
-
-        parser.add_argument("-p", "--provider", dest="provider",
-                            help="The provider to use, type --providers to get a list of supported providers.",
-                            required='--providers' not in sys.argv)
-
-        parser.add_argument("--providers", dest="list_providers", action="store_true",
-                            help="A list of supported providers")
+        parser.add_argument("src_dirs", help="Directory containing deployment sources i.e. Kustomize or Helm Chart",
+                            nargs='+', metavar='dir')
 
         Render.parser = parser
 
-    def __init__(self, args, render_args, log):
+    def __init__(self, provider, args, render_args, log):
         self.args = args
         self.log = log
 
         if 'render' in self.args:
-
-            if self.args.list_providers:
-                self.list_providers()
-                sys.exit(0)
-
-            # Load renderer from provider
-            provider = common.get_provider(self.args.provider)
-
-            if provider is None:
-                log.error(colors.red(f'Cannot find supported provider type "{self.args.provider}". ') +
-                          f'Type "--providers" to get a list of supported providers.')
-                sys.exit(1)
 
             num_warnings = 0
 
@@ -84,12 +61,6 @@ class Render:
                 self.log.info(colors.green_bold(f'Rendering finished'))
 
             sys.exit(0)
-
-    def list_providers(self):
-        self.log.info('Providers:')
-        for (name, module, _) in common.get_submodules(providers):
-            description = getattr(module, 'Renderer').get_parser().format_help().split('\n').pop(0)
-            self.log.info(colors.bold(colors.blue(name)) + ': ' + description)
 
 
 if __name__ == '__main__':
