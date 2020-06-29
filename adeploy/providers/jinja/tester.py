@@ -34,14 +34,24 @@ class Tester:
 
         for deployment in load_deployments(self.log, self.src_dir, self.namespaces_dir, deployment_name):
 
-            manifest_path = Path(self.args.build_dir)\
-                .joinpath(deployment.namespace)\
-                .joinpath(deployment_name)\
+            manifest_path = Path(self.args.build_dir) \
+                .joinpath(deployment.namespace) \
+                .joinpath(deployment_name) \
                 .joinpath(deployment.variant)
 
             self.log.info(f'Testing manifests for deployment "{colors.blue(deployment)}" in "{manifest_path}" ...')
 
             try:
-                kubectl_apply(self.log, manifest_path, namespace=deployment.namespace, dry_run='server')
+                result = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace, dry_run='server')
+                for line in result.stdout.split("\n"):
+                    token = line.split(" ")
+                    if len(token) > 3:
+
+                        resource = token[0]
+                        status = token[1]
+
+                        self.log.info(f'... {colors.bold(resource)}: '
+                                      f'{colors.gray(status) if status == "unchanged" else colors.green(status)}')
+
             except CalledProcessError as e:
                 raise TestError(f'Error in manifest dir "{manifest_path}": {e.stderr}')

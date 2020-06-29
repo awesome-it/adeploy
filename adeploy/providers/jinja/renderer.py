@@ -150,7 +150,7 @@ class Renderer:
 
             for template in templates:
                 values = {
-                    'name': deployment.variant,
+                    'name': deployment.variant.replace('.','-'),
                     'namespace': deployment.namespace,
                     'deployment': deployment.config,
                     'node_selector': deployment.config.get('node', {}),
@@ -163,7 +163,10 @@ class Renderer:
                     .joinpath(deployment.variant)\
                     .joinpath(Path(template).name)
 
-                self.log.info(f'Creating "{colors.bold(output_path)}" for deployment "{colors.blue(deployment)}" ...')
+                self.log.info(f'Rendering "{colors.bold(output_path)}" '
+                              f'from "{colors.bold(template)}" '
+                              f'for deployment "{colors.blue(deployment)}" ...')
+
                 Path(output_path.parent).mkdir(parents=True, exist_ok=True)
                 with open(output_path, 'w') as output_fd:
                     output_fd.write(env.get_template(Path(template).name).render(**values))
