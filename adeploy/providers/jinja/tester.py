@@ -9,14 +9,6 @@ from .common import kubectl, kubectl_apply
 
 
 class Tester:
-    def __init__(self, src_dir, args, log, **kwargs):
-        self.src_dir = src_dir
-        self.log = log
-        self.args = args
-
-        self.namespaces_dir = kwargs.get('namespaces_dir')
-        self.templates_dir = kwargs.get('templates_dir')
-
     @staticmethod
     def get_parser():
         parser = argparse.ArgumentParser(description='Jinja tester for k8s manifests written in Jinja',
@@ -24,8 +16,22 @@ class Tester:
 
         parser.add_argument('--namespaces', dest='namespaces_dir', default='namespaces',
                             help='Directory containing namespaces and variables for deployments')
-
+        parser.add_argument('-n', '--namespace', dest='filters_namespace', nargs='*',
+                            help='Only include specified namespace. Argument can be specified multiple times.')
+        parser.add_argument('-w', '--variant', dest='filters_variant', nargs='*',
+                            help='Only include specified deployment variant i.e. "prod", "testing". '
+                                 'Argument can be specified multiple times.')
         return parser
+
+    def __init__(self, src_dir, args, log, **kwargs):
+        self.src_dir = src_dir
+        self.log = log
+        self.args = args
+
+        self.namespaces_dir = kwargs.get('namespaces_dir')
+        self.templates_dir = kwargs.get('templates_dir')
+        self.filters_namespace = kwargs.get('filters_namespace')
+        self.filters_variant = kwargs.get('filters_variant')
 
     def run(self):
 
@@ -39,6 +45,12 @@ class Tester:
                 .joinpath(deployment_name) \
                 .joinpath(deployment.variant)
 
+            if (self.filters_namespace and deployment.namespace not in self.filters_namespace) or \
+                    (self.filters_variant and deployment.variant not in self.filters_variant):
+                self.log.info(f'{colors.orange_bold("Skip")} testing manifests '
+                              f'for deployment "{colors.blue(deployment)}" in "{manifest_path}".')
+                continue
+
             self.log.info(f'Testing manifests for deployment "{colors.blue(deployment)}" in "{manifest_path}" ...')
 
             try:
@@ -46,7 +58,6 @@ class Tester:
                 for line in result.stdout.split("\n"):
                     token = line.split(" ")
                     if len(token) > 3:
-
                         resource = token[0]
                         status = token[1]
 

@@ -42,3 +42,7 @@ def green_bold(text):
 
 def blue_bold(text):
     return bold(blue(text))
+
+
+def orange_bold(text):
+    return bold(orange(text))
