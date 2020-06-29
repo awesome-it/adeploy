@@ -1,16 +1,16 @@
 import os
 import sys
 
-from ..common import colors, TestError
+from ..common import colors, DeployError
 
 
-class Test:
+class Deploy:
 
-    def __init__(self, provider, args, test_args, log):
+    def __init__(self, provider, args, deploy_args, log):
         self.args = args
         self.log = log
 
-        if 'test' in self.args:
+        if 'deploy' in self.args:
 
             num_warnings = 0
 
@@ -22,31 +22,31 @@ class Test:
                     continue
 
                 self.log.info(
-                    colors.green_bold('Testing ') + colors.bold(src_dir) + ' in ' +
+                    colors.green_bold('Deploying ') + colors.bold(src_dir) + ' in ' +
                     colors.bold(self.args.build_dir) + ' using the provider ' +
                     colors.bold(self.args.provider)
                 )
 
                 try:
-                    Tester = getattr(provider, 'Tester')
+                    Deployer = getattr(provider, 'Deployer')
 
-                    tester = Tester(
+                    deployer = Deployer(
                         src_dir=src_dir,
                         args=self.args,
                         log=self.log,
-                        **vars(Tester.get_parser().parse_args(test_args)))
+                        **vars(Deployer.get_parser().parse_args(deploy_args)))
 
-                    tester.run()
+                    deployer.run()
 
-                except TestError as e:
-                    self.log.error(colors.red(f'Test failed in source directory "{src_dir}":'))
+                except DeployError as e:
+                    self.log.error(colors.red(f'Deployment failed in source directory "{src_dir}":'))
                     self.log.error(colors.red_bold(str(e)))
                     sys.exit(1)
 
             if num_warnings > 0:
-                self.log.warning(colors.orange(f'Testing finished with {num_warnings} warnings'))
+                self.log.warning(colors.orange(f'Deployment finished with {num_warnings} warnings'))
             else:
-                self.log.info(colors.green_bold(f'Testing finished'))
+                self.log.info(colors.green_bold(f'Deployment finished'))
 
             sys.exit(0)
 

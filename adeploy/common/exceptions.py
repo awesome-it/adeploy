@@ -18,5 +18,9 @@ class TestError(Error):
     pass
 
 
+class DeployError(Error):
+    """ Exception raised for errors in the tester."""
+    pass
+
 if __name__ == '__main__':
     pass
