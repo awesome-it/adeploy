@@ -106,13 +106,13 @@ class Renderer:
 
             for ext in extensions:
                 for deployment_release_config in glob.glob(f'{deployment_dir}/*.{ext}'):
-                    deployment_releasde = Path(deployment_release_config).stem
+                    deployment_release = Path(deployment_release_config).stem
                     self.log.debug(f'... found deployment "{colors.bold(deployment_name)}", '
-                                   f'release "{colors.bold(deployment_releasde)}, '
+                                   f'release "{colors.bold(deployment_release)}, '
                                    f'namespace "{colors.bold(ns)}" '
                                    f'in "{deployment_release_config}" ')
 
-                    deployment = Deployment(deployment_name, deployment_releasde, ns)
+                    deployment = Deployment(deployment_name, deployment_release, ns)
                     deployment.load_config(deployment_release_config, defaults=defaults)
                     deployments.append(deployment)
 
