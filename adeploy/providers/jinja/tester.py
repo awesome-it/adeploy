@@ -4,7 +4,7 @@ from pathlib import Path
 from subprocess import CalledProcessError
 
 from adeploy.common import colors, TestError, sys
-from .common.deployment import load_deployments, get_deployment_name
+from adeploy.common.deployment import load_deployments, get_deployment_name
 from .common import kubectl, kubectl_apply
 
 

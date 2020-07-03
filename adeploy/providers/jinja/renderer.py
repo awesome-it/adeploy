@@ -8,8 +8,8 @@ import glob
 from inspect import getmembers, isfunction, getfile
 from pathlib import Path
 from adeploy.common import colors, RenderError
+from adeploy.common.deployment import Deployment
 
-from .common.deployment import Deployment
 from .common import filters, globals
 
 
