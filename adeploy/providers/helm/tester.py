@@ -5,7 +5,6 @@ from subprocess import CalledProcessError
 
 from adeploy.common import colors, TestError, sys
 from adeploy.common.deployment import load_deployments, get_deployment_name
-from .common import kubectl, kubectl_apply
 
 
 class Tester:
@@ -23,7 +22,8 @@ class Tester:
                                  'Argument can be specified multiple times.')
         return parser
 
-    def __init__(self, src_dir, args, log, **kwargs):
+    def __init__(self, name, src_dir, args, log, **kwargs):
+        self.name = name
         self.src_dir = src_dir
         self.log = log
         self.args = args
@@ -54,7 +54,7 @@ class Tester:
             self.log.info(f'Testing manifests for deployment "{colors.blue(deployment)}" in "{manifest_path}" ...')
 
             try:
-                result = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace, dry_run='server')
+                result = "" #kubectl_apply(self.log, manifest_path, namespace=deployment.namespace, dry_run='server')
                 for line in result.stdout.split("\n"):
                     token = line.split(" ")
                     if len(token) > 3:

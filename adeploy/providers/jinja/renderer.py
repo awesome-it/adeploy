@@ -14,7 +14,8 @@ from .common import filters, globals
 
 
 class Renderer:
-    def __init__(self, src_dir, args, log, **kwargs):
+    def __init__(self, name, src_dir, args, log, **kwargs):
+        self.name = name
         self.src_dir = src_dir
         self.log = log
         self.args = args
@@ -115,12 +116,11 @@ class Renderer:
 
     def run(self):
 
-        deployment_name = get_deployment_name(self.src_dir, self.args.deployment_name)
-        self.log.debug(f'Working on deployment "{deployment_name}" ...')
+        self.log.debug(f'Working on deployment "{self.name}" ...')
 
         template_dir, templates = self.load_templates()
         defaults = self.load_defaults()
-        deployments = self.load_deployments(deployment_name, defaults=defaults)
+        deployments = self.load_deployments(self.name, defaults=defaults)
 
         jinja_pathes = ['.', '..', template_dir, str(Path(template_dir).parent), str(Path(template_dir).parent.parent)]
         self.log.debug(f'Using Jinja file system loader with pathes: {", ".join(jinja_pathes)}')
@@ -157,7 +157,7 @@ class Renderer:
 
                 output_path = Path(self.args.build_dir)\
                     .joinpath(deployment.namespace)\
-                    .joinpath(deployment_name)\
+                    .joinpath(self.name)\
                     .joinpath(deployment.release)\
                     .joinpath(Path(template).name)
 

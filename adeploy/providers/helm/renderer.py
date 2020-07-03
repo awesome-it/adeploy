@@ -1,26 +1,29 @@
 import os
 import shutil
 import argparse
-import yaml
-import jinja2
-import glob
+from subprocess import CalledProcessError
+from tempfile import TemporaryDirectory
 
-from inspect import getmembers, isfunction, getfile
+import yaml
+import glob
+import sys
+
 from pathlib import Path
 from adeploy.common import colors, RenderError
 from adeploy.common.deployment import Deployment, get_deployment_name
-from .common import filters, globals
+from .common import helm_repo_add, helm_repo_pull
 
 
 class Renderer:
-    def __init__(self, src_dir, args, log, **kwargs):
+    def __init__(self, name, src_dir, args, log, **kwargs):
+        self.name = name
         self.src_dir = src_dir
         self.log = log
         self.args = args
         self.defaults_file = kwargs.get('defaults_file')
         self.namespaces_dir = kwargs.get('namespaces_dir')
-        self.templates_dir = kwargs.get('templates_dir')
-        self.macros_dirs = kwargs.get('macros_dirs')
+        self.chart_dir = kwargs.get('chart_dir')
+        self.repo_url = kwargs.get('repo_url', None)
 
     @staticmethod
     def get_parser():
@@ -34,32 +37,48 @@ class Renderer:
         parser.add_argument('--chart', dest='chart_dir', default='chart',
                             help='Directory containing the Helm chart to deploy. If no chart is available'
                                  'you can specify a repo URL using "--repo" to download the chart')
-        parser.add_argument('--repo', dest='repo', help='Helm chart repo URL to download')
+        parser.add_argument('--repo-url', dest='repo_url', help='Helm repo URL to download chart if chart dir is empty')
 
         return parser
 
-    def load_templates(self, extensions=None):
+    def load_chart(self, extensions=None):
 
-        if extensions is None:
-            extensions = ['yaml', 'yml', 'jinja']
+        chart_dir = self.chart_dir
+        if not os.path.isabs(chart_dir):
+            chart_dir = f'{self.src_dir}/{chart_dir}'
 
-        templates_dir = self.templates_dir
-        if not os.path.isabs(templates_dir):
-            templates_dir = f'{self.src_dir}/{templates_dir}'
+        if not os.path.exists(chart_dir) or not os.listdir(chart_dir):
 
-        self.log.debug(f'Scanning source dir with pattern "{templates_dir}/*.({"|".join(extensions)})" ...')
+            if self.repo_url is None:
+                raise RenderError(f'No chart repo URL specified while chart dir is empty. '
+                                  f'Please either add a Helm chart to "{colors.bold(self.chart_dir)}" or '
+                                  f'specify a chart repo URL using --repo to download the chart repo.')
 
-        files = []
-        for ext in extensions:
-            files.extend(glob.glob(f'{templates_dir}/*.{ext}'))
+            self.log.info(f'Chart directory "{colors.bold(chart_dir)}" is empty, '
+                          f'downloading chart repo from {colors.blue(self.repo_url)} ...')
 
-        if len(files) == 0:
-            raise RenderError(f'No template files found in "{templates_dir}"')
+            repo = f'repo_{self.name}'
 
-        self.log.debug(f'Found templates: ')
-        [self.log.debug(f'- {f}') for f in files]
+            try:
+                self.log.debug(helm_repo_add(self.log, repo, self.repo_url).stdout.strip())
+            except CalledProcessError as e:
+                raise RenderError(f'Error while adding helm repo {self.repo_url}: {e.stderr}')
 
-        return templates_dir, files
+            try:
+                if os.path.exists(chart_dir):
+                    os.rmdir(chart_dir)
+
+                temp = TemporaryDirectory()
+                self.log.debug(helm_repo_pull(self.log, repo, self.name, temp.name).stdout.strip())
+                shutil.move(f'{temp.name}/{self.name}', chart_dir)
+
+            except CalledProcessError as e:
+                raise RenderError(f'Error while adding helm repo {self.repo_url}: {e.stderr}')
+
+            except shutil.Error as e:
+                raise RenderError(f'Error while creating chart dir "{chart_dir}": {e.strerror}')
+
+        return chart_dir
 
     def load_defaults(self):
 
@@ -117,28 +136,13 @@ class Renderer:
         deployment_name = get_deployment_name(self.src_dir, self.args.deployment_name)
         self.log.debug(f'Working on deployment "{deployment_name}" ...')
 
-        template_dir, templates = self.load_templates()
+        chart_dir = self.load_chart()
         defaults = self.load_defaults()
         deployments = self.load_deployments(deployment_name, defaults=defaults)
 
-        jinja_pathes = ['.', '..', template_dir, str(Path(template_dir).parent), str(Path(template_dir).parent.parent)]
-        self.log.debug(f'Using Jinja file system loader with pathes: {", ".join(jinja_pathes)}')
-
-        env = jinja2.Environment(
-            # This is to load macros from template dir and the parent dir
-            loader=jinja2.FileSystemLoader(jinja_pathes),
-            autoescape=jinja2.select_autoescape(['json']),
-            # Add support for expressions statements, see https://stackoverflow.com/a/39858522/381166
-            extensions=['jinja2.ext.do'],
-        )
-
-        # Register filters from common.filters
-        for name, func in [f for f in getmembers(filters) if isfunction(f[1])]:
-            self.log.debug(f'Registering filter "{name}" from "{getfile(func)}"')
-            env.filters[name] = func
-
         for deployment in deployments:
 
+            """            
             # Register globals from common.globals
             for name, func_creator in [f for f in getmembers(globals) if isfunction(f[1])]:
                 self.log.debug(
@@ -167,5 +171,6 @@ class Renderer:
                 Path(output_path.parent).mkdir(parents=True, exist_ok=True)
                 with open(output_path, 'w') as output_fd:
                     output_fd.write(env.get_template(Path(template).name).render(**values))
+            """
 
         return True

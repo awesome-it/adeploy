@@ -52,9 +52,8 @@ def main():
             sys.exit(1)
 
         # Execute steps
-        for (module, _, class_name) in common.get_submodules(steps):
-            if class_name.__name__ != steps.__class__.__name__:
-                class_name(provider, args, unknown_args, logging.getLogger(f'adeploy.{class_name.__name__}'))
+        for (module, class_name) in common.get_submodules(steps):
+            getattr(module, class_name)(provider, args, unknown_args, logging.getLogger(f'adeploy.{class_name}'))
 
     except common.InputError as e:
         log.error(colors.red(colors.bold(f'Input error in module "{module}": {str(e)}')))
@@ -87,7 +86,8 @@ def setup_parser():
 
     subparsers = parser.add_subparsers(title=f'Available build steps', metavar='build_step')
 
-    for (module_name, _, class_name) in common.get_submodules(steps):
+    for (module, class_name) in common.get_submodules(steps):
+        module_name = module.__name__
         subparser = subparsers.add_parser(module_name,
                                           help=f'Call module "{module_name}", '
                                                f'type: {sys.argv[0]} {module_name} --help for more options')
@@ -120,6 +120,6 @@ def setup_logging(args):
 
 def list_providers():
     log.info(colors.bold('Providers:'))
-    for (name, module, _) in common.get_submodules(providers):
-        description = getattr(module, 'Renderer').get_parser().format_help().split('\n').pop(0)
+    for name, provider in common.get_providers().items():
+        description = provider.renderer.get_parser().format_help().split('\n').pop(0)
         log.info(colors.bold(colors.blue(name)) + ': ' + description)

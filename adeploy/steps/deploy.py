@@ -1,7 +1,8 @@
 import os
 import sys
 
-from ..common import colors, DeployError
+from adeploy.common.deployment import get_deployment_name
+from adeploy.common import colors, DeployError
 
 
 class Deploy:
@@ -30,13 +31,12 @@ class Deploy:
                 )
 
                 try:
-                    Deployer = getattr(provider, 'Deployer')
-
-                    deployer = Deployer(
+                    deployer = provider.deployer(
+                        name=get_deployment_name(src_dir, self.args.deployment_name),
                         src_dir=src_dir,
                         args=self.args,
                         log=self.log,
-                        **vars(Deployer.get_parser().parse_args(deploy_args)))
+                        **vars(provider.deployer.get_parser().parse_args(deploy_args)))
 
                     deployer.run()
 

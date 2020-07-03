@@ -1,7 +1,8 @@
 import os
 import sys
 
-from ..common import colors, TestError
+from adeploy.common.deployment import get_deployment_name
+from adeploy.common import colors, TestError
 
 
 class Test:
@@ -30,13 +31,12 @@ class Test:
                 )
 
                 try:
-                    Tester = getattr(provider, 'Tester')
-
-                    tester = Tester(
+                    tester = provider.tester(
+                        name=get_deployment_name(src_dir, self.args.deployment_name),
                         src_dir=src_dir,
                         args=self.args,
                         log=self.log,
-                        **vars(Tester.get_parser().parse_args(test_args)))
+                        **vars(provider.tester.get_parser().parse_args(test_args)))
 
                     tester.run()
 

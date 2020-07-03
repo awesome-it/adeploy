@@ -23,7 +23,8 @@ class Deployer:
                                  'Argument can be specified multiple times.')
         return parser
 
-    def __init__(self, src_dir, args, log, **kwargs):
+    def __init__(self, name, src_dir, args, log, **kwargs):
+        self.name = name
         self.src_dir = src_dir
         self.log = log
         self.args = args
@@ -35,14 +36,13 @@ class Deployer:
 
     def run(self):
 
-        deployment_name = get_deployment_name(self.src_dir, self.args.deployment_name)
-        self.log.debug(f'Working on deployment "{deployment_name}" ...')
+        self.log.debug(f'Working on deployment "{self.name}" ...')
 
-        for deployment in load_deployments(self.log, self.src_dir, self.namespaces_dir, deployment_name):
+        for deployment in load_deployments(self.log, self.src_dir, self.namespaces_dir, self.name):
 
             manifest_path = Path(self.args.build_dir) \
                 .joinpath(deployment.namespace) \
-                .joinpath(deployment_name) \
+                .joinpath(self.name) \
                 .joinpath(deployment.release)
 
             if (self.filters_namespace and deployment.namespace not in self.filters_namespace) or \

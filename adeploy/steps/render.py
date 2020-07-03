@@ -2,7 +2,8 @@ import os
 import sys
 import argparse
 
-from ..common import colors, RenderError
+from adeploy.common.deployment import get_deployment_name
+from adeploy.common import colors, RenderError
 
 
 class Render:
@@ -31,13 +32,12 @@ class Render:
                 )
 
                 try:
-                    Renderer = getattr(provider, 'Renderer')
-
-                    renderer = Renderer(
+                    renderer = provider.renderer(
+                        name=get_deployment_name(src_dir, self.args.deployment_name),
                         src_dir=src_dir,
                         args=self.args,
                         log=self.log,
-                        **vars(Renderer.get_parser().parse_args(render_args)))
+                        **vars(provider.renderer.get_parser().parse_args(render_args)))
 
                     renderer.run()
 

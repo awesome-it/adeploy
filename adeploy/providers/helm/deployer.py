@@ -5,7 +5,6 @@ from subprocess import CalledProcessError
 
 from adeploy.common import colors, TestError, sys
 from adeploy.common.deployment import load_deployments, get_deployment_name
-from .common import kubectl, kubectl_apply
 
 
 class Deployer:
@@ -26,7 +25,8 @@ class Deployer:
 
         return parser
 
-    def __init__(self, src_dir, args, log, **kwargs):
+    def __init__(self, name, src_dir, args, log, **kwargs):
+        self.name = name
         self.src_dir = src_dir
         self.log = log
         self.args = args
@@ -57,7 +57,7 @@ class Deployer:
             self.log.info(f'Applying manifests for deployment "{colors.blue(deployment)}" in "{manifest_path}" ...')
 
             try:
-                result = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace)
+                result = "" #kubectl_apply(self.log, manifest_path, namespace=deployment.namespace)
                 for line in result.stdout.split("\n"):
                     token = line.split(" ")
                     if len(token) > 3:
