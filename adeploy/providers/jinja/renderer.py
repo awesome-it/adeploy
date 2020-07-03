@@ -150,7 +150,8 @@ class Renderer:
 
             for template in templates:
                 values = {
-                    'name': deployment.release.replace('.','-'),
+                    'name': deployment.name.replace('.','-'),
+                    'release': deployment.release.replace('.','-'),
                     'namespace': deployment.namespace,
                     'deployment': deployment.config,
                     'node_selector': deployment.config.get('node', {}),

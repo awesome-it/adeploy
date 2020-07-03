@@ -6,53 +6,36 @@ An universal deployment tool for k8s deployments.
 Check the help section of `adeploy`:
 ```bash
 $ adeploy --help
+$ adeploy -p <provider> (render|test|deploy) --help
+```
+#### Render
+Render manifests (to a "build" dir). This calls the renderer (i.e. Jinja, Helm, Kustomize, ...)
+```bash
+$ adeploy -p <provider> [-b ./build] render <args> src_dir [src_dir ...]
+```
+For example:
+```bash
+$ adeploy -p jinja render ../deployments/alertmanager
 ```
 
-### Common Usage (WIP)
+The rendered manifest (or similar depending on the provider) files is stored to `./build/<name>`.
 
-#### Rendering
-Render manifests (to a "build" dir). This calls the renderer (i.e. Jinja, Helm, Kustomize*, ...)
+#### Test
+Runs a dry run using the appropriate provider (requires a valid k8s config):
 ```bash
-$ adeploy build <build_opts> [--build-dir=./build]
-```
-(*) Sometimes, there is no need to render i.e. for Kustomize. In this case, it is just copied to the build dir and the
-user has the chance to set another abstraction layer on Kustomize deployments i.e. using Jinja or Wildcards etc..
-
-#### Linting
-Runs linting on the rendered manifests. This gives the user a chance to hook in and make custom checks i.e. no secrets, 
-conventions etc..
-
-```bash
-$ adeploy lint <lint_opts> [--build-dir=./build]
-```
-
-#### Testing
-Runs dry-run or server-dry-run (in case k8s config is given) on the rendered manifests. Additional tests against the 
-build dir can be specified by the user.
-
-```bash
-$ adeploy test <test_opts> [--build-dir=./build]
+$ adeploy -p <provider> test src_dir [src_dir ...]
 ```
 
 #### Deploy
-Deploy manifests from the build dir to a cluster:
+Deploy the manifests to the active cluster
 ```bash
-$ adeploy deploy <deploy_opts>
+$ adeploy -p <provider> src_dir [src_dir ...]
 ```
 
-### Using Jinja Renderer
-```bash
-$ adeploy render --type jinja \
-          [--build_dir ./build] \       # Stdout by default
-          --template ./templates \         # Directory containing Jinja template files
-          --variables ./variables \        # Directory containing Jinja variables as YML files
-          --name deployment_name \         # The name of the deployment
-          [--var1 value1 ...]              # Additional variables to use in the Jinja templates
-... render manifests to ./build
-$ adeploy lint --build_dir ./build
-$ adeploy test --build_dir ./build
-$ adeploy deploy --build_dir ./build
-```
+## Providers
+
+* Jinja: [README.md](./adeploy/providers/jinja/README.md])
+* Helm v3: [README.md](./adeploy/providers/helm/README.md])
 
 ## Setup
 ### For development usage
