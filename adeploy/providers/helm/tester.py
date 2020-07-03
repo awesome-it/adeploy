@@ -43,10 +43,10 @@ class Tester:
             manifest_path = Path(self.args.build_dir) \
                 .joinpath(deployment.namespace) \
                 .joinpath(deployment_name) \
-                .joinpath(deployment.variant)
+                .joinpath(deployment.release)
 
             if (self.filters_namespace and deployment.namespace not in self.filters_namespace) or \
-                    (self.filters_variant and deployment.variant not in self.filters_variant):
+                    (self.filters_name and deployment.name not in self.filters_name):
                 self.log.info(f'{colors.orange_bold("Skip")} testing manifests '
                               f'for deployment "{colors.blue(deployment)}" in "{manifest_path}".')
                 continue

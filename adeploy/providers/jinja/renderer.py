@@ -91,8 +91,8 @@ class Renderer:
 
         self.log.debug(f'Scanning for deployment variables in "{namespaces_dir}/*/*.({"|".join(extensions)})" ...')
 
-        # Structure 1: namespaces / <namespace_name> / <deployment_variant>.yml
-        # Structure 2: instances / <namespace_name> / <deployment_name> / <deployment_variant>.yml
+        # Structure 1: namespaces / <namespace_name> / <deployment_release>.yml
+        # Structure 2: instances / <namespace_name> / <deployment_name> / <deployment_release>.yml
 
         deployments = []
 
@@ -105,15 +105,15 @@ class Renderer:
                 deployment_dir = os.path.join(namespaces_dir, ns)
 
             for ext in extensions:
-                for deployment_variant_config in glob.glob(f'{deployment_dir}/*.{ext}'):
-                    deployment_variant = Path(deployment_variant_config).stem
+                for deployment_release_config in glob.glob(f'{deployment_dir}/*.{ext}'):
+                    deployment_releasde = Path(deployment_release_config).stem
                     self.log.debug(f'... found deployment "{colors.bold(deployment_name)}", '
-                                   f'variant "{colors.bold(deployment_variant)}, '
+                                   f'release "{colors.bold(deployment_releasde)}, '
                                    f'namespace "{colors.bold(ns)}" '
-                                   f'in "{deployment_variant_config}" ')
+                                   f'in "{deployment_release_config}" ')
 
-                    deployment = Deployment(deployment_name, deployment_variant, ns)
-                    deployment.load_config(deployment_variant_config, defaults=defaults)
+                    deployment = Deployment(deployment_name, deployment_releasde, ns)
+                    deployment.load_config(deployment_release_config, defaults=defaults)
                     deployments.append(deployment)
 
         return deployments
@@ -150,7 +150,7 @@ class Renderer:
 
             for template in templates:
                 values = {
-                    'name': deployment.variant.replace('.','-'),
+                    'name': deployment.release.replace('.','-'),
                     'namespace': deployment.namespace,
                     'deployment': deployment.config,
                     'node_selector': deployment.config.get('node', {}),
@@ -160,7 +160,7 @@ class Renderer:
                 output_path = Path(self.args.build_dir)\
                     .joinpath(deployment.namespace)\
                     .joinpath(deployment_name)\
-                    .joinpath(deployment.variant)\
+                    .joinpath(deployment.release)\
                     .joinpath(Path(template).name)
 
                 self.log.info(f'Rendering "{colors.bold(output_path)}" '

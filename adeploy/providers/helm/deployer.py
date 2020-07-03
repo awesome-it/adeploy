@@ -4,7 +4,7 @@ from pathlib import Path
 from subprocess import CalledProcessError
 
 from adeploy.common import colors, TestError, sys
-from .common.deployment import load_deployments, get_deployment_name
+from adeploy.common.deployment import load_deployments, get_deployment_name
 from .common import kubectl, kubectl_apply
 
 
@@ -19,8 +19,8 @@ class Deployer:
                             help='Directory containing namespaces and variables for deployments')
         parser.add_argument('-n', '--namespace', dest='filters_namespace', nargs='*',
                             help='Only include specified namespace. Argument can be specified multiple times.')
-        parser.add_argument('-w', '--variant', dest='filters_variant', nargs='*',
-                            help='Only include specified deployment variant i.e. "prod", "testing". '
+        parser.add_argument('-r', '--release', dest='filters_release', nargs='*',
+                            help='Only include specified deployment release i.e. "prod", "testing". '
                                  'Argument can be specified multiple times.')
         """
 
@@ -34,7 +34,7 @@ class Deployer:
         self.namespaces_dir = kwargs.get('namespaces_dir')
         self.templates_dir = kwargs.get('templates_dir')
         self.filters_namespace = kwargs.get('filters_namespace')
-        self.filters_variant = kwargs.get('filters_variant')
+        self.filters_release = kwargs.get('filters_release')
 
     def run(self):
 
@@ -46,10 +46,10 @@ class Deployer:
             manifest_path = Path(self.args.build_dir) \
                 .joinpath(deployment.namespace) \
                 .joinpath(deployment_name) \
-                .joinpath(deployment.variant)
+                .joinpath(deployment.release)
 
             if (self.filters_namespace and deployment.namespace not in self.filters_namespace) or \
-                    (self.filters_variant and deployment.variant not in self.filters_variant):
+                    (self.filters_release and deployment.release not in self.filters_release):
                 self.log.info(f'{colors.orange_bold("Skip")} applying manifests '
                               f'for deployment "{colors.blue(deployment)}" in "{manifest_path}".')
                 continue

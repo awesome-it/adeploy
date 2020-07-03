@@ -6,23 +6,20 @@ from adeploy.common import colors
 
 
 class Deployment:
-
     name: str
-    variant: str
+    release: str
     namespace: str
     config: dict
 
-    def __init__(self, name: str, variant: str, namespace: str):
-
+    def __init__(self, name: str, release: str, namespace: str):
         self.name = name
-        self.variant = variant
+        self.release = release
         self.namespace = namespace
 
     def __repr__(self):
-        return f'{self.namespace}/{self.name}-{self.variant}'
+        return f'{self.namespace}/{self.name}-{self.release}'
 
     def load_config(self, config_path: str, defaults: dict = None):
-
         if not defaults:
             defaults = {}
 
@@ -34,7 +31,6 @@ class Deployment:
 
 
 def load_deployments(log, src_dir, namespaces_dir, deployment_name, defaults=None, extensions=None):
-
     if defaults is None:
         defaults = {}
 
@@ -45,8 +41,8 @@ def load_deployments(log, src_dir, namespaces_dir, deployment_name, defaults=Non
 
     log.debug(f'Scanning for deployment variables in "{namespaces_dir}/*/*.({"|".join(extensions)})" ...')
 
-    # Structure 1: namespaces / <namespace_name> / <deployment_variant>.yml
-    # Structure 2: instances / <namespace_name> / <deployment_name> / <deployment_variant>.yml
+    # Structure 1: namespaces / <namespace_name> / <deployment_release>.yml
+    # Structure 2: instances / <namespace_name> / <deployment_name> / <deployment_release>.yml
 
     deployments = []
 
@@ -59,15 +55,16 @@ def load_deployments(log, src_dir, namespaces_dir, deployment_name, defaults=Non
             deployment_dir = os.path.join(namespaces_dir, ns)
 
         for ext in extensions:
-            for deployment_variant_config in glob.glob(f'{deployment_dir}/*.{ext}'):
-                deployment_variant = Path(deployment_variant_config).stem
-                log.debug(f'... found deployment "{colors.bold(deployment_name)}", '
-                               f'variant "{colors.bold(deployment_variant)}, '
-                               f'namespace "{colors.bold(ns)}" '
-                               f'in "{deployment_variant_config}" ')
+            for deployment_release_config in glob.glob(f'{deployment_dir}/*.{ext}'):
+                deployment_release = Path(deployment_release_config).stem
+                log.debug(f'... '
+                          f'found deployment "{colors.bold(deployment_name)}", '
+                          f'release "{colors.bold(deployment_release)}, '
+                          f'namespace "{colors.bold(ns)}" '
+                          f'in "{deployment_release_config}" ')
 
-                deployment = Deployment(deployment_name, deployment_variant, ns)
-                deployment.load_config(deployment_variant_config, defaults=defaults)
+                deployment = Deployment(deployment_name, deployment_release, ns)
+                deployment.load_config(deployment_release_config, defaults=defaults)
                 deployments.append(deployment)
 
     return deployments
