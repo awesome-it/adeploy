@@ -59,7 +59,7 @@ def load_deployments(log, src_dir, namespaces_dir, deployment_name, defaults=Non
                 deployment_release = Path(deployment_release_config).stem
                 log.debug(f'... '
                           f'found deployment "{colors.bold(deployment_name)}", '
-                          f'release "{colors.bold(deployment_release)}, '
+                          f'release "{colors.bold(deployment_release)}", '
                           f'namespace "{colors.bold(ns)}" '
                           f'in "{deployment_release_config}" ')
 

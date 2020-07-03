@@ -1,12 +1,13 @@
 import os
 import shutil
 import argparse
+from pathlib import Path
 from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory
 
 from adeploy.common import colors, RenderError, load_defaults
 from adeploy.common.deployment import Deployment, get_deployment_name, load_deployments
-from .common import helm_repo_add, helm_repo_pull
+from .common import helm_repo_add, helm_repo_pull, helm_template
 
 
 class Renderer:
@@ -96,35 +97,23 @@ class Renderer:
             defaults=defaults)
 
         for deployment in deployments:
-            """            
-            # Register globals from common.globals
-            for name, func_creator in [f for f in getmembers(globals) if isfunction(f[1])]:
-                self.log.debug(
-                    f'Registering global function "{name}" for deployment "{str(deployment)}" from "{getfile(func_creator)}"')
-                env.globals.update({name.replace('create_', ''): func_creator(deployment)})
 
-            for template in templates:
-                values = {
-                    'name': deployment.release.replace('.', '-'),
-                    'namespace': deployment.namespace,
-                    'deployment': deployment.config,
-                    'node_selector': deployment.config.get('node', {}),
-                    'default_versions': defaults.get('versions', {}),
-                }
+            output_path = Path(self.args.build_dir) \
+                .joinpath(deployment.namespace) \
+                .joinpath(self.name) \
+                .joinpath(f'{deployment.release}.yml')
 
-                output_path = Path(self.args.build_dir) \
-                    .joinpath(deployment.namespace) \
-                    .joinpath(deployment_name) \
-                    .joinpath(deployment.release) \
-                    .joinpath(Path(template).name)
+            self.log.info(f'Rendering chart "{colors.bold(self.name)}" '
+                          f'for deployment "{colors.blue(deployment)}" '
+                          f'in "{colors.bold(output_path)}" ...')
 
-                self.log.info(f'Rendering "{colors.bold(output_path)}" '
-                              f'from "{colors.bold(template)}" '
-                              f'for deployment "{colors.blue(deployment)}" ...')
+            try:
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                output = helm_template(self.log, deployment.release, chart_dir)
+                with open(output_path, 'w') as fd:
+                    fd.write(output.stdout)
 
-                Path(output_path.parent).mkdir(parents=True, exist_ok=True)
-                with open(output_path, 'w') as output_fd:
-                    output_fd.write(env.get_template(Path(template).name).render(**values))
-            """
+            except CalledProcessError as e:
+                raise RenderError(f'Error while rendering chart "{self.name}": {e.stderr}')
 
         return True

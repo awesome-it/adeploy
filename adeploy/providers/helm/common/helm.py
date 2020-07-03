@@ -12,6 +12,10 @@ def helm_repo_pull(log, repo, name, dest):
     return helm(log, ['pull', f'{repo}/{name}', '--untar', '--untardir', dest])
 
 
+def helm_template(log, name, chart_path):
+    return helm(log, ['template', f'{name}', chart_path])
+
+
 def helm(log, args) -> subprocess.CompletedProcess:
     cmd = ['helm']
     cmd.extend(args)
