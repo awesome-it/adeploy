@@ -1,12 +1,17 @@
+import glob
 import importlib
 import os
 import pkgutil
 import subprocess
 import sys
 from collections import namedtuple
+from pathlib import Path
+
+import yaml
 
 from . import colors
 from adeploy import providers
+from .deployment import Deployment
 
 
 def get_submodules(pkg):
@@ -42,3 +47,12 @@ def run_command(log, cmd) -> subprocess.CompletedProcess:
     result = subprocess.run(cmd, capture_output=True, text=True)
     result.check_returncode()
     return result
+
+
+def load_defaults(log, src_dir, defaults_file):
+    defaults_file = defaults_file
+    if not os.path.isabs(defaults_file):
+        defaults_file = f'{src_dir}/{defaults_file}'
+
+    log.debug(f'Loading defaults from "{defaults_file}" ...')
+    return yaml.load(open(defaults_file), Loader=yaml.FullLoader)

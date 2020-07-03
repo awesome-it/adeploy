@@ -4,13 +4,8 @@ import argparse
 from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory
 
-import yaml
-import glob
-import sys
-
-from pathlib import Path
-from adeploy.common import colors, RenderError
-from adeploy.common.deployment import Deployment, get_deployment_name
+from adeploy.common import colors, RenderError, load_defaults
+from adeploy.common.deployment import Deployment, get_deployment_name, load_deployments
 from .common import helm_repo_add, helm_repo_pull
 
 
@@ -20,6 +15,7 @@ class Renderer:
         self.src_dir = src_dir
         self.log = log
         self.args = args
+
         self.defaults_file = kwargs.get('defaults_file')
         self.namespaces_dir = kwargs.get('namespaces_dir')
         self.chart_dir = kwargs.get('chart_dir')
@@ -41,7 +37,7 @@ class Renderer:
 
         return parser
 
-    def load_chart(self, extensions=None):
+    def load_chart(self):
 
         chart_dir = self.chart_dir
         if not os.path.isabs(chart_dir):
@@ -80,68 +76,26 @@ class Renderer:
 
         return chart_dir
 
-    def load_defaults(self):
-
-        defaults_file = self.defaults_file
-        if not os.path.isabs(self.defaults_file):
-            defaults_file = f'{self.src_dir}/{self.defaults_file}'
-
-        self.log.debug(f'Loading defaults from "{defaults_file}" ...')
-        return yaml.load(open(defaults_file), Loader=yaml.FullLoader)
-
-    def load_deployments(self, deployment_name, defaults=None, extensions=None):
-
-        if defaults is None:
-            defaults = {}
-
-        if extensions is None:
-            extensions = ['yaml', 'yml']
-
-        namespaces_dir = self.namespaces_dir
-        if not os.path.isabs(self.namespaces_dir):
-            namespaces_dir = f'{self.src_dir}/{namespaces_dir}'
-
-        self.log.debug(f'Scanning for deployment variables in "{namespaces_dir}/*/*.({"|".join(extensions)})" ...')
-
-        # Structure 1: namespaces / <namespace_name> / <deployment_release>.yml
-        # Structure 2: instances / <namespace_name> / <deployment_name> / <deployment_release>.yml
-
-        deployments = []
-
-        for ns in [d for d in os.listdir(namespaces_dir) if os.path.isdir(os.path.join(namespaces_dir, d))]:
-
-            # Structure 2
-            deployment_dir = os.path.join(namespaces_dir, ns, deployment_name)
-            if not os.path.isdir(deployment_dir):
-                # Structure 1
-                deployment_dir = os.path.join(namespaces_dir, ns)
-
-            for ext in extensions:
-                for deployment_release_config in glob.glob(f'{deployment_dir}/*.{ext}'):
-                    deployment_release = Path(deployment_release_config).stem
-                    self.log.debug(f'... '
-                                   f'found deployment "{colors.bold(deployment_name)}", '
-                                   f'release "{colors.bold(deployment_release)}, '
-                                   f'namespace "{colors.bold(ns)}" '
-                                   f'in "{deployment_release_config}" ')
-
-                    deployment = Deployment(deployment_name, deployment_release, ns)
-                    deployment.load_config(deployment_release_config, defaults=defaults)
-                    deployments.append(deployment)
-
-        return deployments
-
     def run(self):
 
-        deployment_name = get_deployment_name(self.src_dir, self.args.deployment_name)
-        self.log.debug(f'Working on deployment "{deployment_name}" ...')
+        self.log.debug(f'Working on deployment "{self.name}" ...')
 
         chart_dir = self.load_chart()
-        defaults = self.load_defaults()
-        deployments = self.load_deployments(deployment_name, defaults=defaults)
+
+        defaults = load_defaults(
+            log=self.log,
+            src_dir=self.src_dir,
+            defaults_file=self.defaults_file
+        )
+
+        deployments = load_deployments(
+            log=self.log,
+            src_dir=self.src_dir,
+            namespaces_dir=self.namespaces_dir,
+            deployment_name=self.name,
+            defaults=defaults)
 
         for deployment in deployments:
-
             """            
             # Register globals from common.globals
             for name, func_creator in [f for f in getmembers(globals) if isfunction(f[1])]:

@@ -10,16 +10,15 @@ from adeploy.common.deployment import load_deployments, get_deployment_name
 class Tester:
     @staticmethod
     def get_parser():
-        parser = argparse.ArgumentParser(description='Jinja tester for k8s manifests written in Jinja',
+        parser = argparse.ArgumentParser(description='Helm v3 tester for k8s manifests',
                                          usage=argparse.SUPPRESS)
 
+        parser.add_argument('--defaults', dest='defaults_file', default='defaults.yml',
+                            help='YML file with default variables. Relative to the source dir.')
         parser.add_argument('--namespaces', dest='namespaces_dir', default='namespaces',
-                            help='Directory containing namespaces and value files for deployments')
-        parser.add_argument('-n', '--namespace', dest='filters_namespace', nargs='*',
-                            help='Only include specified namespace. Argument can be specified multiple times.')
-        parser.add_argument('-w', '--name', dest='filters_name', nargs='*',
-                            help='Only include specified deployment names i.e. "prod", "testing". '
-                                 'Argument can be specified multiple times.')
+                            help='Directory containing namespaces and variables for deployments')
+        parser.add_argument('--chart', dest='chart_dir', default='chart',
+                            help='Directory containing the Helm chart to deploy')
         return parser
 
     def __init__(self, name, src_dir, args, log, **kwargs):
@@ -28,21 +27,19 @@ class Tester:
         self.log = log
         self.args = args
 
+        self.defaults_file = kwargs.get('defaults_file')
         self.namespaces_dir = kwargs.get('namespaces_dir')
-        self.templates_dir = kwargs.get('templates_dir')
-        self.filters_namespace = kwargs.get('filters_namespace')
-        self.filters_name = kwargs.get('filters_name')
+        self.chart_dir = kwargs.get('chart_dir')
 
     def run(self):
 
-        deployment_name = get_deployment_name(self.src_dir, self.args.deployment_name)
-        self.log.debug(f'Working on deployment "{deployment_name}" ...')
+        self.log.debug(f'Working on deployment "{self.name}" ...')
 
-        for deployment in load_deployments(self.log, self.src_dir, self.namespaces_dir, deployment_name):
+        for deployment in load_deployments(self.log, self.src_dir, self.namespaces_dir, self.name):
 
             manifest_path = Path(self.args.build_dir) \
                 .joinpath(deployment.namespace) \
-                .joinpath(deployment_name) \
+                .joinpath(self.name) \
                 .joinpath(deployment.release)
 
             if (self.filters_namespace and deployment.namespace not in self.filters_namespace) or \
