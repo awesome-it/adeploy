@@ -34,8 +34,8 @@ $ adeploy -p <provider> src_dir [src_dir ...]
 
 ## Providers
 
-* Jinja: [README.md](./adeploy/providers/jinja/README.md])
-* Helm v3: [README.md](./adeploy/providers/helm/README.md])
+* Jinja: [README.md](adeploy/providers/jinja/README.md])
+* Helm v3: [README.md](adeploy/providers/helm/README.md])
 
 ## Setup
 ### For development usage
