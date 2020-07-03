@@ -4,7 +4,7 @@ import logging
 import argparse
 
 from colorama import init, Style, Fore
-from importlib.metadata import version, PackageNotFoundError
+from importlib_metadata import version, PackageNotFoundError
 
 from . import providers
 from . import steps
@@ -76,7 +76,7 @@ def setup_parser():
     parser.add_argument('-s', '--skip-colors', dest='skip_colors', action='store_true')
     parser.add_argument("-p", "--provider", dest="provider",
                         help="The provider to use, type --providers to get a list of supported providers.",
-                        required='--providers' not in sys.argv)
+                        required='--providers' not in sys.argv and '--version' not in sys.argv)
     parser.add_argument("--providers", dest="list_providers", action="store_true",
                         help="A list of supported providers")
     parser.add_argument('--version', action='store_true', help='Print version and exit')
