@@ -8,7 +8,7 @@ import glob
 from inspect import getmembers, isfunction, getfile
 from pathlib import Path
 from adeploy.common import colors, RenderError
-from adeploy.common.deployment import Deployment
+from adeploy.common.deployment import Deployment, get_deployment_name
 from .common import filters, globals
 
 
@@ -24,25 +24,19 @@ class Renderer:
 
     @staticmethod
     def get_parser():
-        parser = argparse.ArgumentParser(description='Jinja renderer for k8s manifests written in Jinja',
+        parser = argparse.ArgumentParser(description='Helm v3 renderer for k8s manifests',
                                          usage=argparse.SUPPRESS)
 
         parser.add_argument('--defaults', dest='defaults_file', default='defaults.yml',
                             help='YML file with default variables. Relative to the source dir.')
         parser.add_argument('--namespaces', dest='namespaces_dir', default='namespaces',
                             help='Directory containing namespaces and variables for deployments')
-        parser.add_argument("--templates", dest="templates_dir", default='templates',
-                            help='Directory containing Jinja flavored templates')
-        parser.add_argument("--macros", dest='macros_dirs', nargs='+',
-                            help='Directory containing Jinja macros to use. Can be specified mutliple times.'
-                                 'By default, macros are loaded from the template dir and its parent dir')
+        parser.add_argument('--chart', dest='chart_dir', default='chart',
+                            help='Directory containing the Helm chart to deploy. If no chart is available'
+                                 'you can specify a repo URL using "--repo" to download the chart')
+        parser.add_argument('--repo', dest='repo', help='Helm chart repo URL to download')
 
         return parser
-
-    def get_deployment_name(self):
-        deployment_name = os.path.basename(self.src_dir)
-        self.log.debug(f'Working on deployment "{deployment_name}" ...')
-        return deployment_name
 
     def load_templates(self, extensions=None):
 
@@ -120,7 +114,9 @@ class Renderer:
 
     def run(self):
 
-        deployment_name = self.get_deployment_name()
+        deployment_name = get_deployment_name(self.src_dir, self.args.deployment_name)
+        self.log.debug(f'Working on deployment "{deployment_name}" ...')
+
         template_dir, templates = self.load_templates()
         defaults = self.load_defaults()
         deployments = self.load_deployments(deployment_name, defaults=defaults)
@@ -145,22 +141,23 @@ class Renderer:
 
             # Register globals from common.globals
             for name, func_creator in [f for f in getmembers(globals) if isfunction(f[1])]:
-                self.log.debug(f'Registering global function "{name}" for deployment "{str(deployment)}" from "{getfile(func_creator)}"')
+                self.log.debug(
+                    f'Registering global function "{name}" for deployment "{str(deployment)}" from "{getfile(func_creator)}"')
                 env.globals.update({name.replace('create_', ''): func_creator(deployment)})
 
             for template in templates:
                 values = {
-                    'name': deployment.release.replace('.','-'),
+                    'name': deployment.release.replace('.', '-'),
                     'namespace': deployment.namespace,
                     'deployment': deployment.config,
                     'node_selector': deployment.config.get('node', {}),
                     'default_versions': defaults.get('versions', {}),
                 }
 
-                output_path = Path(self.args.build_dir)\
-                    .joinpath(deployment.namespace)\
-                    .joinpath(deployment_name)\
-                    .joinpath(deployment.release)\
+                output_path = Path(self.args.build_dir) \
+                    .joinpath(deployment.namespace) \
+                    .joinpath(deployment_name) \
+                    .joinpath(deployment.release) \
                     .joinpath(Path(template).name)
 
                 self.log.info(f'Rendering "{colors.bold(output_path)}" '

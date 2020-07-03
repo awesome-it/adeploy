@@ -8,7 +8,7 @@ import glob
 from inspect import getmembers, isfunction, getfile
 from pathlib import Path
 from adeploy.common import colors, RenderError
-from adeploy.common.deployment import Deployment
+from adeploy.common.deployment import Deployment, get_deployment_name
 
 from .common import filters, globals
 
@@ -39,11 +39,6 @@ class Renderer:
                                  'By default, macros are loaded from the template dir and its parent dir')
 
         return parser
-
-    def get_deployment_name(self):
-        deployment_name = os.path.basename(self.src_dir)
-        self.log.debug(f'Working on deployment "{deployment_name}" ...')
-        return deployment_name
 
     def load_templates(self, extensions=None):
 
@@ -120,7 +115,9 @@ class Renderer:
 
     def run(self):
 
-        deployment_name = self.get_deployment_name()
+        deployment_name = get_deployment_name(self.src_dir, self.args.deployment_name)
+        self.log.debug(f'Working on deployment "{deployment_name}" ...')
+
         template_dir, templates = self.load_templates()
         defaults = self.load_defaults()
         deployments = self.load_deployments(deployment_name, defaults=defaults)

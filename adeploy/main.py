@@ -80,6 +80,8 @@ def setup_parser():
     parser.add_argument("--providers", dest="list_providers", action="store_true",
                         help="A list of supported providers")
     parser.add_argument('--version', action='store_true', help='Print version and exit')
+    parser.add_argument('-n', '--name', dest="deployment_name", default=None,
+                        help='Specify a deployment name. This will overwrite deployment name derived from repo dir')
     parser.add_argument('--build-dir', dest='build_dir',
                         help='Build directory for output', default='./build', metavar='build_dir')
 

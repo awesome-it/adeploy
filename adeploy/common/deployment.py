@@ -70,5 +70,5 @@ def load_deployments(log, src_dir, namespaces_dir, deployment_name, defaults=Non
     return deployments
 
 
-def get_deployment_name(src_dir):
-    return os.path.basename(src_dir)
+def get_deployment_name(src_dir, overwrite=None):
+    return os.path.basename(src_dir) if overwrite is None else overwrite

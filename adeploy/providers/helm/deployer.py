@@ -38,7 +38,7 @@ class Deployer:
 
     def run(self):
 
-        deployment_name = get_deployment_name(self.src_dir)
+        deployment_name = get_deployment_name(self.src_dir, self.args.deployment_name)
         self.log.debug(f'Working on deployment "{deployment_name}" ...')
 
         for deployment in load_deployments(self.log, self.src_dir, self.namespaces_dir, deployment_name):

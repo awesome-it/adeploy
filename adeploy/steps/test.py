@@ -16,6 +16,8 @@ class Test:
 
             for src_dir in self.args.src_dirs:
 
+                src_dir = os.path.realpath(src_dir)
+
                 if not os.path.isdir(src_dir):
                     self.log.warning(colors.orange(f'"{src_dir}" is not a directory, skip'))
                     num_warnings += 1
