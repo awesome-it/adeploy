@@ -89,8 +89,14 @@ class Tester:
                     .joinpath(f'manifest.yml')
 
                 # Test to apply via kubectl and server-dry-run
-                result = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace, dry_run='server')
-                parse_kubectrl_apply(self.log, result.stdout)
+                self.log.info(f'... Testing raw manifests from "{colors.bold(manifest_path)}" (may fail) ...')
+                try:
+                    result = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace, dry_run='server')
+                    parse_kubectrl_apply(self.log, result.stdout, prefix=2*'...')
+                except CalledProcessError as e:
+                    self.log.warning(colors.orange(f' ... Error when dry-running kubectl apply using raw manifests. '
+                                     f'Helm install might work anyways, so ignore and continue.'))
+                    pass
 
             except CalledProcessError as e:
                 raise TestError(f'Error in Helm deployment "{colors.blue(deployment)}": {e.stderr}')

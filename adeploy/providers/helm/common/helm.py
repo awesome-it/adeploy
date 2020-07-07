@@ -17,7 +17,7 @@ def helm_template(log, deployment: Deployment, chart_path, values_path):
 
 
 def helm_install(log, deployment: Deployment, chart_path, values_path, dry_run=True) -> subprocess.CompletedProcess:
-    args = ['install', deployment.release, chart_path, '-n', deployment.namespace, '-f', values_path, '-o', 'json']
+    args = ['upgrade', '--install', deployment.release, chart_path, '-n', deployment.namespace, '-f', values_path, '-o', 'json']
     if dry_run:
         args.append('--dry-run')
     return helm(log, args)
