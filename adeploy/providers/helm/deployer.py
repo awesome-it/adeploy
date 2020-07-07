@@ -57,6 +57,13 @@ class Deployer:
             self.log.info(f'Applying manifests for deployment "{colors.blue(deployment)}" in "{manifest_path}" ...')
 
             try:
+                # TODO:
+                # Install only works once
+                # helm install traefik ./chart -n test -f ./build/kube-system/traefik/prod/values.yml
+                # Showing current installs:
+                # helm list -n test -o json
+                # We might want to make an update if there is already a chart installed ...
+
                 result = "" #kubectl_apply(self.log, manifest_path, namespace=deployment.namespace)
                 for line in result.stdout.split("\n"):
                     token = line.split(" ")

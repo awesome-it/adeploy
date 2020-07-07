@@ -18,3 +18,14 @@ def kubectl(log, namespace, args) -> subprocess.CompletedProcess:
     result = subprocess.run(cmd, capture_output=True, text=True)
     result.check_returncode()
     return result
+
+
+def parse_kubectrl_apply(log, stdout, prefix='...'):
+    for line in stdout.split('\n'):
+        token = line.split(' ')
+        if len(token) > 3:
+            resource, resource_name = token[0].split('/')
+            status = token[1]
+
+            log.info(f'{prefix} {resource}/{colors.bold(resource_name)}: '
+                     f'{colors.gray(status) if status == "unchanged" else colors.green(status)}')

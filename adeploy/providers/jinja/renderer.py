@@ -1,14 +1,12 @@
 import os
-import shutil
 import argparse
-import yaml
 import jinja2
 import glob
 
 from inspect import getmembers, isfunction, getfile
 from pathlib import Path
 from adeploy.common import colors, RenderError, load_defaults
-from adeploy.common.deployment import Deployment, get_deployment_name, load_deployments
+from adeploy.common.deployment import load_deployments
 
 from .common import filters, globals
 

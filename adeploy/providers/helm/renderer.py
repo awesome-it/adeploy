@@ -5,6 +5,8 @@ from pathlib import Path
 from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory
 
+import yaml
+
 from adeploy.common import colors, RenderError, load_defaults
 from adeploy.common.deployment import Deployment, get_deployment_name, load_deployments
 from .common import helm_repo_add, helm_repo_pull, helm_template
@@ -21,6 +23,8 @@ class Renderer:
         self.namespaces_dir = kwargs.get('namespaces_dir')
         self.chart_dir = kwargs.get('chart_dir')
         self.repo_url = kwargs.get('repo_url', None)
+        self.filters_namespace = kwargs.get('filters_namespace')
+        self.filters_release = kwargs.get('filters_release')
 
     @staticmethod
     def get_parser():
@@ -35,6 +39,11 @@ class Renderer:
                             help='Directory containing the Helm chart to deploy. If no chart is available'
                                  'you can specify a repo URL using "--repo" to download the chart')
         parser.add_argument('--repo-url', dest='repo_url', help='Helm repo URL to download chart if chart dir is empty')
+        parser.add_argument('-n', '--namespace', dest='filters_namespace', nargs='*',
+                            help='Only include specified namespace. Argument can be specified multiple times.')
+        parser.add_argument('-r', '--release', dest='filters_release', nargs='*',
+                            help='Only include specified deployment release i.e. "prod", "testing". '
+                                 'Argument can be specified multiple times.')
 
         return parser
 
@@ -101,16 +110,21 @@ class Renderer:
             output_path = Path(self.args.build_dir) \
                 .joinpath(deployment.namespace) \
                 .joinpath(self.name) \
-                .joinpath(f'{deployment.release}.yml')
+                .joinpath(deployment.release)
 
-            self.log.info(f'Rendering chart "{colors.bold(self.name)}" '
+            self.log.info(f'Rendering chart "{colors.bold(self.name)}" and values '
                           f'for deployment "{colors.blue(deployment)}" '
                           f'in "{colors.bold(output_path)}" ...')
 
             try:
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                output = helm_template(self.log, deployment.release, chart_dir)
-                with open(output_path, 'w') as fd:
+
+                output_path.mkdir(parents=True, exist_ok=True)
+                values_path = f'{output_path}/values.yml'
+                with open(values_path, 'w') as fd:
+                    yaml.dump(deployment.config, fd)
+
+                output = helm_template(self.log, deployment, chart_dir, values_path)
+                with open(f'{output_path}/manifest.yml', 'w') as fd:
                     fd.write(output.stdout)
 
             except CalledProcessError as e:

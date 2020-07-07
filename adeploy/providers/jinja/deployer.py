@@ -3,9 +3,8 @@ import argparse
 from pathlib import Path
 from subprocess import CalledProcessError
 
-from adeploy.common import colors, TestError, sys
-from adeploy.common.deployment import load_deployments, get_deployment_name
-from .common import kubectl, kubectl_apply
+from adeploy.common import colors, TestError, kubectl_apply, parse_kubectrl_apply
+from adeploy.common.deployment import load_deployments
 
 
 class Deployer:
@@ -55,14 +54,7 @@ class Deployer:
 
             try:
                 result = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace)
-                for line in result.stdout.split("\n"):
-                    token = line.split(" ")
-                    if len(token) > 3:
-                        resource = token[0]
-                        status = token[1]
-
-                        self.log.info(f'... {colors.bold(resource)}: '
-                                      f'{colors.gray(status) if status == "unchanged" else colors.green(status)}')
+                parse_kubectrl_apply(self.log, result.stdout)
 
             except CalledProcessError as e:
                 raise TestError(f'Error in manifest dir "{manifest_path}": {e.stderr}')

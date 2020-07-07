@@ -1,5 +1,5 @@
 import subprocess
-from adeploy.common import run_command, colors
+from adeploy.common import run_command, colors, Deployment
 
 
 def helm_repo_add(log, repo, url):
@@ -12,8 +12,15 @@ def helm_repo_pull(log, repo, name, dest):
     return helm(log, ['pull', f'{repo}/{name}', '--untar', '--untardir', dest])
 
 
-def helm_template(log, name, chart_path):
-    return helm(log, ['template', f'{name}', chart_path])
+def helm_template(log, deployment: Deployment, chart_path, values_path):
+    return helm(log, ['template', f'{deployment.release}', chart_path, '-f', values_path])
+
+
+def helm_install(log, deployment: Deployment, chart_path, values_path, dry_run=True) -> subprocess.CompletedProcess:
+    args = ['install', deployment.release, chart_path, '-n', deployment.namespace, '-f', values_path, '-o', 'json']
+    if dry_run:
+        args.append('--dry-run')
+    return helm(log, args)
 
 
 def helm(log, args) -> subprocess.CompletedProcess:
