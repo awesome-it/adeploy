@@ -1,12 +1,10 @@
 import argparse
-import json
-
 from pathlib import Path
 from subprocess import CalledProcessError
 
-from adeploy.common import colors, TestError, sys, kubectl_apply, parse_kubectrl_apply
-from adeploy.common.deployment import load_deployments, get_deployment_name
-from adeploy.providers.helm.common import helm_install
+from adeploy.common import colors, TestError, kubectl_apply, parse_kubectrl_apply
+from adeploy.common.deployment import load_deployments
+from adeploy.providers.helm.common import helm_install, HelmOutput
 
 
 class Tester:
@@ -60,27 +58,18 @@ class Tester:
                     .joinpath(deployment.release) \
                     .joinpath(f'values.yml')
 
-                result = helm_install(self.log, deployment, self.chart_dir, str(values_path), dry_run=True)
-                result_json = json.loads(result.stdout)
+                result = HelmOutput(
+                    helm_install(self.log, deployment, self.chart_dir, str(values_path), dry_run=True).stdout)
 
-                info = result_json.get('info')
-                status = info.get('status')
-                first_deployed = info.get('first_deployed')
-                last_deployed = info.get('last_deployed')
-                description = info.get('description')
-                chart = result_json.get('chart')
-                chart_version = chart.get('metadata').get('version')
-                app_version = chart.get('metadata').get('appVersion')
-
-                is_update = first_deployed != last_deployed
-                deployment_phase = 'Updating' if is_update else 'Creating'
-                last_update = f', last deployed {colors.bold(last_deployed)}' if is_update else ''
+                is_update = result.first_deployed != result.last_deployed
+                last_update = f', last deployed {colors.bold(result.last_deployed)}' if is_update else ''
+                is_success = result.status == 'pending-upgrade'
 
                 self.log.info(f'... ' 
-                              f'{colors.bold(deployment_phase)} '
-                              f'chart version {colors.bold(chart_version)}, '
-                              f'app version {colors.bold(app_version)}{last_update}: '
-                              f'{colors.green(description)}')
+                              f'Chart version {colors.bold(result.chart_version)}, '
+                              f'app version {colors.bold(result.app_version)}{last_update}: '
+                              f'{colors.green_bold(result.description)}, '
+                              f'status {colors.green_bold(result.status) if is_success else colors.red_bold(result.status)}')
 
                 manifest_path = Path(self.args.build_dir) \
                     .joinpath(deployment.namespace) \
@@ -94,8 +83,8 @@ class Tester:
                     result = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace, dry_run='server')
                     parse_kubectrl_apply(self.log, result.stdout, prefix=2*'...')
                 except CalledProcessError as e:
-                    self.log.warning(colors.orange(f' ... Error when dry-running kubectl apply using raw manifests. '
-                                     f'Helm install might work anyways, so ignore and continue.'))
+                    self.log.warning(colors.orange(f' ... Error when dry-running kubectl apply using raw manifests: {e.stderr}'))
+                    self.log.warning(f'Helm install might work anyways, so ignore and continue.')
                     pass
 
             except CalledProcessError as e:
