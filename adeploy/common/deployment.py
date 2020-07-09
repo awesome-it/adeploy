@@ -2,7 +2,7 @@ import glob
 import os
 import yaml
 from pathlib import Path
-from adeploy.common import colors
+from adeploy.common import colors, dict_update_recursive
 
 
 class Deployment:
@@ -25,7 +25,7 @@ class Deployment:
 
         self.config = {}
         self.config.update(defaults)
-        self.config.update(yaml.load(open(config_path), Loader=yaml.FullLoader))
+        self.config = dict_update_recursive(self.config, yaml.load(open(config_path), Loader=yaml.FullLoader))
 
         return self.config
 

@@ -1,17 +1,13 @@
-import glob
-import importlib
+import collections.abc
 import os
 import pkgutil
 import subprocess
-import sys
 from collections import namedtuple
-from pathlib import Path
 
 import yaml
 
-from . import colors
 from adeploy import providers
-from .deployment import Deployment
+from . import colors
 
 
 def get_submodules(pkg):
@@ -56,3 +52,12 @@ def load_defaults(log, src_dir, defaults_file):
 
     log.debug(f'Loading defaults from "{defaults_file}" ...')
     return yaml.load(open(defaults_file), Loader=yaml.FullLoader)
+
+
+def dict_update_recursive(d: dict, u: dict) -> dict:
+    for k, v in u.items():
+        if isinstance(v, collections.abc.Mapping):
+            d[k] = dict_update_recursive(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d

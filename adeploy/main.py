@@ -1,14 +1,14 @@
 from __future__ import print_function
-import sys
-import logging
-import argparse
 
-from colorama import init, Style, Fore
+import argparse
+import logging
+import sys
+
+from colorama import init
 from importlib_metadata import version, PackageNotFoundError
 
-from . import providers
-from . import steps
 from . import common
+from . import steps
 from .common import colors
 
 log = logging.getLogger('adeploy')
