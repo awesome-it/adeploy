@@ -24,12 +24,6 @@ class Deploy:
                     num_warnings += 1
                     continue
 
-                self.log.info(
-                    colors.green_bold('Deploying ') + colors.bold(src_dir) + ' in ' +
-                    colors.bold(self.args.build_dir) + ' using the provider ' +
-                    colors.bold(self.args.provider)
-                )
-
                 try:
                     deployer = provider.deployer(
                         name=get_deployment_name(src_dir, self.args.deployment_name),
@@ -37,6 +31,12 @@ class Deploy:
                         args=self.args,
                         log=self.log,
                         **vars(provider.deployer.get_parser().parse_args(deploy_args)))
+
+                    self.log.info(
+                        colors.green_bold('Deploying ') + colors.bold(src_dir) + ' in ' +
+                        colors.bold(self.args.build_dir) + ' using the provider ' +
+                        colors.bold(self.args.provider)
+                    )
 
                     deployer.run()
 

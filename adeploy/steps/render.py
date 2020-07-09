@@ -1,6 +1,5 @@
 import os
 import sys
-import argparse
 
 from adeploy.common.deployment import get_deployment_name
 from adeploy.common import colors, RenderError
@@ -25,12 +24,6 @@ class Render:
                     num_warnings += 1
                     continue
 
-                self.log.info(
-                    colors.green_bold('Rendering ') + colors.bold(src_dir) + ' in ' +
-                    colors.bold(self.args.build_dir) + ' using the provider ' +
-                    colors.bold(self.args.provider)
-                )
-
                 try:
                     renderer = provider.renderer(
                         name=get_deployment_name(src_dir, self.args.deployment_name),
@@ -38,6 +31,12 @@ class Render:
                         args=self.args,
                         log=self.log,
                         **vars(provider.renderer.get_parser().parse_args(render_args)))
+
+                    self.log.info(
+                        colors.green_bold('Rendering ') + colors.bold(src_dir) + ' in ' +
+                        colors.bold(self.args.build_dir) + ' using the provider ' +
+                        colors.bold(self.args.provider)
+                    )
 
                     renderer.run()
 

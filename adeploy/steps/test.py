@@ -24,12 +24,6 @@ class Test:
                     num_warnings += 1
                     continue
 
-                self.log.info(
-                    colors.green_bold('Testing ') + colors.bold(src_dir) + ' in ' +
-                    colors.bold(self.args.build_dir) + ' using the provider ' +
-                    colors.bold(self.args.provider)
-                )
-
                 try:
                     tester = provider.tester(
                         name=get_deployment_name(src_dir, self.args.deployment_name),
@@ -37,6 +31,12 @@ class Test:
                         args=self.args,
                         log=self.log,
                         **vars(provider.tester.get_parser().parse_args(test_args)))
+
+                    self.log.info(
+                        colors.green_bold('Testing ') + colors.bold(src_dir) + ' in ' +
+                        colors.bold(self.args.build_dir) + ' using the provider ' +
+                        colors.bold(self.args.provider)
+                    )
 
                     tester.run()
 

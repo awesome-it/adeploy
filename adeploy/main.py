@@ -68,7 +68,7 @@ def main():
 
 def setup_parser():
     parser = argparse.ArgumentParser(description='An awesome universal deployment tool for k8s',
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                     usage=colors.bold(f'adeploy -p {colors.blue("provider")} {colors.gray("[optional args ...]")} {colors.blue("build-step")} {colors.gray("[optional build args ...]")} {colors.blue("src_dir")} [{colors.blue("src_dir")} ...]'))
 
     parser.add_argument('-l', '--log', dest='logfile', help='Path to logfile')
     parser.add_argument('-d', '--debug', action='store_true')
@@ -79,12 +79,12 @@ def setup_parser():
     parser.add_argument("--providers", dest="list_providers", action="store_true",
                         help="A list of supported providers")
     parser.add_argument('--version', action='store_true', help='Print version and exit')
-    parser.add_argument('-n', '--name', dest="deployment_name", default=None,
+    parser.add_argument('--name', dest="deployment_name", default=None,
                         help='Specify a deployment name. This will overwrite deployment name derived from repo dir')
     parser.add_argument('--build-dir', dest='build_dir',
                         help='Build directory for output', default='./build', metavar='build_dir')
 
-    subparsers = parser.add_subparsers(title=f'Available build steps', metavar='build_step')
+    subparsers = parser.add_subparsers(title=f'Available build steps', metavar=colors.bold('build-steps'))
 
     for (module, class_name) in common.get_submodules(steps):
         module_name = module.__name__
@@ -93,7 +93,7 @@ def setup_parser():
                                                f'type: {sys.argv[0]} {module_name} --help for more options')
         subparser.add_argument("src_dirs",
                                help="Directory containing deployment sources i.e. Kustomize or Helm Chart",
-                               nargs='+', metavar='src_dir')
+                               nargs='*', default='.', metavar='src_dir')
         subparser.add_argument(f'--{module_name}', default=True, help=argparse.SUPPRESS)
 
     return parser
