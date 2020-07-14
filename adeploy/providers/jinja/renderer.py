@@ -84,7 +84,8 @@ class Renderer:
             deployment_name=self.name,
             defaults=defaults)
 
-        jinja_pathes = ['.', '..', template_dir, str(Path(template_dir).parent), str(Path(template_dir).parent.parent)]
+        jinja_pathes = [str(Path(__file__).parent.joinpath('templates')), '.', '..', template_dir, str(Path(template_dir).parent), str(Path(template_dir).parent.parent)]
+        print(jinja_pathes)
         self.log.debug(f'Using Jinja file system loader with pathes: {", ".join(jinja_pathes)}')
 
         env = jinja2.Environment(
@@ -115,41 +116,48 @@ class Renderer:
 
             for template in templates:
                 values = {
-                    'name': deployment.name.replace('.','-'),
-                    'release': deployment.release.replace('.','-'),
+                    'name': deployment.name.replace('.', '-'),
+                    'release': deployment.release.replace('.', '-'),
                     'namespace': deployment.namespace,
                     'deployment': deployment.config,
                     'node_selector': deployment.config.get('node', {}),
                     'default_versions': defaults.get('versions', {}),
                 }
 
-                output_path = Path(self.build_dir)\
-                    .joinpath(deployment.namespace)\
-                    .joinpath(self.name)\
-                    .joinpath(deployment.release)\
+                output_path = Path(self.build_dir) \
+                    .joinpath(deployment.namespace) \
+                    .joinpath(self.name) \
+                    .joinpath(deployment.release) \
                     .joinpath(Path(template).name)
 
                 self.log.info(f'Rendering "{colors.bold(output_path)}" '
                               f'from "{colors.bold(template)}" '
                               f'for deployment "{colors.blue(deployment)}" ...')
 
-                Path(output_path.parent).mkdir(parents=True, exist_ok=True)
+                output_path.parent.mkdir(parents=True, exist_ok=True)
                 with open(output_path, 'w') as fd:
                     fd.write(env.get_template(Path(template).name).render(**values))
 
-            secret_output_path = Path(self.build_dir)\
-                .joinpath(deployment.namespace)\
-                .joinpath(self.name)\
-                .joinpath(deployment.release)\
-                .joinpath('__secrets.json')
-
             for secret in globals.get_secrets():
-                self.log.info(f'Creating secret "{colors.bold(secret.get("name"))}" '
+                secret_output_path = Path(self.build_dir) \
+                    .joinpath(deployment.namespace) \
+                    .joinpath(self.name) \
+                    .joinpath(deployment.release) \
+                    .joinpath('secrets') \
+                    .joinpath(secret.get('name') + '.yml')
+
+                self.log.info(f'Rendering "{colors.bold(secret_output_path)}" '
+                              f'for secret "{colors.bold(secret.get("name"))}" '
                               f'for deployment "{colors.blue(deployment)}" ...')
 
-            # Store secret as JSON to create them in the deployment steps
-            Path(secret_output_path.parent).mkdir(parents=True, exist_ok=True)
-            with open(secret_output_path, 'w') as fd:
-                json.dump(globals.get_secrets(), fd)
+                values = {
+                    'secret': secret,
+                    'deployment': deployment.config,
+                }
+
+                secret_output_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(secret_output_path, 'w') as fd:
+                    type = 'generic'  # TODO: Support other types, see "kubectl create secret"
+                    fd.write(env.get_template(f'secrets/{type}.yml').render(**values))
 
         return True

@@ -21,12 +21,11 @@ def get_secrets():
     return __secrets
 
 
-def create__create_secret(delpoyment):
-    def create_secret(name, value):
+def create__create_secret(deployment):
+    def create_secret(name, **data):
         __secrets.append({
             'name': name,
-            'value': value,
-            'deployment': delpoyment.__dict__,
+            'data': data,
         })
         return f'secret_{name}'
     return create_secret
