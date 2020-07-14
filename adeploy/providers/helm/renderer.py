@@ -13,9 +13,10 @@ from .common import helm_repo_add, helm_repo_pull, helm_template
 
 
 class Renderer:
-    def __init__(self, name, src_dir, args, log, **kwargs):
+    def __init__(self, name, src_dir, build_dir, args, log, **kwargs):
         self.name = name
         self.src_dir = src_dir
+        self.build_dir = build_dir
         self.log = log
         self.args = args
 
@@ -107,7 +108,7 @@ class Renderer:
 
         for deployment in deployments:
 
-            output_path = Path(self.args.build_dir) \
+            output_path = Path(self.build_dir) \
                 .joinpath(deployment.namespace) \
                 .joinpath(self.name) \
                 .joinpath(deployment.release)

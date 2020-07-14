@@ -12,11 +12,13 @@ from .common import filters, globals
 
 
 class Renderer:
-    def __init__(self, name, src_dir, args, log, **kwargs):
+    def __init__(self, name, src_dir, build_dir, args, log, **kwargs):
         self.name = name
         self.src_dir = src_dir
+        self.build_dir = build_dir
         self.log = log
         self.args = args
+
         self.defaults_file = kwargs.get('defaults_file')
         self.namespaces_dir = kwargs.get('namespaces_dir')
         self.templates_dir = kwargs.get('templates_dir')
@@ -116,7 +118,7 @@ class Renderer:
                     'default_versions': defaults.get('versions', {}),
                 }
 
-                output_path = Path(self.args.build_dir)\
+                output_path = Path(self.build_dir)\
                     .joinpath(deployment.namespace)\
                     .joinpath(self.name)\
                     .joinpath(deployment.release)\

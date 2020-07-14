@@ -14,7 +14,7 @@ def get_submodules(pkg):
     modules = []
     for module_finder, name, ispkg in pkgutil.iter_modules([os.path.dirname(pkg.__file__)]):
         module = module_finder.find_module(name).load_module(name)
-        class_name = dir(module)[0]
+        class_name = list(filter(lambda m: module.__name__ == m.lower(), dir(module)))[0]
         modules.append((module, class_name))
 
     return modules

@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 from adeploy.common.deployment import get_deployment_name
 from adeploy.common import colors, RenderError
@@ -28,6 +29,7 @@ class Render:
                     renderer = provider.renderer(
                         name=get_deployment_name(src_dir, self.args.deployment_name),
                         src_dir=src_dir,
+                        build_dir=Path(self.args.build_dir).joinpath(self.args.provider),
                         args=self.args,
                         log=self.log,
                         **vars(provider.renderer.get_parser().parse_args(render_args)))

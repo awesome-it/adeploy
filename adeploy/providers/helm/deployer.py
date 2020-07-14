@@ -28,9 +28,10 @@ class Deployer:
 
         return parser
 
-    def __init__(self, name, src_dir, args, log, **kwargs):
+    def __init__(self, name, src_dir, build_dir, args, log, **kwargs):
         self.name = name
         self.src_dir = src_dir
+        self.build_dir = build_dir
         self.log = log
         self.args = args
 
@@ -54,7 +55,7 @@ class Deployer:
             self.log.info(f'Deploying Helm chart "{colors.blue(deployment)}" ...')
 
             try:
-                values_path = Path(self.args.build_dir) \
+                values_path = Path(self.build_dir) \
                     .joinpath(deployment.namespace) \
                     .joinpath(self.name) \
                     .joinpath(deployment.release) \
