@@ -1,4 +1,3 @@
-import json
 import subprocess
 from adeploy.common import run_command, colors, Deployment
 

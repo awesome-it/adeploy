@@ -63,7 +63,7 @@ class Tester:
 
                 is_update = result.first_deployed != result.last_deployed
                 last_update = f', last deployed {colors.bold(result.last_deployed)}' if is_update else ''
-                is_success = result.status == 'pending-upgrade'
+                is_success = result.status == 'pending-upgrade' or result.status == 'pending-install'
 
                 self.log.info(f'... ' 
                               f'Chart version {colors.bold(result.chart_version)}, '

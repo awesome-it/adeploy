@@ -58,7 +58,7 @@ class Renderer:
             if self.repo_url is None:
                 raise RenderError(f'No chart repo URL specified while chart dir is empty. '
                                   f'Please either add a Helm chart to "{colors.bold(self.chart_dir)}" or '
-                                  f'specify a chart repo URL using --repo to download the chart repo.')
+                                  f'specify a chart repo URL using --repo-url to download the chart repo.')
 
             self.log.info(f'Chart directory "{colors.bold(chart_dir)}" is empty, '
                           f'downloading chart repo from {colors.blue(self.repo_url)} ...')
