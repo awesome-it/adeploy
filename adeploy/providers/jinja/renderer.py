@@ -1,3 +1,4 @@
+import json
 import os
 import argparse
 import jinja2
@@ -103,10 +104,14 @@ class Renderer:
 
             # Register globals from common.globals
             for name, func_creator in [f for f in getmembers(globals) if isfunction(f[1])]:
+
+                if '__' not in name:
+                    continue
+
                 self.log.debug(f'Registering global function "{name}" '
                                f'for deployment "{str(deployment)}" '
                                f'from "{getfile(func_creator)}"')
-                env.globals.update({name.replace('create_', ''): func_creator(deployment)})
+                env.globals.update({name.split('__')[1]: func_creator(deployment)})
 
             for template in templates:
                 values = {
@@ -129,7 +134,22 @@ class Renderer:
                               f'for deployment "{colors.blue(deployment)}" ...')
 
                 Path(output_path.parent).mkdir(parents=True, exist_ok=True)
-                with open(output_path, 'w') as output_fd:
-                    output_fd.write(env.get_template(Path(template).name).render(**values))
+                with open(output_path, 'w') as fd:
+                    fd.write(env.get_template(Path(template).name).render(**values))
+
+            secret_output_path = Path(self.build_dir)\
+                .joinpath(deployment.namespace)\
+                .joinpath(self.name)\
+                .joinpath(deployment.release)\
+                .joinpath('__secrets.json')
+
+            for secret in globals.get_secrets():
+                self.log.info(f'Creating secret "{colors.bold(secret.get("name"))}" '
+                              f'for deployment "{colors.blue(deployment)}" ...')
+
+            # Store secret as JSON to create them in the deployment steps
+            Path(secret_output_path.parent).mkdir(parents=True, exist_ok=True)
+            with open(secret_output_path, 'w') as fd:
+                json.dump(globals.get_secrets(), fd)
 
         return True
