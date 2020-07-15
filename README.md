@@ -1,6 +1,12 @@
 # adeploy
 An universal deployment tool for k8s deployments.
 
+## Install
+
+```shell script
+$ pip install [--user] git+ssh://git@git.local.awesome-it.de/tools/atimetracker.git 
+```
+
 ## Usage
 
 Check the help section of `adeploy`:
@@ -59,7 +65,7 @@ If you have a repo with multiple deployments, you can have a separate namespace 
 * Jinja: [README.md](adeploy/providers/jinja/README.md)
 * Helm v3: [README.md](adeploy/providers/helm/README.md)
 
-## Setup
+## Advanced Setup
 ### For development usage
 
 Get the source code:
