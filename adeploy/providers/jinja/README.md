@@ -18,29 +18,7 @@
 
 * A jinja deployment consists of a `templates` folder containing the manifest Jinja templates, 
 * a `default.yml` file i.e. containing versions and
-* a `namespaces` directory containing deployment configuration for different namespaces and releases.
-
-### Deployment Configurations
-
-A deployment configuration is a file in the appropriate namespace folder with release name as filename:
-
-```
-/mydeployment/namespaces/<namespace>/<release>.yml
-```
-
-#### Alternative Namespace Structure
-
-If you have a repo with multiple deployments, you can have a separate namespace folder i.e:
-
-```
-/repo/deployment-1
-/repo/deployment-2
-/repo/deployment-3
-...
-/repo/namespaces/<namespace>/deployment-1/<release>.yml
-/repo/namespaces/<namespace>/deployment-2/<release>.yml
-/repo/namespaces/<namespace>/deployment-3/<release>.yml
-```
+* a `namespaces` directory containing [deployment configuration for different namespaces and releases](../../README.md#Deployment Configurations).
 
 ### Templates
 

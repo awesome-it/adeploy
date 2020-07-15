@@ -32,6 +32,28 @@ Deploy the manifests to the active cluster
 $ adeploy -p <provider> src_dir [src_dir ...]
 ```
 
+## Deployment Configurations
+
+A deployment configuration is a file in the appropriate namespace folder with release name as filename:
+
+```
+/mydeployment/namespaces/<namespace>/<release>.yml
+```
+
+### Alternative Namespace Structure
+
+If you have a repo with multiple deployments, you can have a separate namespace folder i.e:
+
+```
+/repo/deployment-1
+/repo/deployment-2
+/repo/deployment-3
+...
+/repo/namespaces/<namespace>/deployment-1/<release>.yml
+/repo/namespaces/<namespace>/deployment-2/<release>.yml
+/repo/namespaces/<namespace>/deployment-3/<release>.yml
+```
+
 ## Providers
 
 * Jinja: [README.md](adeploy/providers/jinja/README.md)
