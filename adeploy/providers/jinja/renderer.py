@@ -1,15 +1,12 @@
-import json
 import os
 import argparse
-import jinja2
 import glob
 
-from inspect import getmembers, isfunction, getfile
 from pathlib import Path
 from adeploy.common import colors, RenderError, load_defaults
 from adeploy.common.deployment import load_deployments
 
-from .common import filters, globals
+from adeploy.common.jinja import globals, env as jinja_env
 
 
 class Renderer:
@@ -84,35 +81,13 @@ class Renderer:
             deployment_name=self.name,
             defaults=defaults)
 
-        jinja_pathes = [str(Path(__file__).parent.joinpath('templates')), '.', '..', template_dir, str(Path(template_dir).parent), str(Path(template_dir).parent.parent)]
-        print(jinja_pathes)
+        jinja_pathes = ['.', '..', template_dir, str(Path(template_dir).parent), str(Path(template_dir).parent.parent)]
         self.log.debug(f'Using Jinja file system loader with pathes: {", ".join(jinja_pathes)}')
-
-        env = jinja2.Environment(
-            # This is to load macros from template dir and the parent dir
-            loader=jinja2.FileSystemLoader(jinja_pathes),
-            autoescape=jinja2.select_autoescape(['json']),
-            # Add support for expressions statements, see https://stackoverflow.com/a/39858522/381166
-            extensions=['jinja2.ext.do'],
-        )
-
-        # Register filters from common.filters
-        for name, func in [f for f in getmembers(filters) if isfunction(f[1])]:
-            self.log.debug(f'Registering filter "{name}" from "{getfile(func)}"')
-            env.filters[name] = func
+        env = jinja_env.create(jinja_pathes, self.log)
 
         for deployment in deployments:
 
-            # Register globals from common.globals
-            for name, func_creator in [f for f in getmembers(globals) if isfunction(f[1])]:
-
-                if '__' not in name:
-                    continue
-
-                self.log.debug(f'Registering global function "{name}" '
-                               f'for deployment "{str(deployment)}" '
-                               f'from "{getfile(func_creator)}"')
-                env.globals.update({name.split('__')[1]: func_creator(deployment)})
+            jinja_env.register_globals(env, deployment, self.log)
 
             for template in templates:
                 values = {
@@ -144,20 +119,12 @@ class Renderer:
                     .joinpath(self.name) \
                     .joinpath(deployment.release) \
                     .joinpath('secrets') \
-                    .joinpath(secret.get('name') + '.yml')
+                    .joinpath(secret.name + '.yml')
 
                 self.log.info(f'Rendering "{colors.bold(secret_output_path)}" '
-                              f'for secret "{colors.bold(secret.get("name"))}" '
+                              f'for secret "{colors.bold(secret.name)}" '
                               f'for deployment "{colors.blue(deployment)}" ...')
 
-                values = {
-                    'secret': secret,
-                    'deployment': deployment.config,
-                }
-
-                secret_output_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(secret_output_path, 'w') as fd:
-                    type = 'generic'  # TODO: Support other types, see "kubectl create secret"
-                    fd.write(env.get_template(f'secrets/{type}.yml').render(**values))
+                secret.render(secret_output_path)
 
         return True
