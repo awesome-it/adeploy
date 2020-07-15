@@ -7,11 +7,11 @@ from tempfile import TemporaryDirectory
 
 import yaml
 
-from adeploy.common import colors, RenderError, Provider
-from .common import helm_repo_add, helm_repo_pull, helm_template
+from adeploy.common import colors, RenderError
+from .common import helm_repo_add, helm_repo_pull, helm_template, HelmProvider
 
 
-class Renderer(Provider):
+class Renderer(HelmProvider):
 
     chart_dir: str = None
     repo_url: str = None
@@ -33,50 +33,68 @@ class Renderer(Provider):
         self.chart_dir = args.get('chart_dir')
         self.repo_url = args.get('repo_url', None)
 
-    def load_chart(self):
+    def build_chart(self):
 
-        chart_dir = self.chart_dir
-        if not os.path.isabs(chart_dir):
-            chart_dir = f'{self.src_dir}/{chart_dir}'
+        chart_dir = Path(self.chart_dir)
 
-        if not os.path.exists(chart_dir) or not os.listdir(chart_dir):
+        if not chart_dir.is_absolute():
+            chart_dir = self.src_dir.joinpath(chart_dir)
 
-            if self.repo_url is None:
-                raise RenderError(f'No chart repo URL specified while chart dir is empty. '
-                                  f'Please either add a Helm chart to "{colors.bold(self.chart_dir)}" or '
-                                  f'specify a chart repo URL using --repo-url to download the chart repo.')
+        chart_build_dir = self.get_chart_dir()
 
-            self.log.info(f'Chart directory "{colors.bold(chart_dir)}" is empty, '
-                          f'downloading chart repo from {colors.blue(self.repo_url)} ...')
+        try:
 
-            repo = f'repo_{self.name}'
+            # Chart dir exists, copy to build dir
+            if chart_dir.is_dir() and os.listdir(chart_dir):
 
-            try:
-                self.log.debug(helm_repo_add(self.log, repo, self.repo_url).stdout.strip())
-            except CalledProcessError as e:
-                raise RenderError(f'Error while adding helm repo {self.repo_url}: {e.stderr}')
+                if chart_build_dir.exists():
+                    shutil.rmtree(chart_build_dir)
 
-            try:
-                if os.path.exists(chart_dir):
-                    os.rmdir(chart_dir)
+                self.log.info(f'Using chart in "{colors.bold(chart_dir)} ...')
+                shutil.copytree(chart_dir, chart_build_dir)
 
-                temp = TemporaryDirectory()
-                self.log.debug(helm_repo_pull(self.log, repo, self.name, temp.name).stdout.strip())
-                shutil.move(f'{temp.name}/{self.name}', chart_dir)
+            else:
 
-            except CalledProcessError as e:
-                raise RenderError(f'Error while adding helm repo {self.repo_url}: {e.stderr}')
+                if self.repo_url is None:
 
-            except shutil.Error as e:
-                raise RenderError(f'Error while creating chart dir "{chart_dir}": {e.strerror}')
+                    if chart_build_dir.is_dir() and os.listdir(chart_build_dir):
+                        self.log.info(f'Re-using previously downlaoded chart from "{colors.bold(chart_build_dir)}". '
+                                      f'Pass --repo-url to force re-downloaded the chart.')
+                        return
 
-        return chart_dir
+                    raise RenderError(f'No chart repo URL specified while chart dir is empty. '
+                                      f'Please either add a Helm chart to "{colors.bold(self.chart_dir)}" or '
+                                      f'specify a chart repo URL using --repo-url to download the chart repo.')
+
+                self.log.info(f'Chart directory "{colors.bold(chart_dir)}" is empty, '
+                              f'downloading chart repo from {colors.blue(self.repo_url)} ...')
+
+                if chart_build_dir.exists():
+                    shutil.rmtree(chart_build_dir)
+
+                repo = f'repo_{self.name}'
+
+                try:
+                    self.log.debug(helm_repo_add(self.log, repo, self.repo_url).stdout.strip())
+                except CalledProcessError as e:
+                    raise RenderError(f'Error while adding helm repo {self.repo_url}: {e.stderr}')
+
+                try:
+
+                    temp = TemporaryDirectory()
+                    self.log.debug(helm_repo_pull(self.log, repo, self.name, temp.name).stdout.strip())
+                    shutil.move(f'{temp.name}/{self.name}', chart_build_dir)
+
+                except CalledProcessError as e:
+                    raise RenderError(f'Error while adding helm repo {self.repo_url}: {e.stderr}')
+
+        except shutil.Error as e:
+            raise RenderError(f'Error while creating chart build dir "{chart_build_dir}": {e.strerror}')
 
     def run(self):
 
         self.log.debug(f'Working on deployment "{self.name}" ...')
-
-        chart_dir = self.load_chart()
+        self.build_chart()
 
         for deployment in self.load_deployments():
 
@@ -96,7 +114,7 @@ class Renderer(Provider):
                 with open(values_path, 'w') as fd:
                     yaml.dump(deployment.config, fd)
 
-                output = helm_template(self.log, deployment, chart_dir, values_path)
+                output = helm_template(self.log, deployment, self.get_chart_dir(), values_path)
                 with open(f'{output_path}/manifest.yml', 'w') as fd:
                     fd.write(output.stdout)
 

@@ -39,6 +39,8 @@ def get_providers() -> dict:
 
 
 def run_command(log, cmd) -> subprocess.CompletedProcess:
+    # Convert possible Pathes to strings
+    cmd = [str(c) for c in cmd]
     log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
     result = subprocess.run(cmd, capture_output=True, text=True)
     result.check_returncode()

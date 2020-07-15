@@ -38,7 +38,7 @@ class Provider(ABC):
         pass
 
     @staticmethod
-    def get_absolute(base_dir: Path, path) -> Path:
+    def get_absolute(base_dir: Path, path: str) -> Path:
         return Path(path if os.path.isabs(path) else base_dir.joinpath(path))
 
     def get_defaults(self) -> dict:

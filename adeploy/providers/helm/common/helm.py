@@ -3,12 +3,12 @@ from adeploy.common import run_command, colors, Deployment
 
 
 def helm_repo_add(log, repo, url):
-    log.info(f'Adding helm repo "{colors.bold(repo)}" from {colors.blue(url)} ...')
+    log.debug(f'Adding helm repo "{colors.bold(repo)}" from {colors.blue(url)} ...')
     return helm(log, ['repo', 'add', repo, url])
 
 
 def helm_repo_pull(log, repo, name, dest):
-    log.info(f'Pulling chart "{colors.bold(name)}" from helm repo {colors.bold(repo)} to "{colors.bold(dest)}" ...')
+    log.debug(f'Pulling chart "{colors.bold(name)}" from helm repo {colors.bold(repo)} to "{colors.bold(dest)}" ...')
     return helm(log, ['pull', f'{repo}/{name}', '--untar', '--untardir', dest])
 
 

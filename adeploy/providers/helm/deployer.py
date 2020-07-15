@@ -2,27 +2,21 @@ import argparse
 from pathlib import Path
 from subprocess import CalledProcessError
 
-from adeploy.common import colors, DeployError, Provider
-from adeploy.providers.helm.common import helm_install, HelmOutput
+from adeploy.common import colors, DeployError
+from adeploy.providers.helm.common import helm_install, HelmOutput, HelmProvider
 
 
-class Deployer(Provider):
-
-    chart_dir: str = None
+class Deployer(HelmProvider):
 
     @staticmethod
     def get_parser():
         parser = argparse.ArgumentParser(description='Helm v3 renderer for k8s manifests',
                                          usage=argparse.SUPPRESS)
 
-        parser.add_argument('-c', '--chart', dest='chart_dir', default='chart',
-                            help='Directory containing the Helm chart to deploy. If no chart is available'
-                                 'you can specify a repo URL using "--repo" to download the chart')
-
         return parser
 
     def parse_args(self, args: dict):
-        self.chart_dir = args.get('chart_dir')
+        return
 
     def run(self):
 
@@ -40,7 +34,7 @@ class Deployer(Provider):
                     .joinpath(f'values.yml')
 
                 result = HelmOutput(
-                    helm_install(self.log, deployment, self.chart_dir, str(values_path), dry_run=False).stdout)
+                    helm_install(self.log, deployment, self.get_chart_dir(), str(values_path), dry_run=False).stdout)
 
                 is_update = result.first_deployed != result.last_deployed
                 last_update = f', last deployed {colors.bold(result.last_deployed)}' if is_update else ''
