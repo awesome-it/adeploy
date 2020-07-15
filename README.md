@@ -4,7 +4,7 @@ An universal deployment tool for k8s deployments.
 ## Install
 
 ```shell script
-$ pip install [--user] git+ssh://git@git.local.awesome-it.de/tools/atimetracker.git 
+$ pip install [--user] git+ssh://git@git.local.awesome-it.de/awesome/tools/adeploy.git 
 ```
 
 ## Usage
@@ -71,7 +71,7 @@ If you have a repo with multiple deployments, you can have a separate namespace 
 Get the source code:
 
 ```bash
-$ git clone https://gitlab.awesome-it.de/tools/adeploy.git ~/path/to/@NAME@
+$ git clone https://gitlab.awesome-it.de/awesome/tools/adeploy.git ~/path/to/@NAME@
 ```
 Setup a virtualenv using `Python3` and activate it:
 
@@ -129,5 +129,5 @@ $ adeploy --help
 # beware of the / instead of the : in the URL!
 $ pip install git+ssh://git@git.local.awesome-it.de/tools/adeploy.git
 # or if you prefer https over ssh
-$ pip install git+https://gitlab.awesome-it.de/tools/adeploy.git
+$ pip install git+https://gitlab.awesome-it.de/awesome/tools/adeploy.git
 ```
