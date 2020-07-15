@@ -29,7 +29,7 @@ $ adeploy -p <provider> test src_dir [src_dir ...]
 #### Deploy
 Deploy the manifests to the active cluster
 ```bash
-$ adeploy -p <provider> src_dir [src_dir ...]
+$ adeploy -p <provider> deploy src_dir [src_dir ...]
 ```
 
 ## Deployment Configurations
