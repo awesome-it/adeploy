@@ -69,7 +69,7 @@ def main():
 def setup_parser():
     parser = argparse.ArgumentParser(description='An awesome universal deployment tool for k8s',
                                      usage=colors.bold(
-                                         f'adeploy -p {colors.blue("provider")} {colors.gray("[optional args ...]")} {colors.blue("build-step")} {colors.gray("[optional build args ...]")} {colors.blue("src_dir")} [{colors.blue("src_dir")} ...]'))
+                                         f'adeploy -p {colors.blue("provider")} [optional args ...] {colors.blue("build-step")} [optional build args ...] {colors.blue("src_dir")} [{colors.blue("src_dir")} ...]'))
 
     parser.add_argument('-l', '--log', dest='logfile', help='Path to logfile')
 
