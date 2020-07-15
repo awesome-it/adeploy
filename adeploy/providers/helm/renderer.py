@@ -7,46 +7,31 @@ from tempfile import TemporaryDirectory
 
 import yaml
 
-from adeploy.common import colors, RenderError, load_defaults
-from adeploy.common.deployment import Deployment, get_deployment_name, load_deployments
+from adeploy.common import colors, RenderError, Provider
 from .common import helm_repo_add, helm_repo_pull, helm_template
 
 
-class Renderer:
-    def __init__(self, name, src_dir, build_dir, args, log, **kwargs):
-        self.name = name
-        self.src_dir = src_dir
-        self.build_dir = build_dir
-        self.log = log
-        self.args = args
+class Renderer(Provider):
 
-        self.defaults_file = kwargs.get('defaults_file')
-        self.namespaces_dir = kwargs.get('namespaces_dir')
-        self.chart_dir = kwargs.get('chart_dir')
-        self.repo_url = kwargs.get('repo_url', None)
-        self.filters_namespace = kwargs.get('filters_namespace')
-        self.filters_release = kwargs.get('filters_release')
+    chart_dir: str = None
+    repo_url: str = None
 
     @staticmethod
     def get_parser():
         parser = argparse.ArgumentParser(description='Helm v3 renderer for k8s manifests',
                                          usage=argparse.SUPPRESS)
 
-        parser.add_argument('--defaults', dest='defaults_file', default='defaults.yml',
-                            help='YML file with default variables. Relative to the source dir.')
-        parser.add_argument('--namespaces', dest='namespaces_dir', default='namespaces',
-                            help='Directory containing namespaces and variables for deployments')
-        parser.add_argument('--chart', dest='chart_dir', default='chart',
+        parser.add_argument('-c', '--chart', dest='chart_dir', default='chart',
                             help='Directory containing the Helm chart to deploy. If no chart is available'
                                  'you can specify a repo URL using "--repo" to download the chart')
+
         parser.add_argument('--repo-url', dest='repo_url', help='Helm repo URL to download chart if chart dir is empty')
-        parser.add_argument('-n', '--namespace', dest='filters_namespace', nargs='*',
-                            help='Only include specified namespace. Argument can be specified multiple times.')
-        parser.add_argument('-r', '--release', dest='filters_release', nargs='*',
-                            help='Only include specified deployment release i.e. "prod", "testing". '
-                                 'Argument can be specified multiple times.')
 
         return parser
+
+    def parse_args(self, args: dict):
+        self.chart_dir = args.get('chart_dir')
+        self.repo_url = args.get('repo_url', None)
 
     def load_chart(self):
 
@@ -93,20 +78,7 @@ class Renderer:
 
         chart_dir = self.load_chart()
 
-        defaults = load_defaults(
-            log=self.log,
-            src_dir=self.src_dir,
-            defaults_file=self.defaults_file
-        )
-
-        deployments = load_deployments(
-            log=self.log,
-            src_dir=self.src_dir,
-            namespaces_dir=self.namespaces_dir,
-            deployment_name=self.name,
-            defaults=defaults)
-
-        for deployment in deployments:
+        for deployment in self.load_deployments():
 
             output_path = Path(self.build_dir) \
                 .joinpath(deployment.namespace) \

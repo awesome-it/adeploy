@@ -3,41 +3,31 @@ import argparse
 import glob
 
 from pathlib import Path
-from adeploy.common import colors, RenderError, load_defaults
-from adeploy.common.deployment import load_deployments
-
+from adeploy.common import colors, RenderError, Provider
 from adeploy.common.jinja import globals, env as jinja_env
 
 
-class Renderer:
-    def __init__(self, name, src_dir, build_dir, args, log, **kwargs):
-        self.name = name
-        self.src_dir = src_dir
-        self.build_dir = build_dir
-        self.log = log
-        self.args = args
+class Renderer(Provider):
 
-        self.defaults_file = kwargs.get('defaults_file')
-        self.namespaces_dir = kwargs.get('namespaces_dir')
-        self.templates_dir = kwargs.get('templates_dir')
-        self.macros_dirs = kwargs.get('macros_dirs')
+    templates_dir: str = None
+    macros_dirs: str = None
 
     @staticmethod
     def get_parser():
         parser = argparse.ArgumentParser(description='Jinja renderer for k8s manifests written in Jinja',
                                          usage=argparse.SUPPRESS)
 
-        parser.add_argument('--defaults', dest='defaults_file', default='defaults.yml',
-                            help='YML file with default variables. Relative to the source dir.')
-        parser.add_argument('--namespaces', dest='namespaces_dir', default='namespaces',
-                            help='Directory containing namespaces and variables for deployments')
         parser.add_argument("--templates", dest="templates_dir", default='templates',
                             help='Directory containing Jinja flavored templates')
+
         parser.add_argument("--macros", dest='macros_dirs', nargs='+',
                             help='Directory containing Jinja macros to use. Can be specified mutliple times.'
                                  'By default, macros are loaded from the template dir and its parent dir')
-
         return parser
+
+    def parse_args(self, args):
+        self.templates_dir = args.get('templates_dir')
+        self.macros_dirs = args.get('macros_dirs')
 
     def load_templates(self, extensions=None):
 
@@ -68,24 +58,11 @@ class Renderer:
 
         template_dir, templates = self.load_templates()
 
-        defaults = load_defaults(
-            log=self.log,
-            src_dir=self.src_dir,
-            defaults_file=self.defaults_file
-        )
-
-        deployments = load_deployments(
-            log=self.log,
-            src_dir=self.src_dir,
-            namespaces_dir=self.namespaces_dir,
-            deployment_name=self.name,
-            defaults=defaults)
-
         jinja_pathes = ['.', '..', template_dir, str(Path(template_dir).parent), str(Path(template_dir).parent.parent)]
         self.log.debug(f'Using Jinja file system loader with pathes: {", ".join(jinja_pathes)}')
         env = jinja_env.create(jinja_pathes, self.log)
 
-        for deployment in deployments:
+        for deployment in self.load_deployments():
 
             jinja_env.register_globals(env, deployment, self.log)
 
@@ -95,8 +72,10 @@ class Renderer:
                     'release': deployment.release.replace('.', '-'),
                     'namespace': deployment.namespace,
                     'deployment': deployment.config,
+
+                    # Some legacy variables
                     'node_selector': deployment.config.get('node', {}),
-                    'default_versions': defaults.get('versions', {}),
+                    'default_versions': deployment.config.get('versions', {}),
                 }
 
                 output_path = Path(self.build_dir) \

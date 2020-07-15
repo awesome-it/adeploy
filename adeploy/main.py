@@ -68,21 +68,42 @@ def main():
 
 def setup_parser():
     parser = argparse.ArgumentParser(description='An awesome universal deployment tool for k8s',
-                                     usage=colors.bold(f'adeploy -p {colors.blue("provider")} {colors.gray("[optional args ...]")} {colors.blue("build-step")} {colors.gray("[optional build args ...]")} {colors.blue("src_dir")} [{colors.blue("src_dir")} ...]'))
+                                     usage=colors.bold(
+                                         f'adeploy -p {colors.blue("provider")} {colors.gray("[optional args ...]")} {colors.blue("build-step")} {colors.gray("[optional build args ...]")} {colors.blue("src_dir")} [{colors.blue("src_dir")} ...]'))
 
     parser.add_argument('-l', '--log', dest='logfile', help='Path to logfile')
+
     parser.add_argument('-d', '--debug', action='store_true')
+
     parser.add_argument('-s', '--skip-colors', dest='skip_colors', action='store_true')
-    parser.add_argument("-p", "--provider", dest="provider",
-                        help="The provider to use, type --providers to get a list of supported providers.",
+
+    parser.add_argument('-p', '--provider', dest='provider',
+                        help='The provider to use, type --providers to get a list of supported providers.',
                         required='--providers' not in sys.argv and '--version' not in sys.argv)
-    parser.add_argument("--providers", dest="list_providers", action="store_true",
-                        help="A list of supported providers")
-    parser.add_argument('--version', action='store_true', help='Print version and exit')
-    parser.add_argument('--name', dest="deployment_name", default=None,
+
+    parser.add_argument('--providers', dest='list_providers', action='store_true',
+                        help='A list of supported providers')
+
+    parser.add_argument('-n', '--name', dest="deployment_name", default=None,
                         help='Specify a deployment name. This will overwrite deployment name derived from repo dir')
+
     parser.add_argument('--build-dir', dest='build_dir',
                         help='Build directory for output', default='./build', metavar='build_dir')
+
+    parser.add_argument('--defaults', dest='defaults_file', default='defaults.yml',
+                        help='YML file with default variables. Relative to source dirs.')
+
+    parser.add_argument('--filter-namespace', dest='filters_namespace', nargs='*',
+                        help='Only include specified namespace. Argument can be specified multiple times.')
+
+    parser.add_argument('--filter-release', dest='filters_release', nargs='*',
+                        help='Only include specified deployment release i.e. "prod", "testing". '
+                             'Argument can be specified multiple times.')
+
+    parser.add_argument('--namespaces', dest='namespaces_dir', default='namespaces',
+                        help='Directory containing namespaces and variables for deployments')
+
+    parser.add_argument('--version', action='store_true', help='Print version and exit')
 
     subparsers = parser.add_subparsers(title=f'Available build steps', metavar=colors.bold('build-steps'))
 
