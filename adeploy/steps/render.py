@@ -30,7 +30,7 @@ class Render:
                         src_dir=src_dir,
                         build_dir=Path(self.args.build_dir).joinpath(self.args.provider),
                         namespaces_dir=self.args.namespaces_dir,
-                        defaults_file=self.args.defaults_file,
+                        defaults_path=self.args.defaults_path,
                         args=self.args,
                         log=self.log,
                         **vars(provider.renderer.get_parser().parse_args(render_args)))

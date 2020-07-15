@@ -69,7 +69,9 @@ def main():
 def setup_parser():
     parser = argparse.ArgumentParser(description='An awesome universal deployment tool for k8s',
                                      usage=colors.bold(
-                                         f'adeploy -p {colors.blue("provider")} {colors.gray("[optional args ...]")} {colors.blue("build-step")} {colors.gray("[optional build args ...]")} {colors.blue("src_dir")} [{colors.blue("src_dir")} ...]'))
+                                         f'adeploy -p {colors.blue("provider")} {colors.gray("[optional args ...]")} '
+                                         f'{colors.blue("build-step")} {colors.gray("[optional build args ...]")} '
+                                         f'{colors.blue("src_dir")} [{colors.blue("src_dir")} ...]'))
 
     parser.add_argument('-l', '--log', dest='logfile', help='Path to logfile')
 
@@ -90,8 +92,9 @@ def setup_parser():
     parser.add_argument('--build-dir', dest='build_dir',
                         help='Build directory for output', default='./build', metavar='build_dir')
 
-    parser.add_argument('--defaults', dest='defaults_file', default='defaults.yml',
-                        help='YML file with default variables. Relative to source dirs.')
+    parser.add_argument('--defaults', dest='defaults_path', default='defaults.yml',
+                        help='YML file or directory containing <deployment_name>.yml with default variables. '
+                             'Relative to source dirs.')
 
     parser.add_argument('--filter-namespace', dest='filters_namespace', nargs='*',
                         help='Only include specified namespace. Argument can be specified multiple times.')

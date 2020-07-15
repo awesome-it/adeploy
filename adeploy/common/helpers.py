@@ -45,27 +45,6 @@ def run_command(log, cmd) -> subprocess.CompletedProcess:
     return result
 
 
-def load_defaults(log, src_dir, defaults_file):
-
-    if not os.path.isabs(defaults_file):
-        defaults_file = f'{src_dir}/{defaults_file}'
-
-    if not os.path.exists(defaults_file):
-
-        defaults_file_yaml = defaults_file.replace('yml', 'yaml')
-        defaults_file_yml = defaults_file.replace('yaml', 'yml')
-
-        if os.path.exists(defaults_file_yaml):
-            log.warning(f'Using "{defaults_file_yaml}" instead of "{defaults_file} ...')
-            defaults_file = defaults_file_yaml
-        elif os.path.exists(defaults_file_yml):
-            log.warning(f'Using "{defaults_file_yml}" instead of "{defaults_file} ...')
-            defaults_file = defaults_file_yml
-
-    log.debug(f'Loading defaults from "{defaults_file}" ...')
-    return yaml.load(open(defaults_file), Loader=yaml.FullLoader)
-
-
 def dict_update_recursive(d: dict, u: dict) -> dict:
     for k, v in u.items():
         if isinstance(v, collections.abc.Mapping):

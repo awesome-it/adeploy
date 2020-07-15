@@ -84,9 +84,9 @@ class Renderer(Provider):
                     .joinpath(deployment.release) \
                     .joinpath(Path(template).name)
 
-                self.log.info(f'Rendering "{colors.bold(output_path)}" '
+                self.log.info(f'Rendering deployment "{colors.blue(deployment)}" '
                               f'from "{colors.bold(template)}" '
-                              f'for deployment "{colors.blue(deployment)}" ...')
+                              f'in "{colors.bold(output_path)}" ...')
 
                 output_path.parent.mkdir(parents=True, exist_ok=True)
                 with open(output_path, 'w') as fd:
@@ -100,9 +100,8 @@ class Renderer(Provider):
                     .joinpath('secrets') \
                     .joinpath(secret.name + '.yml')
 
-                self.log.info(f'Rendering "{colors.bold(secret_output_path)}" '
-                              f'for secret "{colors.bold(secret.name)}" '
-                              f'for deployment "{colors.blue(deployment)}" ...')
+                self.log.info(f'Rendering secret "{colors.bold(secret.name)}" '
+                              f'in "{colors.bold(secret_output_path)}" ...')
 
                 secret.render(secret_output_path)
 
