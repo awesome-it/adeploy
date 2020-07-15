@@ -83,7 +83,7 @@ $ cd ~/path/to/adeploy
 $ virtualenv -p python3 env3
 $ source env3/bin/activate
 (adeploy)$ 
-`````
+```
 
 Install requirements:
 
