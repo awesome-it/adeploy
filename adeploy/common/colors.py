@@ -25,7 +25,8 @@ def orange(text):
 
 
 def gray(text):
-    return f'{Fore.BLACK}{text}{Fore.RESET}' if not _skip_colors else text
+    # Fore.Gray is not readable in some terminals.
+    return f'{Fore.RESET}{text}' if not _skip_colors else text
 
 
 def bold(text):
