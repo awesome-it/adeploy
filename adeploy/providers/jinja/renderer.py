@@ -1,8 +1,12 @@
+import json
 import os
 import argparse
 import glob
 
 from pathlib import Path
+
+import jinja2
+
 from adeploy.common import colors, RenderError, Provider
 from adeploy.common.jinja import globals, env as jinja_env
 
@@ -56,6 +60,7 @@ class Renderer(Provider):
 
         self.log.debug(f'Working on deployment "{self.name}" ...')
 
+
         template_dir, templates = self.load_templates()
 
         jinja_pathes = ['.', '..', template_dir, str(Path(template_dir).parent), str(Path(template_dir).parent.parent)]
@@ -88,9 +93,14 @@ class Renderer(Provider):
                               f'from "{colors.bold(template)}" '
                               f'in "{colors.bold(output_path)}" ...')
 
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(output_path, 'w') as fd:
-                    fd.write(env.get_template(Path(template).name).render(**values))
+                try:
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    with open(output_path, 'w') as fd:
+                        fd.write(env.get_template(Path(template).name).render(**values))
+
+                except jinja2.exceptions.TemplateError as e:
+                    self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
+                    raise RenderError(f'Jinja template error in "{colors.bold(template)}": {e}')
 
             for secret in globals.get_secrets():
                 secret_output_path = Path(self.build_dir) \
