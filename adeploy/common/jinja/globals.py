@@ -1,4 +1,4 @@
-from adeploy.common.secret import *
+from adeploy.common.secret import Secret, GenericSecret, TlsSecret, DockerRegistrySecret
 from typing import List
 
 

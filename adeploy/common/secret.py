@@ -1,22 +1,21 @@
 from pathlib import Path
 
-from adeploy.common import Deployment
-from adeploy.common.jinja.env import create, register_globals
+from adeploy.common.jinja import env as jinja_env
 
 
 class Secret:
     type: str = None
     name: str = None
-    deployment: Deployment = None
+    deployment = None
 
-    def __init__(self, name: str, deployment: Deployment):
+    def __init__(self, name: str, deployment):
         self.name = name
         self.deployment = deployment
 
     def render(self, path: Path):
 
-        env = create([Path(__file__).parent.joinpath('jinja/templates/secrets')])
-        register_globals(env, self.deployment)
+        env = jinja_env.create([Path(__file__).parent.joinpath('jinja/templates/secrets')])
+        jinja_env.register_globals(env, self.deployment)
 
         values = {
             'secret': self.__dict__,
@@ -32,7 +31,7 @@ class GenericSecret(Secret):
     type: str = "generic"
     data: dict = None
 
-    def __init__(self, name: str, deployment: Deployment, data: dict):
+    def __init__(self, name: str, deployment, data: dict):
         super().__init__(name, deployment)
         self.data = data
 
@@ -42,7 +41,7 @@ class TlsSecret(Secret):
     cert_data: str = None
     key_data: str = None
 
-    def __init__(self, name: str, deployment: Deployment, cert_data: str, key_data: str):
+    def __init__(self, name: str, deployment, cert_data: str, key_data: str):
         super().__init__(name, deployment)
         self.cert_data = cert_data
         self.key_data = key_data
@@ -55,7 +54,7 @@ class DockerRegistrySecret(Secret):
     password: str = None
     email: str = None
 
-    def __init__(self, name: str, deployment: Deployment, server: str, username: str, password: str, email: str = None):
+    def __init__(self, name: str, deployment, server: str, username: str, password: str, email: str = None):
         super().__init__(name, deployment)
         self.server = server
         self.username = username

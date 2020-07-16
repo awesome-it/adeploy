@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 
 from adeploy.common import Deployment, colors
+from adeploy.common.jinja import env as jinja_env
 
 
 class Provider(ABC):
@@ -41,17 +42,6 @@ class Provider(ABC):
     def get_absolute(base_dir: Path, path: str) -> Path:
         return Path(path if os.path.isabs(path) else base_dir.joinpath(path))
 
-    def get_defaults(self) -> dict:
-
-        defaults_file = self.get_defaults_file()
-
-        if not defaults_file:
-            self.log.warning(f'Not using defaults, continue ...')
-            return {}
-
-        self.log.info(f'Using defaults from "{colors.bold(defaults_file)}" ...')
-        return yaml.load(open(str(defaults_file)), Loader=yaml.FullLoader)
-
     def get_defaults_file(self) -> Path:
 
         if self.defaults_path.exists():
@@ -77,8 +67,6 @@ class Provider(ABC):
 
     def load_deployments(self):
 
-        defaults = self.get_defaults()
-
         filters_namespace = self.args.filters_namespace
         filter_release = self.args.filters_release
 
@@ -99,8 +87,8 @@ class Provider(ABC):
                 deployment_dir = self.namespaces_dir.joinpath(ns)
 
             for ext in self.extensions:
-                for deployment_release_config in glob.glob(f'{deployment_dir}/*.{ext}'):
-                    deployment_release = Path(deployment_release_config).stem
+                for deployment_release_config in [Path(p) for p in glob.glob(f'{deployment_dir}/*.{ext}')]:
+                    deployment_release = deployment_release_config.stem
                     deployment = Deployment(self.name, deployment_release, ns)
 
                     if (filters_namespace and deployment.namespace not in filters_namespace) or \
@@ -110,7 +98,7 @@ class Provider(ABC):
 
                     self.log.debug(f'Found deployment "{colors.blue(deployment)}", namespace "{colors.bold(ns)}" ...')
 
-                    deployment.load_config(deployment_release_config, defaults=defaults)
+                    deployment.load_config(deployment_release_config, self.get_defaults_file(), self.log)
                     self.log.debug(f'Using config from "{colors.bold(deployment_release_config)}" ...')
 
                     deployments.append(deployment)
