@@ -102,17 +102,4 @@ class Renderer(Provider):
                     self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
                     raise RenderError(f'Jinja template error in "{colors.bold(template)}": {e}')
 
-            for secret in globals.get_secrets():
-                secret_output_path = Path(self.build_dir) \
-                    .joinpath(deployment.namespace) \
-                    .joinpath(self.name) \
-                    .joinpath(deployment.release) \
-                    .joinpath('secrets') \
-                    .joinpath(secret.name + '.yml')
-
-                self.log.info(f'Rendering secret "{colors.bold(secret.name)}" '
-                              f'in "{colors.bold(secret_output_path)}" ...')
-
-                secret.render(secret_output_path)
-
         return True

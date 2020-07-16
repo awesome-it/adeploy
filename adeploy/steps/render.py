@@ -43,6 +43,9 @@ class Render:
 
                     renderer.run()
 
+                    # Render secrets
+
+
                 except RenderError as e:
                     self.log.error(colors.red(f'Render error in source directory "{src_dir}":'))
                     self.log.error(colors.red_bold(str(e)))

@@ -9,7 +9,7 @@ from . import globals
 from . import filters
 
 
-def create(pathes: List[str or Path] = None, log: Logger = None) -> jinja2.Environment:
+def create(pathes: List[str or Path] = None, log: Logger = None, deployment = None) -> jinja2.Environment:
     env = jinja2.Environment(
         # This is to load macros from template dir and the parent dir
         loader=jinja2.FileSystemLoader([str(p) for p in pathes]),
@@ -23,6 +23,9 @@ def create(pathes: List[str or Path] = None, log: Logger = None) -> jinja2.Envir
         if log:
             log.debug(f'Registering filter "{name}" from "{getfile(func)}"')
         env.filters[name] = func
+
+    if deployment:
+        register_globals(env, deployment, log)
 
     return env
 

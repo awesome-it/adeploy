@@ -70,6 +70,27 @@ Or if you have multiple deployments in a `defaults` folder:
 /repo/defaults/<deployment_name>.yml
 ```
 
+## Secrets
+
+Currently there are a few helpers in `common/secrets.py`, which can be used for implicit secret creation e.g:
+
+```jinja2
+myjinjatemplate:
+  config:
+    secretName: {{ create_secret(secret_name, my_key=my_secret) }}
+    secretKey: my_key
+```
+
+The Jinja global function `create_secret()` will create the appropriate secret and return the secret name so it can 
+be used in your YAML i.e. Jinja template or deployment configuration.
+
+Additional there is `create_tls_secret()` and `create_docker_registry_secret()` to create the appropriate secret variants.
+
+### Future Roadmap
+
+Implement `sealed-secrets` https://github.com/bitnami-labs/sealed-secrets.
+
+
 ## Providers
 
 * Jinja: [README.md](adeploy/providers/jinja/README.md)

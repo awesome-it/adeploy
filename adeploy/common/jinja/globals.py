@@ -1,5 +1,4 @@
-from adeploy.common.secret import Secret, GenericSecret, TlsSecret, DockerRegistrySecret
-from typing import List
+from adeploy.common.secret import GenericSecret, TlsSecret, DockerRegistrySecret, register_secret
 
 
 def create__get_version(deployment):
@@ -19,17 +18,11 @@ def create__get_url(deployment):
     return get_url
 
 
-__secrets: List[Secret] = []
-
-
-def get_secrets():
-    return __secrets
-
-
 def create__create_generic_secret(deployment):
     def create_secret(name: str, **data):
-        __secrets.append(GenericSecret(name, deployment, data))
-        return f'secret_{name}'
+        secret = GenericSecret(name, deployment, data)
+        register_secret(secret)
+        return secret.name
     return create_secret
 
 
@@ -40,13 +33,15 @@ def create__create_secret(deployment):
 
 def create__create_tls_secret(deployment):
     def create_tls_secret(name: str, cert_data: str, key_data: str):
-        __secrets.append(TlsSecret(name, deployment, cert_data, key_data))
-        return f'secret_{name}'
+        secret = TlsSecret(name, deployment, cert_data, key_data)
+        register_secret(secret)
+        return secret.name
     return create_tls_secret
 
 
 def create__create_docker_registry_secret(deployment):
     def create_tls_secret(name: str, server: str, username: str, password: str, email: str = None):
-        __secrets.append(DockerRegistrySecret(name, deployment, server, username, password, email))
-        return f'secret_{name}'
+        secret = DockerRegistrySecret(name, deployment, server, username, password, email)
+        register_secret(secret)
+        return secret.name
     return create_tls_secret

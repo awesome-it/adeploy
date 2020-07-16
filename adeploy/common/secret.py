@@ -1,5 +1,7 @@
+from logging import Logger
 from pathlib import Path
 
+from adeploy.common import colors
 from adeploy.common.jinja import env as jinja_env
 
 
@@ -60,3 +62,24 @@ class DockerRegistrySecret(Secret):
         self.username = username
         self.password = password
         self.email = email
+
+
+__secrets = {}
+
+
+def register_secret(s: Secret):
+    __secrets[s.name] = s
+
+
+def render_secrets(build_dir: Path, log: Logger):
+    for secret in __secrets.values():
+        secret_output_path = build_dir \
+            .joinpath(secret.namespace) \
+            .joinpath(secret.name) \
+            .joinpath(secret.deployment.release) \
+            .joinpath('secrets') \
+            .joinpath(secret.name + '.yml')
+
+        log.info(f'Rendering secret "{colors.bold(secret.name)}" '
+                      f'in "{colors.bold(secret_output_path)}" ...')
+        secret.render(secret_output_path)
