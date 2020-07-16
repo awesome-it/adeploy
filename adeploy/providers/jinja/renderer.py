@@ -42,6 +42,9 @@ class Renderer(Provider):
         if not os.path.isabs(templates_dir):
             templates_dir = f'{self.src_dir}/{templates_dir}'
 
+        if templates_dir[-1] == '/':
+            templates_dir = templates_dir[:-1]
+
         self.log.debug(f'Scanning source dir with pattern "{templates_dir}/*.({"|".join(extensions)})" ...')
 
         files = []
@@ -54,12 +57,11 @@ class Renderer(Provider):
         self.log.debug(f'Found templates: ')
         [self.log.debug(f'- {f}') for f in files]
 
-        return templates_dir, files
+        return templates_dir, [f.replace(f'{templates_dir}/', '') for f in files]
 
     def run(self):
 
         self.log.debug(f'Working on deployment "{self.name}" ...')
-
 
         template_dir, templates = self.load_templates()
 
@@ -87,7 +89,7 @@ class Renderer(Provider):
                     .joinpath(deployment.namespace) \
                     .joinpath(self.name) \
                     .joinpath(deployment.release) \
-                    .joinpath(Path(template).name)
+                    .joinpath(template)
 
                 self.log.info(f'Rendering deployment "{colors.blue(deployment)}" '
                               f'from "{colors.bold(template)}" '
@@ -96,7 +98,7 @@ class Renderer(Provider):
                 try:
                     output_path.parent.mkdir(parents=True, exist_ok=True)
                     with open(output_path, 'w') as fd:
-                        fd.write(env.get_template(Path(template).name).render(**values))
+                        fd.write(env.get_template(template).render(**values))
 
                 except jinja2.exceptions.TemplateError as e:
                     self.log.debug(f'Used Jinja variables: {json.dumps(values)}')

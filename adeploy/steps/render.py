@@ -1,9 +1,10 @@
 import os
+import shutil
 import sys
 from pathlib import Path
 
 from adeploy.common import colors, RenderError
-from adeploy.common.secret import get_secrets
+from adeploy.common.secret import Secret
 
 
 class Render:
@@ -19,6 +20,7 @@ class Render:
             for src_dir in self.args.src_dirs:
 
                 src_dir = os.path.realpath(src_dir)
+                name = self.args.deployment_name or os.path.basename(src_dir)
                 build_dir = Path(self.args.build_dir).joinpath(self.args.provider)
 
                 if not os.path.isdir(src_dir):
@@ -28,7 +30,7 @@ class Render:
 
                 try:
                     renderer = provider.renderer(
-                        name=self.args.deployment_name or os.path.basename(src_dir),
+                        name=name,
                         src_dir=src_dir,
                         build_dir=build_dir,
                         namespaces_dir=self.args.namespaces_dir,
@@ -45,9 +47,10 @@ class Render:
 
                     renderer.run()
 
-                    # Render secrets
-                    for secret in get_secrets():
-                        secret.render(build_dir, self.log)
+                    # Clean and store secret info in build dir
+                    Secret.clean_all(build_dir)
+                    for secret in Secret.get_registered():
+                        secret.store(build_dir)
 
                 except RenderError as e:
                     self.log.error(colors.red(f'Render error in source directory "{src_dir}":'))

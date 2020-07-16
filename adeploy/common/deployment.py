@@ -33,7 +33,7 @@ class Deployment:
         if defaults_file:
 
             # Compile defaults with default Jinja renderer i.e. to provide globals and filters
-            env = jinja_env.create([config_path.parent], deployment=self, log=log)
+            env = jinja_env.create([defaults_file.parent], deployment=self, log=log)
             defaults = yaml.load(env.get_template(defaults_file.name).render(), Loader=yaml.FullLoader)
 
             self.config.update(defaults)

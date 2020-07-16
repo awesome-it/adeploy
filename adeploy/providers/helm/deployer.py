@@ -12,7 +12,6 @@ class Deployer(HelmProvider):
     def get_parser():
         parser = argparse.ArgumentParser(description='Helm v3 renderer for k8s manifests',
                                          usage=argparse.SUPPRESS)
-
         return parser
 
     def parse_args(self, args: dict):

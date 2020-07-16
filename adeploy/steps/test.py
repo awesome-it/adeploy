@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from adeploy.common import colors, TestError
-from adeploy.common.secret import get_secrets
+from adeploy.common.secret import Secret
 
 
 class Test:
@@ -19,6 +19,7 @@ class Test:
             for src_dir in self.args.src_dirs:
 
                 src_dir = os.path.realpath(src_dir)
+                name = self.args.deployment_name or os.path.basename(src_dir)
                 build_dir = Path(self.args.build_dir).joinpath(self.args.provider)
 
                 if not os.path.isdir(src_dir):
@@ -28,7 +29,7 @@ class Test:
 
                 try:
                     tester = provider.tester(
-                        name=self.args.deployment_name or os.path.basename(src_dir),
+                        name=name,
                         src_dir=src_dir,
                         build_dir=build_dir,
                         namespaces_dir=self.args.namespaces_dir,
@@ -45,9 +46,9 @@ class Test:
 
                     tester.run()
 
-                    # Test secrets
-                    for secret in get_secrets():
-                        secret.test(build_dir, self.log)
+                    # Check whether secrets have to be created
+                    for secret in Secret.get_stored(build_dir, name):
+                        secret.test(self.log)
 
                 except TestError as e:
                     self.log.error(colors.red(f'Test failed in source directory "{src_dir}":'))

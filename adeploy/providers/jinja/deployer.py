@@ -7,11 +7,15 @@ from adeploy.common import colors, TestError, kubectl_apply, parse_kubectrl_appl
 
 
 class Deployer(Provider):
+
     @staticmethod
     def get_parser():
         parser = argparse.ArgumentParser(description='Deploys k8s manifests written in Jinja',
                                          usage=argparse.SUPPRESS)
         return parser
+
+    def parse_args(self, args: dict):
+        return
 
     def run(self):
 

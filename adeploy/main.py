@@ -96,15 +96,18 @@ def setup_parser():
                         help='YML file or directory containing <deployment_name>.yml with default variables. '
                              'Relative to source dirs.')
 
+    parser.add_argument('--namespaces', dest='namespaces_dir', default='namespaces',
+                        help='Directory containing namespaces and variables for deployments')
+
+    parser.add_argument('--recreate-secrets', dest='recreate_secrets', action='store_true',
+                        help='Force to re-create secrets. This might invoke a password store to retrieve secrets.')
+
     parser.add_argument('--filter-namespace', dest='filters_namespace', nargs='*',
                         help='Only include specified namespace. Argument can be specified multiple times.')
 
     parser.add_argument('--filter-release', dest='filters_release', nargs='*',
                         help='Only include specified deployment release i.e. "prod", "testing". '
                              'Argument can be specified multiple times.')
-
-    parser.add_argument('--namespaces', dest='namespaces_dir', default='namespaces',
-                        help='Directory containing namespaces and variables for deployments')
 
     parser.add_argument('--version', action='store_true', help='Print version and exit')
 
