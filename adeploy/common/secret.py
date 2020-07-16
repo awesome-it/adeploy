@@ -1,7 +1,8 @@
+import shutil
 from logging import Logger
 from pathlib import Path
 
-from adeploy.common import colors
+from adeploy.common import colors, kubectl_apply, parse_kubectrl_apply
 from adeploy.common.jinja import env as jinja_env
 
 
@@ -14,8 +15,15 @@ class Secret:
         self.name = name
         self.deployment = deployment
 
-    def render(self, path: Path):
+    def get_path(self, build_dir):
+        return build_dir \
+            .joinpath(self.deployment.namespace) \
+            .joinpath(self.name) \
+            .joinpath(self.deployment.release) \
+            .joinpath('secrets') \
+            .joinpath(self.name + '.yml')
 
+    def render(self, build_dir: Path, log: Logger = None):
         env = jinja_env.create([Path(__file__).parent.joinpath('jinja/templates/secrets')])
         jinja_env.register_globals(env, self.deployment)
 
@@ -24,9 +32,28 @@ class Secret:
             'deployment': self.deployment.__dict__,
         }
 
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(str(path), 'w') as fd:
+        secret_build_path = self.get_path(build_dir)
+        log.info(f'Rendering secret "{colors.bold(self.name)}" in "{colors.bold(secret_build_path)}" ...')
+
+        if secret_build_path.parent.exists():
+            shutil.rmtree(secret_build_path.parent)
+        secret_build_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(str(secret_build_path), 'w') as fd:
             fd.write(env.get_template(f'{self.type}.yml').render(**values))
+
+    def test(self, build_dir: Path, log: Logger = None):
+        secret_build_path = self.get_path(build_dir)
+
+        log.info(f'Testing secret for deployment "{colors.blue(self.deployment)}" in "{secret_build_path}" ...')
+        result = kubectl_apply(log, self.get_path(build_dir), namespace=self.deployment.namespace, dry_run='server')
+        parse_kubectrl_apply(log, result.stdout)
+
+    def deploy(self, build_dir: Path, log: Logger = None):
+        secret_build_path = self.get_path(build_dir)
+
+        log.info(f'Creating secret for deployment "{colors.blue(self.deployment)}" in "{secret_build_path}" ...')
+        result = kubectl_apply(log, self.get_path(build_dir), namespace=self.deployment.namespace)
+        parse_kubectrl_apply(log, result.stdout)
 
 
 class GenericSecret(Secret):
@@ -71,15 +98,6 @@ def register_secret(s: Secret):
     __secrets[s.name] = s
 
 
-def render_secrets(build_dir: Path, log: Logger):
-    for secret in __secrets.values():
-        secret_output_path = build_dir \
-            .joinpath(secret.namespace) \
-            .joinpath(secret.name) \
-            .joinpath(secret.deployment.release) \
-            .joinpath('secrets') \
-            .joinpath(secret.name + '.yml')
+def get_secrets():
+    return __secrets.values()
 
-        log.info(f'Rendering secret "{colors.bold(secret.name)}" '
-                      f'in "{colors.bold(secret_output_path)}" ...')
-        secret.render(secret_output_path)

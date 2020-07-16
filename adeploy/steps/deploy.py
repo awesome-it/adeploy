@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 from adeploy.common import colors, DeployError
+from adeploy.common.secret import get_secrets
 
 
 class Deploy:
@@ -18,6 +19,7 @@ class Deploy:
             for src_dir in self.args.src_dirs:
 
                 src_dir = os.path.realpath(src_dir)
+                build_dir = Path(self.args.build_dir).joinpath(self.args.provider)
 
                 if not os.path.isdir(src_dir):
                     self.log.warning(colors.orange(f'"{src_dir}" is not a directory, skip'))
@@ -28,7 +30,7 @@ class Deploy:
                     deployer = provider.deployer(
                         name=self.args.deployment_name or os.path.basename(src_dir),
                         src_dir=src_dir,
-                        build_dir=Path(self.args.build_dir).joinpath(self.args.provider),
+                        build_dir=build_dir,
                         namespaces_dir=self.args.namespaces_dir,
                         defaults_path=self.args.defaults_path,
                         args=self.args,
@@ -42,6 +44,10 @@ class Deploy:
                     )
 
                     deployer.run()
+
+                    # Deploy secrets
+                    for secret in get_secrets():
+                        secret.deploy(build_dir, self.log)
 
                 except DeployError as e:
                     self.log.error(colors.red(f'Deployment failed in source directory "{src_dir}":'))
