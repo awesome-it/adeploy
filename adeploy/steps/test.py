@@ -2,7 +2,8 @@ import os
 import sys
 from pathlib import Path
 
-from adeploy.common import colors, TestError
+from adeploy.common import colors
+from adeploy.common.errors import TestError
 from adeploy.common.secret import Secret
 
 

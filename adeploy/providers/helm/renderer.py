@@ -7,7 +7,8 @@ from tempfile import TemporaryDirectory
 
 import yaml
 
-from adeploy.common import colors, RenderError
+from adeploy.common import colors
+from adeploy.common.errors import RenderError
 from .common import helm_repo_add, helm_repo_pull, helm_template, HelmProvider
 
 

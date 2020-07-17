@@ -2,7 +2,8 @@ import argparse
 from pathlib import Path
 from subprocess import CalledProcessError
 
-from adeploy.common import colors, DeployError
+from adeploy.common import colors
+from adeploy.common.errors import DeployError
 from adeploy.providers.helm.common import helm_install, HelmOutput, HelmProvider
 
 

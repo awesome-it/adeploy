@@ -7,8 +7,11 @@ from logging import Logger
 from pathlib import Path
 from pickle import dump, load, dumps
 
-from adeploy.common import colors, kubectl_apply, parse_kubectrl_apply, kubectl_create_secret, RenderError, \
-    kubectl_get_secret, kubectl_delete_secret
+from adeploy.common import colors
+from adeploy.common.kubectl import parse_kubectrl_apply, kubectl_create_secret, kubectl_get_secret, \
+    kubectl_delete_secret
+from adeploy.common.errors import RenderError
+from adeploy.common.gopass import gopass_get
 
 
 class Secret(ABC):
@@ -119,7 +122,8 @@ class Secret(ABC):
             parse_kubectrl_apply(log, result.stdout)
 
         except subprocess.CalledProcessError as e:
-            raise RenderError(f'Error while creating (dry-run) secret "{colors.bold(self.name)}": {e}\n{e.stderr.strip()}')
+            raise RenderError(
+                f'Error while creating (dry-run) secret "{colors.bold(self.name)}": {e}\n{e.stderr.strip()}')
 
     def deploy(self, log: Logger, recreate=False):
 
@@ -137,10 +141,6 @@ class Secret(ABC):
             self.create(log)
         except subprocess.CalledProcessError as e:
             raise RenderError(f'Error while creating secret "{colors.bold(self.name)}": {e}\n{e.stderr.strip()}')
-
-    def get_from_pass(self, path):
-        # TODO: Retrieve password value from Gopass
-        return path
 
     @abstractmethod
     def create(self, log: Logger = None, dry_run: str = None):
@@ -162,7 +162,7 @@ class GenericSecret(Secret):
             if dry_run:
                 value = '*****'
             elif self.use_pass:
-                value = self.get_from_pass(v)
+                value = gopass_get(v, log)
             else:
                 value = v
             args.append(f'--from-literal={k}={value}')
@@ -195,7 +195,8 @@ class DockerRegistrySecret(Secret):
     password: str = None
     email: str = None
 
-    def __init__(self, deployment, server: str, username: str, password: str, email: str = None, name: str = None, use_pass: bool = True):
+    def __init__(self, deployment, server: str, username: str, password: str, email: str = None, name: str = None,
+                 use_pass: bool = True):
         self.server = server
         self.username = username
         self.password = password

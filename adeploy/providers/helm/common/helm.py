@@ -1,5 +1,7 @@
 import subprocess
-from adeploy.common import run_command, colors, Deployment
+from adeploy.common.helpers import run_command
+from adeploy.common.deployment import Deployment
+from adeploy.common import colors
 
 
 def helm_repo_add(log, repo, url):

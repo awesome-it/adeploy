@@ -2,7 +2,9 @@ import argparse
 from pathlib import Path
 from subprocess import CalledProcessError
 
-from adeploy.common import colors, TestError, kubectl_apply, parse_kubectrl_apply
+from adeploy.common import colors
+from adeploy.common.kubectl import  kubectl_apply, parse_kubectrl_apply
+from adeploy.common.errors import TestError
 from adeploy.providers.helm.common import helm_install, HelmOutput, HelmProvider
 
 

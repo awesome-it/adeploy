@@ -5,10 +5,8 @@ from argparse import Namespace
 from logging import Logger
 from pathlib import Path
 
-import yaml
-
-from adeploy.common import Deployment, colors
-from adeploy.common.jinja import env as jinja_env
+from adeploy.common import colors
+from adeploy.common.deployment import Deployment
 
 
 class Provider(ABC):

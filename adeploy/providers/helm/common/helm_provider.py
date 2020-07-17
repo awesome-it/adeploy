@@ -1,6 +1,6 @@
 from abc import ABC
 
-from adeploy.common import Provider, Path
+from adeploy.common.provider import Provider
 
 
 class HelmProvider(Provider, ABC):

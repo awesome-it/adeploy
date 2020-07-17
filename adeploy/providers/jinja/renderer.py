@@ -1,14 +1,15 @@
-import json
-import os
 import argparse
 import glob
-
+import json
+import os
 from pathlib import Path
 
 import jinja2
 
-from adeploy.common import colors, RenderError, Provider
-from adeploy.common.jinja import globals, env as jinja_env
+from adeploy.common import colors
+from adeploy.common.errors import RenderError
+from adeploy.common.jinja import env as jinja_env
+from adeploy.common.provider import Provider
 
 
 class Renderer(Provider):

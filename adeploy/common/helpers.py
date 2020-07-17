@@ -4,10 +4,8 @@ import pkgutil
 import subprocess
 from collections import namedtuple
 
-import yaml
-
 from adeploy import providers
-from . import colors
+from adeploy.common import colors
 
 
 def get_submodules(pkg):

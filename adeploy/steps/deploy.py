@@ -2,7 +2,8 @@ import os
 import sys
 from pathlib import Path
 
-from adeploy.common import colors, DeployError
+from adeploy.common import colors
+from adeploy.common.errors import DeployError
 from adeploy.common.secret import Secret
 
 
@@ -44,7 +45,7 @@ class Deploy:
                         colors.bold(self.args.provider)
                     )
 
-                    deployer.run()
+                    #deployer.run()
 
                     # Create secrets
                     for secret in Secret.get_stored(build_dir, name):

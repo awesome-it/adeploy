@@ -3,8 +3,9 @@ from pathlib import Path
 
 import yaml
 
-from adeploy.common import dict_update_recursive, colors
+from adeploy.common.helpers import dict_update_recursive
 from adeploy.common.jinja import env as jinja_env
+from adeploy.common import colors
 
 
 class Deployment:
