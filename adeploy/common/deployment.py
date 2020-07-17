@@ -2,7 +2,9 @@ from logging import Logger
 from pathlib import Path
 
 import yaml
+from yaml.parser import ParserError
 
+from adeploy.common.errors import Error
 from adeploy.common.helpers import dict_update_recursive
 from adeploy.common.jinja import env as jinja_env
 from adeploy.common import colors
@@ -33,14 +35,21 @@ class Deployment:
         self.config = {}
         if defaults_file:
 
-            # Compile defaults with default Jinja renderer i.e. to provide globals and filters
-            env = jinja_env.create([defaults_file.parent], deployment=self, log=log)
-            defaults = yaml.load(env.get_template(defaults_file.name).render(), Loader=yaml.FullLoader)
+            try:
 
-            self.config.update(defaults)
+                # Compile defaults with default Jinja renderer i.e. to provide globals and filters
+                env = jinja_env.create([defaults_file.parent], deployment=self, log=log)
+                defaults = yaml.load(env.get_template(defaults_file.name).render(), Loader=yaml.FullLoader)
+                self.config.update(defaults)
 
-        # Compile config with default Jinja renderer i.e. to provide globals and filters
-        env = jinja_env.create([config_path.parent], deployment=self, log=log)
+            except ParserError as e:
+                raise Error(f'Unexpected error while parsing YAML "{colors.bold(defaults_file)}": {e}')
 
-        return dict_update_recursive(self.config,
-                                     yaml.load(env.get_template(config_path.name).render(), Loader=yaml.FullLoader))
+        try:
+            # Compile config with default Jinja renderer i.e. to provide globals and filters
+            env = jinja_env.create([config_path.parent], deployment=self, log=log)
+            return dict_update_recursive(self.config,
+                                         yaml.load(env.get_template(config_path.name).render(), Loader=yaml.FullLoader))
+
+        except ParserError as e:
+            raise Error(f'Unexpected error while parsing YAML "{colors.bold(config_path)}": {e}')

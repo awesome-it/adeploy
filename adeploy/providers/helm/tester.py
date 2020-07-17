@@ -1,9 +1,10 @@
 import argparse
+import json
 from pathlib import Path
 from subprocess import CalledProcessError
 
 from adeploy.common import colors
-from adeploy.common.kubectl import  kubectl_apply, parse_kubectrl_apply
+from adeploy.common.kubectl import kubectl_apply, parse_kubectrl_apply
 from adeploy.common.errors import TestError
 from adeploy.providers.helm.common import helm_install, HelmOutput, HelmProvider
 
@@ -56,8 +57,12 @@ class Tester(HelmProvider):
                 # Test to apply via kubectl and server-dry-run
                 self.log.info(f'... Testing raw manifests from "{colors.bold(manifest_path)}" (may fail) ...')
                 try:
+                    # Get manifests to fetch destination namepsace
+                    manifests = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace, dry_run='client',
+                                              output='json')
                     result = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace, dry_run='server')
-                    parse_kubectrl_apply(self.log, result.stdout, prefix=2 * '...')
+                    parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout),
+                                         prefix=2 * '...')
                 except CalledProcessError as e:
                     self.log.warning(
                         colors.orange(f' ... Error when dry-running kubectl apply using raw manifests: {e.stderr}'))

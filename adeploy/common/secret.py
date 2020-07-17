@@ -1,5 +1,6 @@
 import glob
 import hashlib
+import json
 import shutil
 import subprocess
 from abc import ABC, abstractmethod
@@ -79,26 +80,6 @@ class Secret(ABC):
         with open(str(output_path), 'wb') as fd:
             dump(self, fd)
 
-    """
-    def render(self, build_dir: Path, log: Logger = None):
-        env = jinja_env.create([Path(__file__).parent.joinpath('jinja/templates/secrets')])
-        jinja_env.register_globals(env, self.deployment)
-
-        values = {
-            'secret': self.__dict__,
-            'deployment': self.deployment.__dict__,
-        }
-
-        secret_build_path = self.get_path(build_dir)
-        log.info(f'Rendering secret "{colors.bold(self.name)}" in "{colors.bold(secret_build_path)}" ...')
-
-        if secret_build_path.parent.exists():
-            shutil.rmtree(secret_build_path.parent)
-        secret_build_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(str(secret_build_path), 'w') as fd:
-            fd.write(env.get_template(f'{self.type}.yml').render(**values))
-    """
-
     def exists(self, log: Logger):
         try:
             kubectl_get_secret(log, self.name, self.deployment.namespace)
@@ -118,8 +99,9 @@ class Secret(ABC):
 
         # Test creating the secret using kubectl
         try:
+            manifest = self.create(log, dry_run='client', output='json')
             result = self.create(log, dry_run='server')
-            parse_kubectrl_apply(log, result.stdout)
+            parse_kubectrl_apply(log, result.stdout, manifests=json.loads(manifest.stdout))
 
         except subprocess.CalledProcessError as e:
             raise RenderError(
@@ -143,7 +125,7 @@ class Secret(ABC):
             raise RenderError(f'Error while creating secret "{colors.bold(self.name)}": {e}\n{e.stderr.strip()}')
 
     @abstractmethod
-    def create(self, log: Logger = None, dry_run: str = None):
+    def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
         pass
 
 
@@ -155,7 +137,7 @@ class GenericSecret(Secret):
         self.data = data
         super().__init__(deployment, name, use_pass)
 
-    def create(self, log: Logger = None, dry_run: str = None) -> subprocess.CompletedProcess:
+    def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
 
         args = []
         for k, v in self.data.items():
@@ -171,7 +153,7 @@ class GenericSecret(Secret):
             log=log, name=self.name,
             namespace=self.deployment.namespace,
             type=self.type, dry_run=dry_run,
-            args=args)
+            args=args, output=output)
 
 
 class TlsSecret(Secret):
@@ -184,7 +166,7 @@ class TlsSecret(Secret):
         self.key_data = key_data
         super().__init__(deployment, name, use_pass)
 
-    def create(self, log: Logger = None, dry_run: str = None):
+    def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
         raise NotImplementedError()
 
 
@@ -203,5 +185,5 @@ class DockerRegistrySecret(Secret):
         self.email = email
         super().__init__(deployment, name, use_pass)
 
-    def create(self, log: Logger = None, dry_run: str = None):
+    def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
         raise NotImplementedError()
