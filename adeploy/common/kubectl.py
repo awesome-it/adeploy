@@ -1,4 +1,5 @@
 import subprocess
+from logging import Logger
 
 from adeploy.common import colors
 
@@ -9,15 +10,15 @@ def kubectl_apply(log, manifest_path, namespace=None, dry_run=None, output=None)
         args.append(f'--dry-run={dry_run}')
     if output:
         args += ['-o', output]
-    return kubectl(log, namespace, args)
+    return kubectl(log, args, namespace)
 
 
 def kubectl_get_secret(log, name, namespace) -> subprocess.CompletedProcess:
-    return kubectl(log, namespace, ['get', 'secret', name, '-o', 'json'])
+    return kubectl(log, ['get', 'secret', name, '-o', 'json'], namespace)
 
 
 def kubectl_delete_secret(log, name, namespace) -> subprocess.CompletedProcess:
-    return kubectl(log, namespace, ['delete', 'secret', name, '-o', 'name'])
+    return kubectl(log, ['delete', 'secret', name, '-o', 'name'], namespace)
 
 
 def kubectl_create_secret(log, name, namespace, type, args, dry_run: bool=None, output: str =None) -> subprocess.CompletedProcess:
@@ -26,11 +27,16 @@ def kubectl_create_secret(log, name, namespace, type, args, dry_run: bool=None, 
         args.append(f'--dry-run={dry_run}')
     if output:
         args += ['-o', output]
-    return kubectl(log, namespace, args)
+    return kubectl(log, args, namespace)
 
 
-def kubectl(log, namespace, args) -> subprocess.CompletedProcess:
-    cmd = ['kubectl', '-n', namespace] + args
+def kubectl(log: Logger, args: list, namespace: str = None) -> subprocess.CompletedProcess:
+
+    cmd = ['kubectl']
+    if namespace:
+        cmd += ['-n', namespace]
+    cmd += args
+
     log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
     result = subprocess.run(cmd, capture_output=True, text=True)
     result.check_returncode()

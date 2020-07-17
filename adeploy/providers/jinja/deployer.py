@@ -34,7 +34,7 @@ class Deployer(Provider):
             self.log.info(f'Applying manifests for deployment "{colors.blue(deployment)}" in "{manifest_path}" ...')
 
             try:
-                result = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace)
+                result = kubectl_apply(self.log, manifest_path)
                 parse_kubectrl_apply(self.log, result.stdout)
 
             except CalledProcessError as e:

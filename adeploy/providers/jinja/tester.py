@@ -34,8 +34,8 @@ class Tester(Provider):
             self.log.info(f'Testing manifests for deployment "{colors.blue(deployment)}" in "{manifest_path}" ...')
 
             try:
-                manifests = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace, dry_run='client', output='json')
-                result = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace, dry_run='server')
+                manifests = kubectl_apply(self.log, manifest_path, dry_run='client', output='json')
+                result = kubectl_apply(self.log, manifest_path, dry_run='server')
                 parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout))
 
             except CalledProcessError as e:
