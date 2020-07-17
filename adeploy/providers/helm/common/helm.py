@@ -15,7 +15,7 @@ def helm_repo_pull(log, repo, name, dest):
 
 
 def helm_template(log, deployment: Deployment, chart_path, values_path):
-    return helm(log, ['template', f'{deployment.release}', chart_path, '-f', values_path])
+    return helm(log, ['template', deployment.release, chart_path, '-n', deployment.namespace, '-f', values_path])
 
 
 def helm_install(log, deployment: Deployment, chart_path, values_path, dry_run=True) -> subprocess.CompletedProcess:
