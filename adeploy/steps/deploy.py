@@ -45,7 +45,7 @@ class Deploy:
                         colors.bold(self.args.provider)
                     )
 
-                    #deployer.run()
+                    deployer.run()
 
                     # Create secrets
                     for secret in Secret.get_stored(build_dir, name):
