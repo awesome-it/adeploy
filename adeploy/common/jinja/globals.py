@@ -51,11 +51,11 @@ def create__create_tls_secret(deployment, log: Logger = None):
 
 
 def create__create_docker_registry_secret(deployment, log: Logger = None):
-    def create_tls_secret(server: str, username: str, password: str, email: str = None, name: str = None, use_pass: bool = True):
+    def create_docker_registry_secret(server: str, username: str, password: str, email: str = None, name: str = None, use_pass: bool = True):
         secret = DockerRegistrySecret(deployment, server, username, password, email, name, use_pass)
         if Secret.register(secret) and log:
             log.info(f'Registering docker registry secret "{colors.bold(secret.name)}" '
                      f'for deployment "{colors.blue(deployment)} ...')
         return secret.name
 
-    return create_tls_secret
+    return create_docker_registry_secret

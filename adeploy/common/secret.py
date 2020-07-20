@@ -201,4 +201,21 @@ class DockerRegistrySecret(Secret):
         super().__init__(deployment, name, use_pass)
 
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
-        raise NotImplementedError()
+
+        args = [f'--docker-server={self.server}',
+                f'--docker-username={self.username}']
+
+        if self.email:
+            args.append(f'--docker-email={self.email}')
+
+        password = self.password
+        if self.use_pass and not dry_run:
+            password = gopass_get(Path(self.password), log=log)
+
+        args.append(f'--docker-password={password}')
+
+        return kubectl_create_secret(
+            log=log, name=self.name,
+            namespace=self.deployment.namespace,
+            type=self.type, dry_run=dry_run,
+            args=args, output=output)
