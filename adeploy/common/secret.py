@@ -1,8 +1,10 @@
 import glob
 import hashlib
 import json
+import os
 import shutil
 import subprocess
+import tempfile
 from abc import ABC, abstractmethod
 from logging import Logger
 from pathlib import Path
@@ -140,20 +142,33 @@ class GenericSecret(Secret):
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
 
         args = []
+        temp_files = []
         for k, v in self.data.items():
+
             if dry_run:
                 value = '*****'
             elif self.use_pass:
                 value = gopass_get(v, log)
             else:
                 value = v
-            args.append(f'--from-literal={k}={value}')
 
-        return kubectl_create_secret(
+            fd = tempfile.NamedTemporaryFile(delete=False, mode='w')
+            fd.write(value)
+            fd.close()
+
+            temp_files.append(fd.name)
+            args.append(f'--from-file={k}={fd.name}')
+
+        result = kubectl_create_secret(
             log=log, name=self.name,
             namespace=self.deployment.namespace,
             type=self.type, dry_run=dry_run,
             args=args, output=output)
+
+        for f in temp_files:
+            os.remove(f)
+
+        return result
 
 
 class TlsSecret(Secret):

@@ -19,6 +19,9 @@ def gopass_get(path: Path, log: Logger = None):
     log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
     result = subprocess.run(cmd, capture_output=True, text=True)
     result.check_returncode()
-    lines = result.stdout.split('\n')
 
-    return lines[0] if len(lines) > 0 else None
+    lines = result.stdout.split('\n')
+    if len(lines) > 1 and lines[1] == '--':
+        return lines[0]
+
+    return result.stdout
