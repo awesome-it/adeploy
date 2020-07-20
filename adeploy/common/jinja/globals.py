@@ -24,8 +24,8 @@ def create__get_url(deployment, log: Logger = None):
 
 
 def create__create_generic_secret(deployment, log: Logger = None):
-    def create_secret(name: str = None, use_pass=True, **data):
-        secret = GenericSecret(deployment, data, name, use_pass)
+    def create_secret(name: str = None, use_pass=True, data=None, **kwargs):
+        secret = GenericSecret(deployment, data or kwargs, name, use_pass)
         if Secret.register(secret) and log:
             log.info(f'Registered generic secret "{colors.bold(secret.name)}" '
                      f'for deployment "{colors.blue(deployment)} ...')
