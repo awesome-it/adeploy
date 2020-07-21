@@ -43,7 +43,7 @@ def kubectl(log: Logger, args: list, namespace: str = None) -> subprocess.Comple
     return result
 
 
-def parse_kubectrl_apply(log, stdout, manifests: dict = None, deployment=None, prefix='...'):
+def parse_kubectrl_apply(log, stdout, manifests: dict = None, deployment_ns: str = None, prefix='...'):
     for line in stdout.split('\n'):
         token = line.split(' ')
         if len(token) > 3:
@@ -65,8 +65,8 @@ def parse_kubectrl_apply(log, stdout, manifests: dict = None, deployment=None, p
                         # If the helm templates does not contain a namespace (which is seen as best practise, see
                         # https://github.com/helm/helm/issues/5465. This "fakes" the real namespace that would be used
                         # for helm install/upgrade.
-                        if namespace == 'default' and deployment and deployment.namespace != namespace:
-                            namespace = deployment.namespace
+                        if namespace == 'default' and deployment_ns and deployment_ns != namespace:
+                            namespace = deployment_ns
 
                         found = True
 

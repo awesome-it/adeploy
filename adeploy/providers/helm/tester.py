@@ -57,11 +57,18 @@ class Tester(HelmProvider):
                 # Test to apply via kubectl and server-dry-run
                 self.log.info(f'... Testing raw manifests from "{colors.bold(manifest_path)}" (may fail) ...')
                 try:
-                    # Get manifests to fetch destination namepsace
+                    # Get manifests to fetch destination namespace
                     manifests = kubectl_apply(self.log, manifest_path, dry_run='client', output='json')
-                    result = kubectl_apply(self.log, manifest_path, dry_run='server')
+
+                    try:
+                        # First try including namespace
+                        result = kubectl_apply(self.log, manifest_path, namespace=deployment.namespace, dry_run='server')
+                    except CalledProcessError:
+                        # Fallback without namespace i.e. defined in template and != deployment.namespace
+                        result = kubectl_apply(self.log, manifest_path, dry_run='server')
+
                     parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout),
-                                         deployment=deployment, prefix=2 * '...')
+                                         deployment_ns=deployment.namespace, prefix=2 * '...')
                 except CalledProcessError as e:
                     self.log.warning(
                         colors.orange(f' ... Error when dry-running kubectl apply using raw manifests: {e.stderr}'))

@@ -103,7 +103,9 @@ class Secret(ABC):
         try:
             manifest = self.create(log, dry_run='client', output='json')
             result = self.create(log, dry_run='server')
-            parse_kubectrl_apply(log, result.stdout, manifests=json.loads(manifest.stdout), deployment=self.deployment)
+            parse_kubectrl_apply(log, result.stdout,
+                                 manifests=json.loads(manifest.stdout),
+                                 deployment_ns=self.deployment.namespace)
 
         except subprocess.CalledProcessError as e:
             raise RenderError(
