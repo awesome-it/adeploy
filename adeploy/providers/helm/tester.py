@@ -60,7 +60,8 @@ class Tester(HelmProvider):
                     # Get manifests to fetch destination namepsace
                     manifests = kubectl_apply(self.log, manifest_path, dry_run='client', output='json')
                     result = kubectl_apply(self.log, manifest_path, dry_run='server')
-                    parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout), prefix=2 * '...')
+                    parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout),
+                                         deployment=deployment, prefix=2 * '...')
                 except CalledProcessError as e:
                     self.log.warning(
                         colors.orange(f' ... Error when dry-running kubectl apply using raw manifests: {e.stderr}'))

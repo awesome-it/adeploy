@@ -20,14 +20,27 @@
 
 ### Charts
 
-The Helm chart in the `chart` folder will be installed with variables for each namespace and deployment-release merged with the variables from `defaults.yml`. 
+The Helm chart in the `chart` folder (default value of `--chart-dir`) will be installed with variables for each namespace and deployment-release merged with the variables from `defaults.yml`.:
 
-If no chart folder is given, an upstream chart can be automatically downloaded using `--repo-url URL` in the render step.
-The chart name is given by the deployment name i.e. the foldername (here: `mydeployment`) or you specify another name using
+```bash
+$ adeploy -p helm render . [--chart-dir ./chart]
+```
+
+The chart name is given by the deployment name i.e. the folder name (here: `mydeployment`) or you specify another name using
 `--name` parameter.
+
+If no chart folder is given, an upstream chart can be automatically downloaded using `--repo-url URL` in the render step:
  
 ```bash
 $ adeploy [--name customer_chart_name] -p helm render . --repo-url https://chart.url
 ```
 
-If using `--repo-url`, you should make sure, that the content of `chart` is ignored by git. To always fetch the latest chart version when rendering.
+#### Version & AppVersion
+ 
+The chart version and the app version (`appVersion`) can be set globally in the `defaults.yml` (or `defaults/<release>.yml`) for the appropriate deployments:
+
+```yaml
+_chart:
+    version: 0.0.0
+    appVersion: 0.0.0
+```

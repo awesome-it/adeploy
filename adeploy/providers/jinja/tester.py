@@ -36,7 +36,8 @@ class Tester(Provider):
             try:
                 manifests = kubectl_apply(self.log, manifest_path, dry_run='client', output='json')
                 result = kubectl_apply(self.log, manifest_path, dry_run='server')
-                parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout))
+                parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout),
+                                     deployment=deployment)
 
             except CalledProcessError as e:
                 raise TestError(f'Error in manifest dir "{manifest_path}": {e.stderr}')

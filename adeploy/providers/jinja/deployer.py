@@ -35,7 +35,7 @@ class Deployer(Provider):
 
             try:
                 result = kubectl_apply(self.log, manifest_path)
-                parse_kubectrl_apply(self.log, result.stdout)
+                parse_kubectrl_apply(self.log, result.stdout, deployment=deployment)
 
             except CalledProcessError as e:
                 raise TestError(f'Error in manifest dir "{manifest_path}": {e.stderr}')

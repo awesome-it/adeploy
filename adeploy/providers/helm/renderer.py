@@ -22,7 +22,7 @@ class Renderer(HelmProvider):
         parser = argparse.ArgumentParser(description='Helm v3 renderer for k8s manifests',
                                          usage=argparse.SUPPRESS)
 
-        parser.add_argument('-c', '--chart', dest='chart_dir', default='chart',
+        parser.add_argument('-c', '--chart-dir', dest='chart_dir', default='chart',
                             help='Directory containing the Helm chart to deploy. If no chart is available'
                                  'you can specify a repo URL using "--repo" to download the chart')
 

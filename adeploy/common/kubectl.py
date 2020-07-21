@@ -21,7 +21,8 @@ def kubectl_delete_secret(log, name, namespace) -> subprocess.CompletedProcess:
     return kubectl(log, ['delete', 'secret', name, '-o', 'name'], namespace)
 
 
-def kubectl_create_secret(log, name, namespace, type, args, dry_run: bool=None, output: str =None) -> subprocess.CompletedProcess:
+def kubectl_create_secret(log, name, namespace, type, args, dry_run: bool = None,
+                          output: str = None) -> subprocess.CompletedProcess:
     args = ['create', 'secret', type, name] + args
     if dry_run:
         args.append(f'--dry-run={dry_run}')
@@ -31,7 +32,6 @@ def kubectl_create_secret(log, name, namespace, type, args, dry_run: bool=None, 
 
 
 def kubectl(log: Logger, args: list, namespace: str = None) -> subprocess.CompletedProcess:
-
     cmd = ['kubectl']
     if namespace:
         cmd += ['-n', namespace]
@@ -43,7 +43,7 @@ def kubectl(log: Logger, args: list, namespace: str = None) -> subprocess.Comple
     return result
 
 
-def parse_kubectrl_apply(log, stdout, manifests: dict = None, prefix='...'):
+def parse_kubectrl_apply(log, stdout, manifests: dict = None, deployment=None, prefix='...'):
     for line in stdout.split('\n'):
         token = line.split(' ')
         if len(token) > 3:
@@ -51,8 +51,8 @@ def parse_kubectrl_apply(log, stdout, manifests: dict = None, prefix='...'):
             status = token[1]
             namespace = None
 
+            found = False
             if manifests:
-                found = False
                 for item in manifests.get('items', [manifests]):
                     metadata = item.get('metadata', {})
                     item_resource_name = item.get('kind').lower()
@@ -61,6 +61,13 @@ def parse_kubectrl_apply(log, stdout, manifests: dict = None, prefix='...'):
 
                     if item_resource_name == resource and metadata.get('name', None) == resource_name:
                         namespace = metadata.get('namespace', None)
+
+                        # If the helm templates does not contain a namespace (which is seen as best practise, see
+                        # https://github.com/helm/helm/issues/5465. This "fakes" the real namespace that would be used
+                        # for helm install/upgrade.
+                        if namespace == 'default' and deployment and deployment.namespace != namespace:
+                            namespace = deployment.namespace
+
                         found = True
 
                 if not found:
@@ -71,7 +78,7 @@ def parse_kubectrl_apply(log, stdout, manifests: dict = None, prefix='...'):
             if manifests:
                 namespace_description = f'namespace: {colors.bold(namespace) if namespace else colors.orange("all")}, '
 
-            log.info(f'{prefix} {namespace_description}'                     
+            log.info(f'{prefix} {namespace_description}'
                      f'resource: {colors.bold(resource)}, '
                      f'name: {colors.bold(resource_name)}: '
                      f'{colors.gray(status) if status == "unchanged" else colors.green(status)}')

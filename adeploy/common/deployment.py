@@ -39,7 +39,7 @@ class Deployment:
 
                 # Compile defaults with default Jinja renderer i.e. to provide globals and filters
                 env = jinja_env.create([defaults_file.parent], deployment=self, log=log)
-                defaults = yaml.load(env.get_template(defaults_file.name).render(), Loader=yaml.FullLoader)
+                defaults = yaml.load(env.get_template(defaults_file.name).render(self.__dict__), Loader=yaml.FullLoader)
                 self.config.update(defaults)
 
             except ParserError as e:
@@ -49,7 +49,7 @@ class Deployment:
             # Compile config with default Jinja renderer i.e. to provide globals and filters
             env = jinja_env.create([config_path.parent], deployment=self, log=log)
             return dict_update_recursive(self.config,
-                                         yaml.load(env.get_template(config_path.name).render(), Loader=yaml.FullLoader))
+                                         yaml.load(env.get_template(config_path.name).render(self.__dict__), Loader=yaml.FullLoader))
 
         except ParserError as e:
             raise Error(f'Unexpected error while parsing YAML "{colors.bold(config_path)}": {e}')
