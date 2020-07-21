@@ -67,8 +67,7 @@ class Renderer(HelmProvider):
                                       f'Please either add a Helm chart to "{colors.bold(self.chart_dir)}" or '
                                       f'specify a chart repo URL using --repo-url to download the chart repo.')
 
-                self.log.info(f'Chart directory "{colors.bold(chart_dir)}" is empty, '
-                              f'downloading chart repo from {colors.blue(self.repo_url)} ...')
+                self.log.info(f'Downloading chart repo from {colors.blue(self.repo_url)} ...')
 
                 if chart_build_dir.exists():
                     shutil.rmtree(chart_build_dir)

@@ -33,6 +33,7 @@ class Deployment:
                 log.info(f'Using defaults from "{colors.bold(defaults_file)}" ...')
 
         self.config = {}
+
         if defaults_file:
 
             try:
@@ -48,8 +49,9 @@ class Deployment:
         try:
             # Compile config with default Jinja renderer i.e. to provide globals and filters
             env = jinja_env.create([config_path.parent], deployment=self, log=log)
-            return dict_update_recursive(self.config,
-                                         yaml.load(env.get_template(config_path.name).render(self.__dict__), Loader=yaml.FullLoader))
+            return dict_update_recursive(self.config, yaml.load(
+                env.get_template(config_path.name).render(defaults=self.config, **self.__dict__),
+                Loader=yaml.FullLoader))
 
         except ParserError as e:
             raise Error(f'Unexpected error while parsing YAML "{colors.bold(config_path)}": {e}')

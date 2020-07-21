@@ -49,8 +49,8 @@ def dict_update_recursive(d: dict, u: dict) -> dict:
     for k, v in u.items():
         if isinstance(v, collections.abc.Mapping):
             d[k] = dict_update_recursive(d.get(k, {}), v)
-        elif isinstance(v, list):
-            d[k] = (d[k] if k in d else []) + v
+        #elif isinstance(v, list):
+        #    d[k] = (d[k] if k in d else []) + v
         else:
             d[k] = v
     return d
