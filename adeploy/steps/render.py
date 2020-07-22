@@ -48,7 +48,7 @@ class Render:
                     renderer.run()
 
                     # Clean and store secret info in build dir
-                    Secret.clean_all(build_dir)
+                    Secret.clean_build_secrets(build_dir)
                     for secret in Secret.get_registered():
                         secret.store(build_dir)
 

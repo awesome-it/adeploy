@@ -48,8 +48,12 @@ class Test:
                     tester.run()
 
                     # Check whether secrets have to be created
-                    for secret in Secret.get_stored(build_dir, name):
+                    secrets = Secret.get_stored(build_dir, name)
+                    for secret in secrets:
                         secret.test(self.log)
+
+                    # Check and report orphaned secrets
+                    Secret.clean_all(secrets, self.log, dry_run=True)
 
                 except TestError as e:
                     self.log.error(colors.red(f'Test failed in source directory "{src_dir}":'))

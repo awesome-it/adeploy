@@ -8,13 +8,13 @@ import tempfile
 from abc import ABC, abstractmethod
 from logging import Logger
 from pathlib import Path
-from pickle import dump, load, dumps
+from pickle import dump, load
 
 from adeploy.common import colors
-from adeploy.common.kubectl import parse_kubectrl_apply, kubectl_create_secret, kubectl_get_secret, \
-    kubectl_delete_secret
 from adeploy.common.errors import RenderError
 from adeploy.common.gopass import gopass_get
+from adeploy.common.kubectl import parse_kubectrl_apply, kubectl_create_secret, kubectl_get_secret, \
+    kubectl_delete_secret, kubectl
 
 
 class Secret(ABC):
@@ -31,7 +31,7 @@ class Secret(ABC):
         return build_dir.joinpath(deployment_name).joinpath('secrets').joinpath(name)
 
     @staticmethod
-    def clean_all(build_dir: Path):
+    def clean_build_secrets(build_dir: Path):
         for secret in Secret.get_registered():
             secrets_dir = secret.get_path(build_dir).parent
             if secrets_dir.exists():
@@ -61,6 +61,32 @@ class Secret(ABC):
             secrets.append(Secret.load(secret))
         return secrets
 
+    @staticmethod
+    def clean_all(secrets, log, dry_run: bool = True):
+        deployments = {}
+        for s in secrets:
+            key = str(s.deployment)
+            deployments[key] = deployments.get(key, []) + [s]
+
+        for d, secrets in deployments.items():
+            if len(secrets) > 0:
+                log.info(f'Checking for orphaned secrets of deployment "{colors.blue(d)}" ...')
+                d = secrets[0].deployment
+                result = kubectl(log, ['get', 'secret', '-l',
+                                       f'adeploy.name={d.name},adeploy.release={d.release}',
+                                       '-o=jsonpath=\'{.items[*].metadata.name}\''], namespace=d.namespace)
+
+                secrets_existing = result.stdout.replace("'", '').split(' ')
+                secrets_created = [s.name for s in secrets]
+                for s in secrets_existing:
+                    if s not in secrets_created:
+                        if not dry_run:
+                            log.info(f'... {colors.orange("delete")} orphaned secret "{colors.bold(d.name + "/" + s)}"')
+                            kubectl_delete_secret(log, name=s, namespace=d.namespace)
+                        else:
+                            log.info(f'... found orphaned secret "{colors.bold(d.name + "/" + s)}", '
+                                     f'{colors.orange("will be deleted without dry-run")}')
+
     def __init__(self, deployment, name: str = None, use_pass: bool = True):
 
         self.name = name if name else self.gen_name()
@@ -71,7 +97,7 @@ class Secret(ABC):
         return f'{self.deployment.name}/{self.name}'
 
     def gen_name(self):
-        return f'{Secret._name_prefix}{hashlib.sha1(dumps(self)).hexdigest()}'
+        return f'{Secret._name_prefix}{hashlib.sha1(json.dumps(self.__dict__).encode()).hexdigest()}'
 
     def get_path(self, build_dir):
         return Secret.get_secret_path(build_dir, self.deployment.name, self.name)
@@ -95,7 +121,7 @@ class Secret(ABC):
 
         # Test whether this secret is already deployed
         if self.exists(log):
-            log.info(f'... Secret already exists. '
+            log.info(f'... secret already exists. '
                      f'{colors.orange("The secret will not be re-created unless --recreate-secrets was specified.")}')
             return
 
@@ -161,14 +187,21 @@ class GenericSecret(Secret):
             temp_files.append(fd.name)
             args.append(f'--from-file={k}={fd.name}')
 
-        result = kubectl_create_secret(
-            log=log, name=self.name,
-            namespace=self.deployment.namespace,
-            type=self.type, dry_run=dry_run,
-            args=args, output=output)
+        try:
 
-        for f in temp_files:
-            os.remove(f)
+            result = kubectl_create_secret(
+                log=log, name=self.name,
+                namespace=self.deployment.namespace,
+                type=self.type, dry_run=dry_run,
+                args=args, output=output,
+                labels={
+                    'adeploy.name': self.deployment.name,
+                    'adeploy.release': self.deployment.release
+                })
+
+        finally:
+            for f in temp_files:
+                os.remove(f)
 
         return result
 
@@ -220,4 +253,8 @@ class DockerRegistrySecret(Secret):
             log=log, name=self.name,
             namespace=self.deployment.namespace,
             type=self.type, dry_run=dry_run,
-            args=args, output=output)
+            args=args, output=output,
+            labels={
+                'adeploy.name': self.deployment.name,
+                'adeploy.release': self.deployment.release
+            })

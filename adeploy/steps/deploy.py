@@ -48,8 +48,12 @@ class Deploy:
                     deployer.run()
 
                     # Create secrets
-                    for secret in Secret.get_stored(build_dir, name):
+                    secrets = Secret.get_stored(build_dir, name)
+                    for secret in secrets:
                         secret.deploy(self.log, self.args.recreate_secrets)
+
+                    # Remove unused secrets
+                    Secret.clean_all(secrets, self.log, dry_run=False)
 
                 except DeployError as e:
                     self.log.error(colors.red(f'Deployment failed in source directory "{src_dir}":'))

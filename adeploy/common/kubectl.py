@@ -1,7 +1,13 @@
+import json
+import os
 import subprocess
+import tempfile
 from logging import Logger
 
+import yaml
+
 from adeploy.common import colors
+from adeploy.common.helpers import dict_update_recursive
 
 
 def kubectl_apply(log, manifest_path, namespace=None, dry_run=None, output=None) -> subprocess.CompletedProcess:
@@ -21,14 +27,37 @@ def kubectl_delete_secret(log, name, namespace) -> subprocess.CompletedProcess:
     return kubectl(log, ['delete', 'secret', name, '-o', 'name'], namespace)
 
 
-def kubectl_create_secret(log, name, namespace, type, args, dry_run: bool = None,
-                          output: str = None) -> subprocess.CompletedProcess:
-    args = ['create', 'secret', type, name] + args
+def kubectl_create_secret(log, name, namespace, type, args, labels: dict = None,
+                          dry_run: bool = None, output: str = None) -> subprocess.CompletedProcess:
+    # Get manifest for secret
+    result = kubectl(log, ['create', 'secret', type, name] + args + ['--dry-run=client', '-o', 'json'], namespace)
+    manifest = json.loads(result.stdout)
+
+    # Add labels
+    manifest = dict_update_recursive(manifest, {
+        'metadata': {
+            'labels': labels
+        }
+    })
+
+    fd = tempfile.NamedTemporaryFile(delete=False, mode='w')
+    yaml.dump(manifest, fd)
+    fd.close()
+
+    # Apply manifest
+    args = []
     if dry_run:
         args.append(f'--dry-run={dry_run}')
+
     if output:
         args += ['-o', output]
-    return kubectl(log, args, namespace)
+
+    try:
+        result = kubectl(log, ['apply', '-f', fd.name] + args, namespace)
+    finally:
+        os.remove(fd.name)
+
+    return result
 
 
 def kubectl(log: Logger, args: list, namespace: str = None) -> subprocess.CompletedProcess:
