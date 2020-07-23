@@ -41,7 +41,8 @@ class Deployment:
                 # Compile defaults with default Jinja renderer i.e. to provide globals and filters
                 env = jinja_env.create([defaults_file.parent], deployment=self, log=log)
                 defaults = yaml.load(env.get_template(defaults_file.name).render(self.__dict__), Loader=yaml.FullLoader)
-                self.config.update(defaults)
+                if defaults is not None:
+                    self.config.update(defaults)
 
             except ParserError as e:
                 raise Error(f'Unexpected error while parsing YAML "{colors.bold(defaults_file)}": {e}')
