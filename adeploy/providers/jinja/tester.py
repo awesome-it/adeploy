@@ -1,11 +1,14 @@
 import argparse
 import json
+import string
 
 from pathlib import Path
+from random import random
 from subprocess import CalledProcessError
 
 from adeploy.common import colors
-from adeploy.common.kubectl import kubectl_apply, parse_kubectrl_apply
+from adeploy.common.kubectl import kubectl_apply, parse_kubectrl_apply, kubectl_get_default_namespace, \
+    kubectl_set_default_namespace, kubectl_get_namespaces, kubectl_set_fake_namespace
 from adeploy.common.errors import TestError
 from adeploy.common.provider import Provider
 
@@ -34,9 +37,14 @@ class Tester(Provider):
             self.log.info(f'Testing manifests for deployment "{colors.blue(deployment)}" in "{manifest_path}" ...')
 
             try:
+
+                default_ns, fake_ns = kubectl_set_fake_namespace(self.log)
                 manifests = kubectl_apply(self.log, manifest_path, dry_run='client', output='json')
+                kubectl_set_default_namespace(self.log, default_ns)
+
                 result = kubectl_apply(self.log, manifest_path, dry_run='server')
-                parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout))
+                parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout), fake_ns=fake_ns,
+                                     default_ns=default_ns)
 
             except CalledProcessError as e:
                 raise TestError(f'Error in manifest dir "{manifest_path}": {e.stderr}')
