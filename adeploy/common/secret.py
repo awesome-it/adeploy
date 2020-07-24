@@ -76,16 +76,23 @@ class Secret(ABC):
                                        f'adeploy.name={d.name},adeploy.release={d.release}',
                                        '-o=jsonpath=\'{.items[*].metadata.name}\''], namespace=d.namespace)
 
-                secrets_existing = result.stdout.replace("'", '').split(' ')
+                secrets_existing = [s for s in result.stdout.replace("'", '').split(' ') if len(s) > 0]
                 secrets_created = [s.name for s in secrets]
+                num_orphaned = 0
                 for s in secrets_existing:
                     if s not in secrets_created:
+                        num_orphaned += 1
                         if not dry_run:
                             log.info(f'... {colors.orange("delete")} orphaned secret "{colors.bold(d.name + "/" + s)}"')
                             kubectl_delete_secret(log, name=s, namespace=d.namespace)
                         else:
                             log.info(f'... found orphaned secret "{colors.bold(d.name + "/" + s)}", '
                                      f'{colors.orange("will be deleted without dry-run")}')
+
+                if num_orphaned > 0:
+                    log.info(f'Found {colors.bold(num_orphaned)} orphaned secrets.')
+                else:
+                    log.info(f'No orphaned secrets found.')
 
     def __init__(self, deployment, name: str = None, use_pass: bool = True):
 
