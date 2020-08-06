@@ -77,7 +77,19 @@ Currently there are a few helpers in `common/secrets.py`, which can be used for 
 ```jinja2
 myjinjatemplate:
   config:
-    secretName: {{ create_secret(secret_name, my_key=my_secret) }}
+    secretName: {{ create_secret(secret_name, my_key=/pass/path/to/my_secret) }}
+    secretKey: my_key
+```
+
+By default the secret value is taken from `gopass` password store that must be available when for initial deployment.
+If the secret is not attempt to change (i.e. during CI/CD), no password store is required.
+
+You can optionally set `use_pass=False` to use the specified value as follows:
+
+```jinja2
+myjinjatemplate:
+  config:
+    secretName: {{ create_secret(secret_name, use_pass=False, my_key=my_secret_value) }}
     secretKey: my_key
 ```
 
@@ -85,10 +97,6 @@ The Jinja global function `create_secret()` will create the appropriate secret a
 be used in your YAML i.e. Jinja template or deployment configuration.
 
 Additional there is `create_tls_secret()` and `create_docker_registry_secret()` to create the appropriate secret variants.
-
-### Future Roadmap
-
-Implement `sealed-secrets` https://github.com/bitnami-labs/sealed-secrets.
 
 
 ## Providers
