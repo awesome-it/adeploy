@@ -70,6 +70,14 @@ Or if you have multiple deployments in a `defaults` folder:
 /repo/defaults/<deployment_name>.yml
 ```
 
+While your deployment configuration inherits from the defaults file, you can also access specified default variables
+in your deployment configuration as follows:
+
+```jinja2
+mydeployment:
+    image: registry/image:v{{ defaults.get('versions').get('image') }}
+```
+
 ## Secrets
 
 Currently there are a few helpers in `common/secrets.py`, which can be used for implicit secret creation e.g:
