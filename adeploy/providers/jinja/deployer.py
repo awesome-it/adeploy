@@ -33,6 +33,10 @@ class Deployer(Provider):
 
             self.log.info(f'Applying manifests for deployment "{colors.blue(deployment)}" in "{manifest_path}" ...')
 
+            if not manifest_path.exists():
+                self.log.info(f'... skip deployment without manifests')
+                continue
+
             try:
                 result = kubectl_apply(self.log, manifest_path)
                 parse_kubectrl_apply(self.log, result.stdout)

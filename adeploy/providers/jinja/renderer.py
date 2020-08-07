@@ -97,9 +97,11 @@ class Renderer(Provider):
                               f'in "{colors.bold(output_path)}" ...')
 
                 try:
-                    output_path.parent.mkdir(parents=True, exist_ok=True)
-                    with open(output_path, 'w') as fd:
-                        fd.write(env.get_template(template).render(**values))
+                    data = env.get_template(template).render(**values)
+                    if len(data.replace('\n', '').strip()) > 0:
+                        output_path.parent.mkdir(parents=True, exist_ok=True)
+                        with open(output_path, 'w') as fd:
+                            fd.write(data)
 
                 except jinja2.exceptions.TemplateError as e:
                     self.log.debug(f'Used Jinja variables: {json.dumps(values)}')

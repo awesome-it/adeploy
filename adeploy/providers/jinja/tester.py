@@ -38,6 +38,10 @@ class Tester(Provider):
 
             try:
 
+                if not manifest_path.exists():
+                    self.log.info(f'... skip deployment without manifests')
+                    continue
+
                 default_ns, fake_ns = kubectl_set_fake_namespace(self.log)
                 manifests = kubectl_apply(self.log, manifest_path, dry_run='client', output='json')
                 kubectl_set_default_namespace(self.log, default_ns)
