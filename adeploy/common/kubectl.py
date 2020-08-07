@@ -104,6 +104,10 @@ def kubectl(log: Logger, args: list, namespace: str = None) -> subprocess.Comple
 
 def parse_kubectrl_apply(log, stdout, manifests: dict = None, fake_ns: str = None, default_ns: str = None,
                          deployment_ns: str = None, prefix='...'):
+
+    # If there is no fake_ns, we need to determine by comparing existing namespaces
+    namespaces = kubectl_get_namespaces(log)
+
     for line in stdout.split('\n'):
         token = line.split(' ')
         if len(token) > 3:
@@ -127,7 +131,7 @@ def parse_kubectrl_apply(log, stdout, manifests: dict = None, fake_ns: str = Non
                         # If the helm templates does not contain a namespace (which is seen as best practise, see
                         # https://github.com/helm/helm/issues/5465. This displays the real namespace that would be used
                         # for helm install/upgrade.
-                        if namespace == 'default' and deployment_ns and deployment_ns != namespace:
+                        if (namespace == 'default' or namespace not in namespaces) and deployment_ns and deployment_ns != namespace:
                             namespace = deployment_ns
 
                     # No namespace needed for cluster resources

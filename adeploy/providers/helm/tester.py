@@ -71,7 +71,7 @@ class Tester(HelmProvider):
                                          deployment_ns=deployment.namespace, prefix=2 * '...')
                 except CalledProcessError as e:
                     self.log.warning(
-                        colors.orange(f' ... Error when dry-running kubectl apply using raw manifests: {e.stderr}'))
+                        colors.orange(f' ... Error when dry-running kubectl apply using raw manifests: {e.stderr[:255] + (e.stderr[255:] and "...")}'))
                     self.log.warning(f'Helm install might work anyways, so ignore and continue.')
                     pass
 
