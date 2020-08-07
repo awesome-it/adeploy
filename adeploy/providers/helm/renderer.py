@@ -59,7 +59,7 @@ class Renderer(HelmProvider):
                 if self.repo_url is None:
 
                     if chart_build_dir.is_dir() and os.listdir(chart_build_dir):
-                        self.log.info(f'Re-using previously downlaoded chart from "{colors.bold(chart_build_dir)}". '
+                        self.log.info(f'Re-using previously downloaded chart from "{colors.bold(chart_build_dir)}". '
                                       f'Pass --repo-url to force re-downloaded the chart.')
                         return
 
