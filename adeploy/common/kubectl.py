@@ -14,7 +14,10 @@ from adeploy.common.helpers import dict_update_recursive
 
 
 def kubectl_set_default_namespace(log: Logger, namespace: str) -> subprocess.CompletedProcess:
-    return kubectl(log, ['config', 'set-context', '--current', f'--namespace={namespace}'])
+    try:
+        return kubectl(log, ['config', 'set-context', '--current', f'--namespace={namespace}'])
+    except subprocess.CalledProcessError as e:
+        log.warning(f'Error while changing default namespace: {e}')
 
 
 def kubectl_get_default_namespace(log: Logger) -> str:
