@@ -134,15 +134,17 @@ def parse_kubectrl_apply(log, stdout, manifests: dict = None, fake_ns: str = Non
                         if (namespace == 'default' or namespace not in namespaces) and deployment_ns and deployment_ns != namespace:
                             namespace = deployment_ns
 
-                    # No namespace needed for cluster resources
-                    if 'cluster' in item_resource_name.lower() and namespace is None:
-                        namespace_description = ''
+                        # No namespace needed for cluster resources
+                        if 'cluster' in item_resource_name.lower():
+                            namespace_description = ''
 
-                    elif fake_ns and namespace == fake_ns:
-                        raise TestError(f'No namespace specified for '
-                                        f'resource {colors.bold(resource)}/{colors.bold(resource_name)} ')
-                    else:
-                        namespace_description = f'namespace: {colors.bold(namespace or default_ns)} '
+                        elif fake_ns and namespace == fake_ns:
+                            raise TestError(f'No namespace specified for '
+                                            f'resource {colors.bold(resource)}/{colors.bold(resource_name)} ')
+                        else:
+                            namespace_description = f'namespace: {colors.bold(namespace or default_ns)} '
+
+                        break
 
                 if not found:
                     log.warning(f'Could not find metadata for resource: {colors.bold(resource)}, '
