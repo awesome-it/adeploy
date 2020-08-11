@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import logging
+import os
 import sys
 
 from colorama import init
@@ -17,7 +18,10 @@ log = get_logger('adeploy')
 
 
 def main():
-    init(autoreset=True)
+
+    if not os.getenv('CI', False):
+        init(autoreset=True)
+
     parser = setup_parser()
     args, unknown_args = parse(parser)
     setup_logging(args)
