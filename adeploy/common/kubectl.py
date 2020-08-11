@@ -19,10 +19,11 @@ def kubectl_set_default_namespace(log: Logger, namespace: str) -> subprocess.Com
 
 def kubectl_get_default_namespace(log: Logger) -> str:
     config = json.loads(kubectl(log, ['config', 'view', '-o', 'json']).stdout)
-
-    for c in config.get('contexts', []):
+    contexts = config.get('contexts', [])
+    for c in contexts or []:
         if c.get('name') == config.get('current-context'):
             return c.get('context').get('namespace', 'default')
+    return 'default'
 
 
 def kubectl_set_fake_namespace(log: Logger) -> (str, str):
