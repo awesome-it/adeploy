@@ -13,11 +13,22 @@ from adeploy.common.errors import TestError
 from adeploy.common.helpers import dict_update_recursive
 
 
+def kubectl_add_default_context(log: Logger):
+    kubectl(log, ['config', 'set-cluster', 'default',
+                  f'--server=https://{os.getenv("KUBERNETES_SERVICE_HOST")}:{os.getenv("KUBERNETES_SERVICE_PORT_HTTPS")}',
+                  '--certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'])
+
+    kubectl(log, ['config', 'set-context', 'default', '--cluster=deploy'])
+
+    with open('/var/run/secrets/kubernetes.io/serviceaccount/token') as fd:
+        kubectl(log, ['config', 'set-credentials', 'default', f'--token={fd.read()}'])
+
+    kubectl(log, ['config', 'set-context', 'default', '--user=default'])
+    kubectl(log, ['config', 'use-context', 'default'])
+
+
 def kubectl_set_default_namespace(log: Logger, namespace: str) -> subprocess.CompletedProcess:
-    try:
-        return kubectl(log, ['config', 'set-context', '--current', f'--namespace={namespace}'])
-    except subprocess.CalledProcessError as e:
-        log.warning(f'Error while changing default namespace: {e}')
+    return kubectl(log, ['config', 'set-context', '--current', f'--namespace={namespace}'])
 
 
 def kubectl_get_default_namespace(log: Logger) -> str:
@@ -30,6 +41,9 @@ def kubectl_get_default_namespace(log: Logger) -> str:
 
 
 def kubectl_set_fake_namespace(log: Logger) -> (str, str):
+    if os.getenv('CI'):
+        kubectl_add_default_context(log)
+
     default_ns = kubectl_get_default_namespace(log)
     namespaces = kubectl_get_namespaces(log)
     fake_ns = None
@@ -108,7 +122,6 @@ def kubectl(log: Logger, args: list, namespace: str = None) -> subprocess.Comple
 
 def parse_kubectrl_apply(log, stdout, manifests: dict = None, fake_ns: str = None, default_ns: str = None,
                          deployment_ns: str = None, prefix='...'):
-
     # If there is no fake_ns, we need to determine by comparing existing namespaces
     namespaces = kubectl_get_namespaces(log)
 
@@ -135,7 +148,8 @@ def parse_kubectrl_apply(log, stdout, manifests: dict = None, fake_ns: str = Non
                         # If the helm templates does not contain a namespace (which is seen as best practise, see
                         # https://github.com/helm/helm/issues/5465. This displays the real namespace that would be used
                         # for helm install/upgrade.
-                        if (namespace == 'default' or namespace not in namespaces) and deployment_ns and deployment_ns != namespace:
+                        if (
+                                namespace == 'default' or namespace not in namespaces) and deployment_ns and deployment_ns != namespace:
                             namespace = deployment_ns
 
                         # No namespace needed for cluster resources
