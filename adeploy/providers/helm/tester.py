@@ -5,6 +5,8 @@ import tempfile
 from pathlib import Path
 from subprocess import CalledProcessError
 
+import yaml
+
 from adeploy.common import colors
 from adeploy.common.kubectl import kubectl_apply, parse_kubectrl_apply
 from adeploy.common.errors import TestError
@@ -12,7 +14,6 @@ from adeploy.providers.helm.common import helm_install, HelmOutput, HelmProvider
 
 
 class Tester(HelmProvider):
-
     skip_raw_test: bool
 
     @staticmethod
@@ -81,22 +82,47 @@ class Tester(HelmProvider):
 
                     for single_manifest_path in manifest_files:
 
-                        # Get manifests to fetch destination namespace
-                        manifests = kubectl_apply(self.log, single_manifest_path, dry_run='client', output='json')
+                        # Determine destination namespace
+                        with open(single_manifest_path) as fd:
+                            manifest_yaml = yaml.load(fd, Loader=yaml.FullLoader)
 
-                        try:
-                            # First try including namespace
-                            result = kubectl_apply(self.log, single_manifest_path, namespace=deployment.namespace, dry_run='server')
-                        except CalledProcessError:
-                            # Fallback without namespace i.e. defined in template and != deployment.namespace
+                        # Skip empty YAML i.e. comments
+                        if not manifest_yaml:
+                            continue
+
+                        kind = manifest_yaml.get('kind')
+                        namespace = manifest_yaml.get('metadata', {}).get('namespace', False)
+
+                        # Cluster resource does not need a namespace
+                        if 'cluster' in kind.lower():
+
+                            manifests = kubectl_apply(self.log, single_manifest_path, dry_run='client', output='json')
+                            result = kubectl_apply(self.log, single_manifest_path, dry_run='server')
+
+                        # Namespace is not defined in manifest (which is best practice), so pass it to kubectl
+                        elif not namespace:
+
+                            manifests = kubectl_apply(self.log, single_manifest_path, namespace=deployment.namespace,
+                                                      dry_run='client', output='json')
+                            result = kubectl_apply(self.log, single_manifest_path, namespace=deployment.namespace,
+                                                   dry_run='server')
+
+                        # Namespace is defined in manifest or there are manifests for different namespaces,
+                        # so don't pass it to kubectl
+                        else:
+
+                            manifests = kubectl_apply(self.log, single_manifest_path, dry_run='client', output='json')
                             result = kubectl_apply(self.log, single_manifest_path, dry_run='server')
 
                         parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout),
                                              deployment_ns=deployment.namespace, prefix=2 * '...')
 
                 except CalledProcessError as e:
-                    self.log.warning(
-                        colors.orange(f' ... Error when dry-running kubectl apply using raw manifests: {e.stderr[:255] + (e.stderr[255:] and "...")}'))
+                    self.log.warning(colors.orange(f' ... '
+                                                   f'Error when dry-running kubectl apply '
+                                                   f'using raw manifests: '
+                                                   f'{e.stderr[:255] + (e.stderr[255:] and "...")}'))
+
                     self.log.warning(f'Helm install might work anyways, so ignore and continue.')
                     pass
 
