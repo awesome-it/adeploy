@@ -41,4 +41,4 @@ def register_globals(env: jinja2.Environment, deployment, log: Logger = None):
                       f'for deployment "{str(deployment)}" '
                       f'from "{getfile(func_creator)}"')
 
-        env.globals.update({name.split('__')[1]: func_creator(deployment, log)})
+        env.globals.update({name.split('__')[1]: func_creator(deployment, log=log, env=env)})

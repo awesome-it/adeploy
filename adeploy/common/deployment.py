@@ -56,3 +56,15 @@ class Deployment:
 
         except ParserError as e:
             raise Error(f'Unexpected error while parsing YAML "{colors.bold(config_path)}": {e}')
+
+    def get_template_values(self):
+        return {
+            'name': self.name.replace('.', '-'),
+            'release': self.release.replace('.', '-'),
+            'namespace': self.namespace,
+            'deployment': self.config,
+
+            # Some legacy variables
+            'node_selector': self.config.get('node', {}),
+            'default_versions': self.config.get('versions', {}),
+        }

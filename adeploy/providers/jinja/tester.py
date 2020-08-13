@@ -1,4 +1,5 @@
 import argparse
+import glob
 import json
 import string
 
@@ -38,17 +39,19 @@ class Tester(Provider):
 
             try:
 
-                if not manifest_path.exists():
-                    self.log.info(f'... skip deployment without manifests')
-                    continue
+                files = []
+                for ext in ['yaml', 'yml']:
+                    files.extend(glob.glob(f'{manifest_path}/**/*.{ext}', recursive=True))
 
-                default_ns, fake_ns = kubectl_set_fake_namespace(self.log)
-                manifests = kubectl_apply(self.log, manifest_path, dry_run='client', output='json')
-                kubectl_set_default_namespace(self.log, default_ns)
+                for manifest_path in files:
 
-                result = kubectl_apply(self.log, manifest_path, dry_run='server')
-                parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout), fake_ns=fake_ns,
-                                     default_ns=default_ns)
+                    default_ns, fake_ns = kubectl_set_fake_namespace(self.log)
+                    manifests = kubectl_apply(self.log, manifest_path, dry_run='client', output='json')
+                    kubectl_set_default_namespace(self.log, default_ns)
+
+                    result = kubectl_apply(self.log, manifest_path, dry_run='server')
+                    parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout), fake_ns=fake_ns,
+                                         default_ns=default_ns)
 
             except CalledProcessError as e:
                 raise TestError(f'Error in manifest dir "{manifest_path}": {e.stderr}')

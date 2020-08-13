@@ -148,8 +148,8 @@ def parse_kubectrl_apply(log, stdout, manifests: dict = None, fake_ns: str = Non
                         # If the helm templates does not contain a namespace (which is seen as best practise, see
                         # https://github.com/helm/helm/issues/5465. This displays the real namespace that would be used
                         # for helm install/upgrade.
-                        if (
-                                namespace == 'default' or namespace not in namespaces) and deployment_ns and deployment_ns != namespace:
+                        if (namespace == 'default' or namespace not in namespaces) \
+                                and deployment_ns and deployment_ns != namespace:
                             namespace = deployment_ns
 
                         # No namespace needed for cluster resources

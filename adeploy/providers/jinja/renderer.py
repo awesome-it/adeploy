@@ -37,7 +37,7 @@ class Renderer(Provider):
     def load_templates(self, extensions=None):
 
         if extensions is None:
-            extensions = ['yaml', 'yml', 'jinja']
+            extensions = ['yaml', 'yml']
 
         templates_dir = self.templates_dir
         if not os.path.isabs(templates_dir):
@@ -46,11 +46,11 @@ class Renderer(Provider):
         if templates_dir[-1] == '/':
             templates_dir = templates_dir[:-1]
 
-        self.log.debug(f'Scanning source dir with pattern "{templates_dir}/*.({"|".join(extensions)})" ...')
+        self.log.debug(f'Scanning source dir with pattern "{templates_dir}/**/*.({"|".join(extensions)})" ...')
 
         files = []
         for ext in extensions:
-            files.extend(glob.glob(f'{templates_dir}/*.{ext}'))
+            files.extend(glob.glob(f'{templates_dir}/**/*.{ext}', recursive=True))
 
         if len(files) == 0:
             raise RenderError(f'No template files found in "{templates_dir}"')
@@ -74,17 +74,10 @@ class Renderer(Provider):
 
             jinja_env.register_globals(env, deployment, self.log)
 
-            for template in templates:
-                values = {
-                    'name': deployment.name.replace('.', '-'),
-                    'release': deployment.release.replace('.', '-'),
-                    'namespace': deployment.namespace,
-                    'deployment': deployment.config,
+            self.log.info(f'Rendering deployment "{colors.blue(deployment)}" ...')
 
-                    # Some legacy variables
-                    'node_selector': deployment.config.get('node', {}),
-                    'default_versions': deployment.config.get('versions', {}),
-                }
+            for template in templates:
+                values = deployment.get_template_values()
 
                 output_path = Path(self.build_dir) \
                     .joinpath(deployment.namespace) \
@@ -92,9 +85,7 @@ class Renderer(Provider):
                     .joinpath(deployment.release) \
                     .joinpath(template)
 
-                self.log.info(f'Rendering deployment "{colors.blue(deployment)}" '
-                              f'from "{colors.bold(template)}" '
-                              f'in "{colors.bold(output_path)}" ...')
+                self.log.info(f'... render "{colors.bold(template)}" in "{colors.bold(output_path)}" ...')
 
                 try:
                     data = env.get_template(template).render(**values)
