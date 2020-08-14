@@ -6,12 +6,13 @@
 /mydeployment/
 
 /mydeployment/chart
+/mydeployment/hooks
 
 /mydeployment/namespaces
 /mydeployment/namespaces/mynamespace/prod.yml
 /mydeployment/namespaces/mynamespace/test.yml
 
-/defaults.yml
+/mydeployment/defaults.yml
 ```
 
 * A Helm deployment consists of an optional `chart` folder containing a Helm chart,
@@ -44,3 +45,12 @@ _chart:
     version: 0.0.0
     appVersion: 0.0.0
 ```
+
+### Hooks
+
+Since 0.4.0 adeploy executes scripts from the `/mydeployment/hooks` folder as:
+```bash
+$ cd /mydeployment/hooks
+$ ./script.sh /mydeployment/build/helm/charts/<chartname>/
+```
+You can use this i.e. to patch Helm Charts without touching upstream repos for quick and dirty fixes.
