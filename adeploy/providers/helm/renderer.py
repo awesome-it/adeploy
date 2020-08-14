@@ -1,6 +1,8 @@
+import glob
 import os
 import shutil
 import argparse
+import subprocess
 from pathlib import Path
 from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory
@@ -13,9 +15,9 @@ from .common import helm_repo_add, helm_repo_pull, helm_template, HelmProvider
 
 
 class Renderer(HelmProvider):
-
-    chart_dir: str = None
+    chart_dir: Path = None
     repo_url: str = None
+    hooks_dir: Path = None
 
     @staticmethod
     def get_parser():
@@ -28,31 +30,38 @@ class Renderer(HelmProvider):
 
         parser.add_argument('--repo-url', dest='repo_url', help='Helm repo URL to download chart if chart dir is empty')
 
+        parser.add_argument('--hooks-dir', dest='hooks_dir', default='hooks',
+                            help='Directory containing bash scripts that can be used to modify the Helm chart without'
+                                 'changing upstream repos')
+
         return parser
 
     def parse_args(self, args: dict):
-        self.chart_dir = args.get('chart_dir')
+
         self.repo_url = args.get('repo_url', None)
 
+        self.chart_dir = Path(args.get('chart_dir'))
+        if not self.chart_dir.is_absolute():
+            self.chart_dir = self.src_dir.joinpath(self.chart_dir)
+
+        self.hooks_dir = Path(args.get('hooks_dir'))
+        if not self.hooks_dir.is_absolute():
+            self.hooks_dir = self.src_dir.joinpath(self.hooks_dir)
+
     def build_chart(self):
-
-        chart_dir = Path(self.chart_dir)
-
-        if not chart_dir.is_absolute():
-            chart_dir = self.src_dir.joinpath(chart_dir)
 
         chart_build_dir = self.get_chart_dir()
 
         try:
 
             # Chart dir exists, copy to build dir
-            if chart_dir.is_dir() and os.listdir(chart_dir):
+            if self.chart_dir.is_dir() and os.listdir(str(self.chart_dir)):
 
                 if chart_build_dir.exists():
                     shutil.rmtree(chart_build_dir)
 
-                self.log.info(f'Using chart in "{colors.bold(chart_dir)} ...')
-                shutil.copytree(chart_dir, chart_build_dir)
+                self.log.info(f'Using chart in "{colors.bold(self.chart_dir)} ...')
+                shutil.copytree(str(self.chart_dir), chart_build_dir)
 
             else:
 
@@ -86,15 +95,39 @@ class Renderer(HelmProvider):
                     shutil.move(f'{temp.name}/{self.name}', chart_build_dir)
 
                 except CalledProcessError as e:
-                    raise RenderError(f'Error while adding helm repo {self.repo_url}: {e.stderr}')
+                    raise RenderError(f'Error while pulling helm repo {self.repo_url}: {e.stderr}')
 
         except shutil.Error as e:
             raise RenderError(f'Error while creating chart build dir "{chart_build_dir}": {e.strerror}')
 
+    def run_hooks(self):
+
+        if self.hooks_dir.is_dir():
+            for hook in [Path(h) for h in glob.glob(f'{self.hooks_dir}/*.sh')]:
+                self.log.info(f'Running hook "{colors.bold(hook.stem)}" ...')
+
+                cmd = [str(c) for c in [hook, self.src_dir.joinpath(self.get_chart_dir())]]
+
+                self.log.debug(f'... Executing command "{colors.bold(" ".join(cmd))}" '
+                               f'in "{colors.bold(self.hooks_dir)}"')
+
+                try:
+                    result = subprocess.run(cmd, cwd=str(self.hooks_dir), capture_output=True, text=True)
+                    result.check_returncode()
+                    self.log.debug(f'... {result.stdout}')
+                except CalledProcessError as e:
+                    self.log.error(f'... {e.stdout}')
+                    self.log.error(colors.red(f'Error when running hook "{colors.bold(hook.stem)}": {e.stderr}'))
+                    raise e
+
+                return result
+
     def run(self):
 
         self.log.debug(f'Working on deployment "{self.name}" ...')
+
         self.build_chart()
+        self.run_hooks()
 
         for deployment in self.load_deployments():
 

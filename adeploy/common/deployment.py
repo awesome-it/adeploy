@@ -1,3 +1,4 @@
+import glob
 from logging import Logger
 from pathlib import Path
 
@@ -15,11 +16,13 @@ class Deployment:
     release: str
     namespace: str
     config: dict
+    hooks: dict
 
     def __init__(self, name: str, release: str, namespace: str):
         self.name = name
         self.release = release
         self.namespace = namespace
+        self.hooks = {}
 
     def __repr__(self):
         return f'{self.namespace}/{self.name}-{self.release}'
@@ -50,12 +53,14 @@ class Deployment:
         try:
             # Compile config with default Jinja renderer i.e. to provide globals and filters
             env = jinja_env.create([config_path.parent], deployment=self, log=log)
-            return dict_update_recursive(self.config, yaml.load(
+            self.config = dict_update_recursive(self.config, yaml.load(
                 env.get_template(config_path.name).render(defaults=self.config, **self.__dict__),
                 Loader=yaml.FullLoader))
 
         except ParserError as e:
             raise Error(f'Unexpected error while parsing YAML "{colors.bold(config_path)}": {e}')
+
+        return self.config
 
     def get_template_values(self):
         return {
