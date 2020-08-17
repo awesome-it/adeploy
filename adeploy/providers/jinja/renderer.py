@@ -58,7 +58,7 @@ class Renderer(Provider):
         self.log.debug(f'Found templates: ')
         [self.log.debug(f'- {f}') for f in files]
 
-        return templates_dir, [f.replace(f'{templates_dir}/', '') for f in files]
+        return templates_dir, sorted([f.replace(f'{templates_dir}/', '') for f in files])
 
     def run(self):
 
@@ -93,6 +93,10 @@ class Renderer(Provider):
                         output_path.parent.mkdir(parents=True, exist_ok=True)
                         with open(output_path, 'w') as fd:
                             fd.write(data)
+
+                except jinja2.exceptions.TemplateNotFound as e:
+                    self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
+                    raise RenderError(f'Jinja template error: Template "{e}" not found in "{template}"')
 
                 except jinja2.exceptions.TemplateError as e:
                     self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
