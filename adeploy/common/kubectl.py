@@ -127,7 +127,7 @@ def parse_kubectrl_apply(log, stdout, manifests: dict = None, fake_ns: str = Non
 
     for line in stdout.split('\n'):
         token = line.split(' ')
-        if len(token) > 3:
+        if len(token) >= 2:
             resource, resource_name = token[0].split('/')
             status = token[1]
             namespace = None

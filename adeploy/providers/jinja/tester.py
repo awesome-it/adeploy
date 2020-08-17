@@ -30,28 +30,29 @@ class Tester(Provider):
 
         for deployment in self.load_deployments():
 
-            manifest_path = Path(self.build_dir) \
+            manifests_dir = Path(self.build_dir) \
                 .joinpath(deployment.namespace) \
                 .joinpath(self.name) \
                 .joinpath(deployment.release)
 
-            self.log.info(f'Testing manifests for deployment "{colors.blue(deployment)}" in "{manifest_path}" ...')
+            self.log.info(f'Testing manifests for deployment "{colors.blue(deployment)}" in "{manifests_dir}" ...')
 
-            try:
+            files = []
+            for ext in ['yaml', 'yml']:
+                files.extend(glob.glob(f'{manifests_dir}/**/*.{ext}', recursive=True))
 
-                files = []
-                for ext in ['yaml', 'yml']:
-                    files.extend(glob.glob(f'{manifest_path}/**/*.{ext}', recursive=True))
+            for manifest_path in files:
 
-                for manifest_path in files:
+                try:
 
                     default_ns, fake_ns = kubectl_set_fake_namespace(self.log)
                     manifests = kubectl_apply(self.log, manifest_path, dry_run='client', output='json')
                     kubectl_set_default_namespace(self.log, default_ns)
 
                     result = kubectl_apply(self.log, manifest_path, dry_run='server')
-                    parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout), fake_ns=fake_ns,
+                    parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout),
+                                         fake_ns=fake_ns,
                                          default_ns=default_ns)
 
-            except CalledProcessError as e:
-                raise TestError(f'Error in manifest dir "{manifest_path}": {e.stderr}')
+                except CalledProcessError as e:
+                    raise TestError(f'Error in manifest dir "{manifest_path}": {e.stderr}')
