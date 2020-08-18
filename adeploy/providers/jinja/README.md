@@ -35,6 +35,34 @@ Legacy variables (do not use them in a new deployment):
 * `node_selector`: Derived from `deployment.node`
 * `default_version`: Derived from `deployment.versions` (i.e. `versions` in `default.yml`)
 
+#### Global Functions & Filters
+
+There are a various number of global functions and filters that can be used within a Jinja template:
+
+```bash
+$ grep "def create__" adeploy/common/jinja/globals.py | sed -s 's/def create__//'
+get_version(deployment, **kwargs):
+version(deployment, **kwargs):
+get_url(deployment, **kwargs):
+create_generic_secret(deployment, **create_kwargs):
+create_secret(deployment, **kwargs):
+create_tls_secret(deployment, **kwargs):
+create_docker_registry_secret(deployment, **kwargs):
+include_file(deployment, **kwargs):
+``` 
+
+See [adeploy/common/jinja/globals.py](adeploy/common/jinja/globals.py) for reference.
+
+```bash
+$ grep "def " adeploy/common/jinja/filters.py | sed -s 's/def //'
+yaml(obj, flow_style):
+quote(string):
+base64_encode(string):
+sha265sum(string: str):
+```
+
+See [adeploy/common/jinja/filters.py](adeploy/common/jinja/filters.py) for reference.
+
 #### Macros
 
 You can include macros or Jinja files from 
