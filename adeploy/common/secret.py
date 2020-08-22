@@ -44,8 +44,9 @@ class Secret(ABC):
 
     @staticmethod
     def register(s):
-        if s.name not in Secret._secrets:
-            Secret._secrets[s.name] = s
+        key = f'{s.deployment.namespace}.{s.name}'
+        if key not in Secret._secrets:
+            Secret._secrets[key] = s
             return True
         return False
 
