@@ -27,8 +27,8 @@ class Secret(ABC):
     _secrets = {}
 
     @staticmethod
-    def get_secret_path(build_dir: Path, deployment_name: str, name: str):
-        return build_dir.joinpath(deployment_name).joinpath('secrets').joinpath(name)
+    def get_secret_dir(build_dir: Path, deployment_name: str):
+        return build_dir.joinpath(deployment_name).joinpath('secrets')
 
     @staticmethod
     def clean_build_secrets(build_dir: Path):
@@ -55,10 +55,10 @@ class Secret(ABC):
         return Secret._secrets.values()
 
     @staticmethod
-    def get_stored(build_dir: Path, name: str):
-        secrets_dir = Secret.get_secret_path(build_dir, name, '.')
+    def get_stored(build_dir: Path, deployment_name: str):
+        secrets_dir = Secret.get_secret_dir(build_dir, deployment_name)
         secrets = []
-        for secret in glob.glob(f'{secrets_dir}/*'):
+        for secret in glob.glob(f'{secrets_dir}/*/*'):
             secrets.append(Secret.load(secret))
         return secrets
 
@@ -108,7 +108,7 @@ class Secret(ABC):
         return f'{Secret._name_prefix}{hashlib.sha1(json.dumps(self.__dict__).encode()).hexdigest()}'
 
     def get_path(self, build_dir):
-        return Secret.get_secret_path(build_dir, self.deployment.name, self.name)
+        return Secret.get_secret_dir(build_dir, self.deployment.name).joinpath(self.deployment.namespace).joinpath(self.name)
 
     def store(self, build_dir: Path):
         output_path = self.get_path(build_dir)
