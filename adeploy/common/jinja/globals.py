@@ -77,7 +77,8 @@ def create__include_file(deployment, **kwargs):
     env = kwargs.get('env')
     values = deployment.get_template_values()
 
-    def include_file(path: str):
-        return f'|\n{textwrap.indent(env.get_template(path).render(**values), "    ")}'
+    def include_file(path: str, direct: bool = False, indent: int = 4):
+        prefix = '|\n' if not direct else ''
+        return f'{prefix}{textwrap.indent(env.get_template(path).render(**values), indent * " ")}'
 
     return include_file
