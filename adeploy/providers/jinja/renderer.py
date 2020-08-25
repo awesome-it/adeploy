@@ -52,6 +52,9 @@ class Renderer(Provider):
         for ext in extensions:
             files.extend(glob.glob(f'{templates_dir}/**/*.{ext}', recursive=True))
 
+        # Ignore files starting with "_" and "."
+        files = [f for f in files if Path(f).name[0] not in ['.', '_']]
+
         if len(files) == 0:
             raise RenderError(f'No template files found in "{templates_dir}"')
 
