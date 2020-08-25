@@ -7,7 +7,7 @@ from yaml.parser import ParserError
 
 from adeploy.common.errors import Error
 from adeploy.common.helpers import dict_update_recursive
-from adeploy.common.jinja import env as jinja_env
+from adeploy.common.jinja import env as jinja_env, dict as jinja_dict
 from adeploy.common import colors
 
 
@@ -67,7 +67,7 @@ class Deployment:
             'name': self.name.replace('.', '-'),
             'release': self.release.replace('.', '-'),
             'namespace': self.namespace,
-            'deployment': self.config,
+            'deployment': jinja_dict.JinjaDict(self.config),
 
             # Some legacy variables
             'node_selector': self.config.get('node', {}),
