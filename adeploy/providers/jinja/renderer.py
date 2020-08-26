@@ -92,7 +92,7 @@ class Renderer(Provider):
 
                 try:
                     data = env.get_template(template).render(**values)
-                    if len(data.replace('\n', '').strip()) > 0:
+                    if len(data.replace('---','').replace('\n', '').strip()) > 0:
                         output_path.parent.mkdir(parents=True, exist_ok=True)
                         with open(output_path, 'w') as fd:
                             fd.write(data)

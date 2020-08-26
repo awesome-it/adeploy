@@ -14,7 +14,8 @@ class JinjaDict(dict):
             self.delimiter = re.compile('\.|:')
 
     def get(self, key, default=None):
-        return super().get(key) or self.get_path(key) or default
+        data = super().get(key) or self.get_path(key) or default
+        return JinjaDict(data) if isinstance(data,dict) else data
 
     def get_path(self, key):
         data = None
