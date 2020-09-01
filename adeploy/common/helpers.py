@@ -2,10 +2,13 @@ import collections.abc
 import os
 import pkgutil
 import subprocess
-from collections import namedtuple
+import yaml
 
+from collections import namedtuple
 from adeploy import providers
-from adeploy.common import colors
+
+import adeploy.common.colors as colors
+import adeploy.common.jinja.env as jinja_env
 
 
 def get_submodules(pkg):
@@ -34,6 +37,11 @@ def get_providers() -> dict:
             )
 
     return found
+
+
+def get_defaults(defaults_file, deployment=None, log=None, template_values=None):
+    env = jinja_env.create([defaults_file.parent], deployment=deployment, log=log)
+    return yaml.load(env.get_template(defaults_file.name).render(template_values if template_values else {}), Loader=yaml.FullLoader)
 
 
 def run_command(log, cmd) -> subprocess.CompletedProcess:

@@ -5,7 +5,7 @@ import yaml
 from yaml.parser import ParserError
 
 from adeploy.common.errors import Error
-from adeploy.common.helpers import dict_update_recursive
+from adeploy.common.helpers import dict_update_recursive, get_defaults
 from adeploy.common.jinja import env as jinja_env, dict as jinja_dict
 from adeploy.common import colors
 
@@ -41,8 +41,9 @@ class Deployment:
             try:
 
                 # Compile defaults with default Jinja renderer i.e. to provide globals and filters
-                env = jinja_env.create([defaults_file.parent], deployment=self, log=log)
-                defaults = yaml.load(env.get_template(defaults_file.name).render(self.get_template_values()), Loader=yaml.FullLoader)
+                defaults = get_defaults(defaults_file,
+                                        deployment=self, log=log,
+                                        template_values=self.get_template_values())
                 if defaults is not None:
                     self.config.update(defaults)
 

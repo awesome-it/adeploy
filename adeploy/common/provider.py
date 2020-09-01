@@ -13,7 +13,7 @@ class Provider(ABC):
     name: str = None
     src_dir: Path = None
     build_dir: Path = None
-    defaults_file: Path = None
+    defaults_path: Path = None
     namespaces_dir: Path = None
     log: Logger = None
     args: Namespace = None

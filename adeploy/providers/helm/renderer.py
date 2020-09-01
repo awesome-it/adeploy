@@ -76,7 +76,7 @@ class Renderer(HelmProvider):
                                       f'Please either add a Helm chart to "{colors.bold(self.chart_dir)}" or '
                                       f'specify a chart repo URL using --repo-url to download the chart repo.')
 
-                self.log.info(f'Downloading chart repo from {colors.blue(self.repo_url)} ...')
+                self.log.info(f'Adding chart repo from {colors.blue(self.repo_url)} ...')
 
                 if chart_build_dir.exists():
                     shutil.rmtree(chart_build_dir)
@@ -90,8 +90,15 @@ class Renderer(HelmProvider):
 
                 try:
 
+                    chart_version = self.get_chart_version()
+                    self.log.debug(f'Pulling chart "{colors.bold(self.name)}" version {colors.bold(chart_version)} ...')
+
                     temp = TemporaryDirectory()
-                    self.log.debug(helm_repo_pull(self.log, repo, self.name, temp.name).stdout.strip())
+                    self.log.debug(helm_repo_pull(self.log, repo,
+                                                  name=self.name,
+                                                  version=chart_version,
+                                                  dest=temp.name).stdout.strip())
+
                     shutil.move(f'{temp.name}/{self.name}', chart_build_dir)
 
                 except CalledProcessError as e:
@@ -136,8 +143,9 @@ class Renderer(HelmProvider):
                 .joinpath(self.name) \
                 .joinpath(deployment.release)
 
-            self.log.info(f'Rendering chart "{colors.bold(self.name)}" and values '
-                          f'for deployment "{colors.blue(deployment)}" '
+            self.log.info(f'Rendering chart "{colors.bold(self.name)}" '
+                          f'version {colors.bold(self.get_chart_version())} '
+                          f'and values for deployment "{colors.blue(deployment)}" '
                           f'in "{colors.bold(output_path)}" ...')
 
             try:

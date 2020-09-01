@@ -1,7 +1,7 @@
 import textwrap
 
-from adeploy.common import colors
-from adeploy.common.secret import Secret, GenericSecret, TlsSecret, DockerRegistrySecret
+import adeploy.common.colors as colors
+import adeploy.common.secret as secret
 
 
 def create__get_version(deployment, **kwargs):
@@ -32,11 +32,11 @@ def create__create_generic_secret(deployment, **create_kwargs):
     log = create_kwargs.get('log', None)
 
     def create_secret(name: str = None, use_pass=True, data=None, **kwargs):
-        secret = GenericSecret(deployment, data or kwargs, name, use_pass)
-        if Secret.register(secret) and log:
-            log.info(f'Registered generic secret "{colors.bold(secret.name)}" '
+        s = secret.GenericSecret(deployment, data or kwargs, name, use_pass)
+        if secret.Secret.register(s) and log:
+            log.info(f'Registered generic secret "{colors.bold(s.name)}" '
                      f'for deployment "{colors.blue(deployment)} ...')
-        return secret.name
+        return s.name
 
     return create_secret
 
@@ -50,11 +50,11 @@ def create__create_tls_secret(deployment, **kwargs):
     log = kwargs.get('log')
 
     def create_tls_secret(cert_data: str, key_data: str, name: str, use_pass: bool = True):
-        secret = TlsSecret(deployment, name, cert_data, key_data, use_pass)
-        if Secret.register(secret) and log:
-            log.info(f'Registering TLS secret "{colors.bold(secret.name)}" '
+        s = secret.TlsSecret(deployment, name, cert_data, key_data, use_pass)
+        if secret.Secret.register(s) and log:
+            log.info(f'Registering TLS secret "{colors.bold(s.name)}" '
                      f'for deployment "{colors.blue(deployment)} ...')
-        return secret.name
+        return s.name
 
     return create_tls_secret
 
@@ -64,11 +64,11 @@ def create__create_docker_registry_secret(deployment, **kwargs):
 
     def create_docker_registry_secret(server: str, username: str, password: str, email: str = None, name: str = None,
                                       use_pass: bool = True):
-        secret = DockerRegistrySecret(deployment, server, username, password, email, name, use_pass)
-        if Secret.register(secret) and log:
-            log.info(f'Registering docker registry secret "{colors.bold(secret.name)}" '
+        s = secret.DockerRegistrySecret(deployment, server, username, password, email, name, use_pass)
+        if secret.Secret.register(s) and log:
+            log.info(f'Registering docker registry secret "{colors.bold(s.name)}" '
                      f'for deployment "{colors.blue(deployment)} ...')
-        return secret.name
+        return s.name
 
     return create_docker_registry_secret
 

@@ -14,9 +14,9 @@ def helm_repo_add(log, repo, url):
     return helm(log, ['repo', 'add', repo, url])
 
 
-def helm_repo_pull(log, repo, name, dest):
+def helm_repo_pull(log, repo, name, version, dest):
     log.debug(f'Pulling chart "{colors.bold(name)}" from helm repo {colors.bold(repo)} to "{colors.bold(dest)}" ...')
-    return helm(log, ['pull', f'{repo}/{name}', '--untar', '--untardir', dest])
+    return helm(log, ['pull', f'{repo}/{name}', '--version', version, '--untar', '--untardir', dest])
 
 
 def helm_template(log, deployment: Deployment, chart_path, values_path):
