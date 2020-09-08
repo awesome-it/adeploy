@@ -4,7 +4,6 @@ import re
 class JinjaDict(dict):
 
     delimiter = None
-    dict: dict = None
 
     def __init__(self, dict, delimiter: str = None):
         super().__init__(dict)
@@ -30,3 +29,9 @@ class JinjaDict(dict):
             data = data.get(sub_key)
 
         return data
+
+    def get_dict(self):
+        obj = {}
+        for n, v in self.items():
+            obj[n] = v
+        return obj

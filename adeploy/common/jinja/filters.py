@@ -8,7 +8,7 @@ import adeploy.common.jinja.dict as jinja_dict
 def yaml(obj, flow_style):
     """Returns yaml for object"""
     if isinstance(obj, jinja_dict.JinjaDict):
-        obj = obj.dict
+        obj = obj.get_dict()
     return _yaml.safe_dump(obj, default_flow_style=flow_style)
 
 
