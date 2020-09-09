@@ -12,11 +12,9 @@ def setup(args):
         loglevel = logging.INFO
 
     if args.logfile:
-        logging.basicConfig(level=loglevel, filename=args.logfile,
-                            format='%(asctime)s %(levelname)-8s %(name)-10s %(message)s')
+        logging.basicConfig(level=loglevel, filename=args.logfile, format=get_log_format(args, loglevel))
     else:
-        logging.basicConfig(level=loglevel,
-                            format=f'%(asctime)s %(levelname)-8s ' + colors.bold('%(name)-10s') + ' %(message)s')
+        logging.basicConfig(level=loglevel, format=get_log_format(args, loglevel))
 
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("requests").setLevel(logging.WARNING)
@@ -24,3 +22,14 @@ def setup(args):
 
 def get_logger(name: str = None):
     return logging.getLogger(name)
+
+
+def get_log_format(args, loglevel):
+
+    if args.logfile:
+        return '%(asctime)s %(levelname)-8s %(name)s %(message)s'
+
+    if loglevel == logging.DEBUG:
+        return '%(levelname)-8s ' + colors.bold('%(name)s') + ' %(message)s'
+
+    return colors.bold('%(name)s') + ' %(message)s'
