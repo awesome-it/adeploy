@@ -38,12 +38,11 @@ $ adeploy [--name customer_chart_name] -p helm render . --repo-url https://chart
 
 #### Version & AppVersion
  
-The chart version and the app version (`appVersion`) can be set globally in the `defaults.yml` (or `defaults/<release>.yml`) for the appropriate deployments:
+The chart version can be set in the `defaults.yml` (or `defaults/<release>.yml`) for the appropriate deployments:
 
 ```yaml
 _chart:
     version: 0.0.0
-    appVersion: 0.0.0
 ```
 
 ### Hooks
