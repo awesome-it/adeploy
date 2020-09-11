@@ -4,7 +4,7 @@ An universal deployment tool for k8s deployments.
 ## Install
 
 ```shell script
-$ pip install [--user] git+ssh://git@git.local.awesome-it.de/awesome/tools/adeploy.git 
+$ pip install [--user] git+https://github.com/awesome-it/adeploy
 ```
 
 ## Usage
@@ -14,6 +14,13 @@ Check the help section of `adeploy`:
 $ adeploy --help
 $ adeploy -p <provider> (render|test|deploy) --help
 ```
+
+#### Example: Helm Chart Deployment
+
+Dowload an Helm chart and examine k8s resources that will be deployed before you apply them to k8s:
+
+![adeploy-jinja-001.svg](https://awesome-it.de/wp-content/uploads/2020/09/adeploy-helm-001.svg)
+
 #### Render
 Render manifests (to a "build" dir). This calls the renderer (i.e. Jinja, Helm, Kustomize, ...)
 ```bash
