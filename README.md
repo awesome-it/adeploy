@@ -62,8 +62,8 @@ Or if you have a repo with multiple deployments, you can have a separate namespa
 ## Defaults
 
 You can specify defaults (for all deployment configurations) in a separate defaults file or directory i.e. if you
-want to specify image tags and versions for all deployments. The defaults will be overwritten from the appropriate 
-deployment configurations.
+want to specify image tags and versions for all deployments. The deployment configuration will be merge to this 
+defaults. 
 
 Defaults can be specified in a single `defaults.yml` file:
 
@@ -97,9 +97,11 @@ myjinjatemplate:
 ```
 
 By default the secret value is taken from `gopass` password store that must be available when for initial deployment.
-If the secret is not attempt to change (i.e. during CI/CD), no password store is required.
+If the secret is applied another time and it is not attempt to change, the secret creation is skipped and no password store 
+is required. This is useful for automated deployment in CI/CD, the secret is only touched during the initial deployment
+which is thought to be done by a human beeing. 
 
-You can optionally set `use_pass=False` to use the specified value as follows:
+You can skip the `gopass` feature by passing `use_pass=False` as follows:
 
 ```jinja2
 myjinjatemplate:
@@ -116,72 +118,11 @@ Additional there is `create_tls_secret()` and `create_docker_registry_secret()` 
 
 ## Providers
 
+The following providers are currently supported. Check the sub-pages for details:
+
 * Jinja: [README.md](adeploy/providers/jinja/README.md)
 * Helm v3: [README.md](adeploy/providers/helm/README.md)
 
-## Advanced Setup
-### For development usage
+## Read More
 
-Get the source code:
-
-```bash
-$ git clone https://gitlab.awesome-it.de/awesome/tools/adeploy.git ~/path/to/@NAME@
-```
-Setup a virtualenv using `Python3` and activate it:
-
-```bash
-$ virtualenv -p python3 ~/.virtualenvs/adeploy
-$ source ~/.virtualenvs/adeploy/bin/activate
-# alternatively install it in your project directory
-$ cd ~/path/to/adeploy
-$ virtualenv -p python3 env3
-$ source env3/bin/activate
-(adeploy)$ 
-```
-
-Install requirements:
-
-```bash
-(adeploy)$ pip install -r requirements.txt
-```
-#### Usage while developing
-
-There are two ways you can invoke adeploy while developing (i.e. while in your virtualenv).
-
-1. There is a wrapper that can be used to run it from your PATH. This is only intended for quick usage while development,
-not as a binary (i.e. don't link to it or anything; have a look at the next topic).
-```bash
-$ ./runner.py
-```
-
-2. The second way is via pip. Pip can install a python package in edit-mode. If you do this all code changes will
-immediately take effect. To skip the virtualenv, you can append "--user" to pip in order to install adeploy using the user scheme.
- ```bash
- $ cd ~/path/to/adeploy
- $ pip install [--user] -e .
- $ adeploy
- # make changes
- $ adeploy
- # new behaviour, changes take effect immediately.
- ```
-
-### For production usage
-
-For production usage you can just install the package like any other python package. There are two ways to do this:
-1. Checkout by hand and install by hand or via pip:
-```bash
-$ git clone git@git.local.awesome-it.de:tools/adeploy.git
-$ cd adeploy
-$ python setup.py install
-# OR:
-$ pip install .
-$ adeploy --help
-```
-
-2. Install via pip directly from gitlab:
-```bash
-# beware of the / instead of the : in the URL!
-$ pip install git+ssh://git@git.local.awesome-it.de/tools/adeploy.git
-# or if you prefer https over ssh
-$ pip install git+https://gitlab.awesome-it.de/awesome/tools/adeploy.git
-```
+* https://awesome-it.de/2020/09/11/adeploy-an-universal-deployment-tool-for-kubernetes/
