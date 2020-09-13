@@ -41,7 +41,12 @@ def get_providers() -> dict:
 
 def get_defaults(defaults_file, deployment=None, log=None, template_values=None):
     env = jinja_env.create([defaults_file.parent], deployment=deployment, log=log)
-    return yaml.load(env.get_template(defaults_file.name).render(template_values if template_values else {}), Loader=yaml.FullLoader)
+    # Make best to load defaults
+    template_values_default = {
+        'name': deployment.name if deployment else 'undefined',
+        'namespace': deployment.namespace if deployment else 'undefined',
+    }
+    return yaml.load(env.get_template(defaults_file.name).render(template_values if template_values else template_values_default), Loader=yaml.FullLoader)
 
 
 def run_command(log, cmd) -> subprocess.CompletedProcess:
