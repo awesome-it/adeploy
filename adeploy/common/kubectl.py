@@ -113,7 +113,7 @@ def kubectl_create_secret(log, name, namespace, type, args, labels: dict = None,
 
 
 def kubectl(log: Logger, args: list, namespace: str = None) -> subprocess.CompletedProcess:
-    cmd = ['kubectl', '--kubeconfig', KUBECONF]
+    cmd = ['kubectl', '--kubeconfig', str(KUBECONF)]
     if namespace:
         cmd += ['-n', namespace]
     cmd += args
