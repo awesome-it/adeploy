@@ -5,12 +5,16 @@ import subprocess
 import tempfile
 import random
 from logging import Logger
+from pathlib import Path
 
 import yaml
 
 from adeploy.common import colors
 from adeploy.common.errors import TestError
 from adeploy.common.helpers import dict_update_recursive
+
+# See kubectl_init()
+KUBECONF=None
 
 
 def kubectl_add_default_context(log: Logger):
@@ -109,7 +113,7 @@ def kubectl_create_secret(log, name, namespace, type, args, labels: dict = None,
 
 
 def kubectl(log: Logger, args: list, namespace: str = None) -> subprocess.CompletedProcess:
-    cmd = ['kubectl']
+    cmd = ['kubectl', '--kubeconfig', KUBECONF]
     if namespace:
         cmd += ['-n', namespace]
     cmd += args
@@ -118,6 +122,21 @@ def kubectl(log: Logger, args: list, namespace: str = None) -> subprocess.Comple
     result = subprocess.run(cmd, capture_output=True, text=True)
     result.check_returncode()
     return result
+
+
+def kubectl_init(args):
+
+    global KUBECONF
+
+    # Create temporary kube config to not change users kubeconf
+    KUBECONF = args.adeploy_dir.joinpath('kubeconf')
+    KUBECONF.parent.mkdir(parents=True, exist_ok=True)
+
+    result = subprocess.run(['kubectl', 'config', 'view', '--raw'], capture_output=True, text=True)
+    result.check_returncode()
+
+    with open(str(KUBECONF), 'w') as fd:
+        fd.write(result.stdout)
 
 
 def parse_kubectrl_apply(log, stdout, manifests: dict = None, fake_ns: str = None, default_ns: str = None,

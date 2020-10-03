@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+from pathlib import Path
 
 from adeploy import common, steps
 from adeploy.common import colors
@@ -33,7 +34,6 @@ def parse(parser: argparse.ArgumentParser):
 
 
 def setup_parser():
-
     parser = argparse.ArgumentParser(description='An awesome universal deployment tool for k8s',
                                      usage=colors.bold(
                                          f'adeploy -p {colors.blue("provider")} {colors.gray("[optional args ...]")} '
@@ -56,6 +56,10 @@ def setup_parser():
     parser.add_argument('-n', '--name', dest="deployment_name", default=None,
                         help='Specify a deployment name. This will overwrite deployment name derived from repo dir')
 
+    parser.add_argument('--adepoly-dir', dest='adeploy_dir',
+                        help='Configuration directory for adeploy', default=Path.home().joinpath('.adeploy'),
+                        metavar='adeploy_dir', type=Path)
+
     parser.add_argument('--build-dir', dest='build_dir',
                         help='Build directory for output', default='./build', metavar='build_dir')
 
@@ -76,7 +80,7 @@ def setup_parser():
                         help='Only include specified deployment release i.e. "prod", "testing". '
                              'Argument can be specified multiple times.')
 
-    parser.add_argument('--gopass-prefix', dest='gopass_prefix', default=os.getenv('ADEPLOY_GOPASS_PREFIX','awesome'),
+    parser.add_argument('--gopass-prefix', dest='gopass_prefix', default=os.getenv('ADEPLOY_GOPASS_PREFIX', 'awesome'),
                         help='The gopass path prefix/store, where the awesome secrets are stored. The default'
                              'can be overwritten by the env var ADEPLOY_GOPASS_PREFIX')
 

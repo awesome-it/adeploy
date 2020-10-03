@@ -13,6 +13,7 @@ from .common.args import parse, setup_parser
 from .common.errors import InputError, Error
 from .common.helpers import get_provider, get_submodules, get_providers
 from .common.logging import setup as setup_logging, get_logger
+from .common.kubectl import kubectl_init
 
 log = get_logger('adeploy')
 
@@ -25,6 +26,7 @@ def main():
     parser = setup_parser()
     args, unknown_args = parse(parser)
     setup_logging(args)
+    kubectl_init(args)
     module = None
 
     try:
