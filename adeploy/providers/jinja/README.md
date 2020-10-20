@@ -77,3 +77,33 @@ Example (assuming a `macros.jinja` in `/` or in `/mydeployment/templates/`):
 ```jinja2
 {% from "macros.jinja" import k8s_create_ingress, k8s_get_version with context %}
 ``` 
+
+#### Global Probe Configuration
+
+You can specify a global probe configuration in `default.yml` or in your deployment configuration as follows:
+
+```yaml
+_probes:
+  liveness:
+    initial_delay_seconds: 60
+    period_seconds: 30
+    timeout_seconds: 5
+    failure_threshold: 5
+    success_threshold: 1
+
+  readiness:
+    initial_delay_seconds: 10
+    period_seconds: 5
+    timeout_seconds: 5
+    failure_threshold: 10
+    success_threshold: 1
+
+  custom-deployment-name:
+    liveness:
+      initial_delay_seconds: 300
+``` 
+
+The example above will update all probes in the generated deployments with the given values. The `initialDelaySeconds` of
+the `liveness` probe for the deployment `custom-deployment-name` will be additionally set to `300`. 
+
+Note that you can either use snake casing (í.e. `period_seconds`) or camel casing as in the official docs (i.e. `periodSeconds`). 

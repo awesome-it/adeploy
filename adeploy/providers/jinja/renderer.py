@@ -10,7 +10,7 @@ from adeploy.common import colors
 from adeploy.common.errors import RenderError
 from adeploy.common.jinja import env as jinja_env
 from adeploy.common.provider import Provider
-
+from adeploy.common.yaml import probes
 
 class Renderer(Provider):
 
@@ -93,6 +93,7 @@ class Renderer(Provider):
                 try:
                     data = env.get_template(template).render(**values)
                     if len(data.replace('---','').replace('\n', '').strip()) > 0:
+                        data = probes.update(self.log, data, deployment)
                         output_path.parent.mkdir(parents=True, exist_ok=True)
                         with open(output_path, 'w') as fd:
                             fd.write(data)
