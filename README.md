@@ -59,6 +59,15 @@ Or if you have a repo with multiple deployments, you can have a separate namespa
 /repo/namespaces/<namespace>/<deployment_name>/<release>.yml
 ```
 
+### Minimum Version
+
+For a deployment, you can set a minimum required adeploy version i.e. in `defaults.yml` as follows:
+
+```shell script
+_adeploy:
+  version: 0.5
+```
+
 ## Defaults
 
 You can specify defaults (for all deployment configurations) in a separate defaults file or directory i.e. if you

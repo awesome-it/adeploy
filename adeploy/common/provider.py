@@ -1,12 +1,16 @@
 import glob
 import os
+
 from abc import ABC, abstractmethod
 from argparse import Namespace
 from logging import Logger
 from pathlib import Path
+from importlib_metadata import version
+from packaging.version import parse as parse_version
 
 from adeploy.common import colors
 from adeploy.common.deployment import Deployment
+from adeploy.common.errors import RenderError
 
 
 class Provider(ABC):
@@ -98,6 +102,13 @@ class Provider(ABC):
 
                     deployment.load_config(deployment_release_config, self.get_defaults_file(), self.log)
                     self.log.debug(f'Using config from "{colors.bold(deployment_release_config)}" ...')
+
+                    # Check valid deployment versions
+                    deployment_version = deployment.config.get('_adeploy', {}).get('version', '0.0.0')
+                    if parse_version(str(deployment_version)) > parse_version(version('adeploy')):
+                        raise RenderError(f'Deployment requires at least '
+                                          f'adeploy version {deployment_version}, '
+                                          f'current version is {version("adeploy")}')
 
                     deployments.append(deployment)
 
