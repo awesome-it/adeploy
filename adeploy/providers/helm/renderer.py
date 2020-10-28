@@ -127,8 +127,6 @@ class Renderer(HelmProvider):
                     self.log.error(colors.red(f'Error when running hook "{colors.bold(hook.stem)}": {e.stderr}'))
                     raise e
 
-                return result
-
     def run(self):
 
         self.log.debug(f'Working on deployment "{self.name}" ...')
