@@ -80,7 +80,7 @@ def setup_parser():
                         help='Only include specified deployment release i.e. "prod", "testing". '
                              'Argument can be specified multiple times.')
 
-    parser.add_argument('--gopass-prefix', dest='gopass_prefix', default=os.getenv('ADEPLOY_GOPASS_PREFIX', 'awesome'),
+    parser.add_argument('--gopass-prefix', dest='gopass_prefix', default=os.getenv('ADEPLOY_GOPASS_PREFIX', ''),
                         help='The gopass path prefix/store, where the awesome secrets are stored. The default'
                              'can be overwritten by the env var ADEPLOY_GOPASS_PREFIX')
 
