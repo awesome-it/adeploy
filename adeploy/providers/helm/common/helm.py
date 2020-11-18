@@ -11,7 +11,7 @@ from adeploy.common import colors
 
 def helm_repo_add(log, repo, url):
     log.debug(f'Adding helm repo "{colors.bold(repo)}" from {colors.blue(url)} ...')
-    return helm(log, ['repo', 'add', repo, url])
+    return helm(log, ['repo', 'add', repo, url, '--force-update'])
 
 
 def helm_repo_pull(log, repo, name, version, dest):
