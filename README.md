@@ -108,7 +108,10 @@ myjinjatemplate:
 By default the secret value is taken from `gopass` password store that must be available when for initial deployment.
 If the secret is applied another time and it is not attempt to change, the secret creation is skipped and no password store 
 is required. This is useful for automated deployment in CI/CD, the secret is only touched during the initial deployment
-which is thought to be done by a human beeing. 
+which is thought to be done by a human beeing.
+
+Note that you can export `ADEPLOY_GOPASS_REPOS` as comma separated a list of `gopass` repo names that are tried in the 
+defined order to find the secret. See `--gopass-repo` arg in `adeploy --help` for further help. 
 
 You can skip the `gopass` feature by passing `use_pass=False` as follows:
 
