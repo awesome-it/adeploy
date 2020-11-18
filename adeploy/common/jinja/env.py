@@ -24,13 +24,12 @@ def create(pathes: List[str or Path] = None, log: Logger = None, deployment = No
             log.debug(f'Registering filter "{name}" from "{getfile(func)}"')
         env.filters[name] = func
 
-    if deployment:
-        register_globals(env, deployment, log)
+    register_globals(env, deployment, log)
 
     return env
 
 
-def register_globals(env: jinja2.Environment, deployment, log: Logger = None):
+def register_globals(env: jinja2.Environment, deployment = None, log: Logger = None):
     for name, func_creator in [f for f in getmembers(globals) if isfunction(f[1])]:
 
         if '__' not in name:
@@ -38,7 +37,7 @@ def register_globals(env: jinja2.Environment, deployment, log: Logger = None):
 
         if log:
             log.debug(f'Registering global function "{name}" '
-                      f'for deployment "{str(deployment)}" '
+                      f'for deployment "{str(deployment)}" ' if deployment else ''
                       f'from "{getfile(func_creator)}"')
 
         env.globals.update({name.split('__')[1]: func_creator(deployment, log=log, env=env)})

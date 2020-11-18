@@ -2,10 +2,13 @@ import textwrap
 
 import adeploy.common.colors as colors
 import adeploy.common.secret as secret
+import adeploy.common.errors as errors
 
 
 def create__get_version(deployment, **kwargs):
     def get_version(package):
+        if not deployment:
+            raise errors.RenderError('get_version() or version() cannot be used here')
         return deployment.config.get('versions', {}).get(package, 'latest')
 
     return get_version
@@ -18,6 +21,8 @@ def create__version(deployment, **kwargs):
 
 def create__get_url(deployment, **kwargs):
     def get_url():
+        if not deployment:
+            raise errors.RenderError('get_url() cannot be used here')
         ingress = deployment.config.get('ingress', {}).items()
         server_name, props = next(iter(ingress))
         if props.get('external', False):
@@ -32,6 +37,8 @@ def create__create_generic_secret(deployment, **create_kwargs):
     log = create_kwargs.get('log', None)
 
     def create_secret(name: str = None, use_pass=True, data=None, **kwargs):
+        if not deployment:
+            raise errors.RenderError('create_secret() cannot be used here')
         s = secret.GenericSecret(deployment, data or kwargs, name, use_pass)
         if secret.Secret.register(s) and log:
             log.info(f'Registered generic secret "{colors.bold(s.name)}" '
@@ -50,6 +57,8 @@ def create__create_tls_secret(deployment, **kwargs):
     log = kwargs.get('log')
 
     def create_tls_secret(cert_data: str, key_data: str, name: str, use_pass: bool = True):
+        if not deployment:
+            raise errors.RenderError('create_tls_secret() cannot be used here')
         s = secret.TlsSecret(deployment, name, cert_data, key_data, use_pass)
         if secret.Secret.register(s) and log:
             log.info(f'Registering TLS secret "{colors.bold(s.name)}" '
@@ -64,6 +73,8 @@ def create__create_docker_registry_secret(deployment, **kwargs):
 
     def create_docker_registry_secret(server: str, username: str, password: str, email: str = None, name: str = None,
                                       use_pass: bool = True):
+        if not deployment:
+            raise errors.RenderError('create_docker_registry_secret() cannot be used here')
         s = secret.DockerRegistrySecret(deployment, server, username, password, email, name, use_pass)
         if secret.Secret.register(s) and log:
             log.info(f'Registering docker registry secret "{colors.bold(s.name)}" '
@@ -75,7 +86,9 @@ def create__create_docker_registry_secret(deployment, **kwargs):
 
 def create__include_file(deployment, **kwargs):
     env = kwargs.get('env')
-    values = deployment.get_template_values()
+    values = {}
+    if deployment:
+        values = deployment.get_template_values()
 
     def include_file(path: str, direct: bool = False, render: bool = True, indent: int = 4):
         prefix = '|\n' if not direct else ''
