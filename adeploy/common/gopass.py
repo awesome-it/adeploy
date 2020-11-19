@@ -2,6 +2,7 @@ import os
 import subprocess
 from logging import Logger
 from pathlib import Path
+from typing import Union
 
 from adeploy.common import colors
 from adeploy.common.args import get_args
@@ -15,14 +16,15 @@ def gopass_get_repos():
     return repos
 
 
-def gopass_get(path: str, log: Logger = None) -> str:
+def gopass_get(path: Union[Path, str], log: Logger = None) -> str:
 
     if not log:
         log = get_logger()
 
-    if path == "":
+    if not path:
         log.debug('Empty path, skipping call to gopass')
         return ""
+
     result = None
     for repo in [Path(r) for r in gopass_get_repos()]:
 
