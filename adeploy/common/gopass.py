@@ -15,11 +15,14 @@ def gopass_get_repos():
     return repos
 
 
-def gopass_get(path: Path, log: Logger = None):
+def gopass_get(path: str, log: Logger = None) -> str:
 
     if not log:
         log = get_logger()
 
+    if path == "":
+        log.debug('Empty path, skipping call to gopass')
+        return ""
     result = None
     for repo in [Path(r) for r in gopass_get_repos()]:
 
