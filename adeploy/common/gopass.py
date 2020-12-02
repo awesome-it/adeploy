@@ -42,7 +42,7 @@ def gopass_get(path: Union[Path, str], log: Logger = None) -> str:
     result.check_returncode()
 
     lines = result.stdout.split('\n')
-    if len(lines) > 1 and lines[1] == '--':
-        return lines[0]
+    if len(lines) > 1:
+        return lines[-1]
 
     return result.stdout
