@@ -29,7 +29,7 @@ def gopass_get(path: Union[Path, str], log: Logger = None) -> str:
     for repo in [Path(r) for r in gopass_get_repos()]:
 
         repo_path = repo.joinpath(path)
-        cmd = ['gopass', 'show', str(repo_path)]
+        cmd = ['gopass', 'show', '--password', str(repo_path)]
 
         log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
         result = subprocess.run(cmd, capture_output=True, text=True)
