@@ -25,24 +25,25 @@ def gopass_get(path: Union[Path, str], log: Logger = None) -> str:
         log.debug('Empty path, skipping call to gopass')
         return ""
 
-    result = None
-    for repo in [Path(r) for r in gopass_get_repos()]:
-
-        repo_path = repo.joinpath(path)
-        cmd = ['gopass', 'show', '--password', str(repo_path)]
-
-        log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
-        result = subprocess.run(cmd, capture_output=True, text=True)
-
-        # Stop on success
-        if not result.returncode:
-            break
+    result = gopass_try_repos(path, True, log)
+    if not result:
+        result = gopass_try_repos(path, False, log)
 
     # Trigger error on last run (if any)
     result.check_returncode()
 
-    lines = result.stdout.split('\n')
-    if len(lines) > 1:
-        return lines[-1]
+    return result.stdout.strip()
 
-    return result.stdout
+
+def gopass_try_repos(path: Union[Path, str], explicit_pass = True, log: Logger = None) -> subprocess.CompletedProcess:
+
+    for repo in [Path(r) for r in gopass_get_repos()]:
+
+        repo_path = repo.joinpath(path)
+        cmd = ['gopass', 'show'] + (['--password'] if explicit_pass else []) + [str(repo_path)]
+        log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
+        result = subprocess.run(cmd, capture_output=True, text=True)
+
+        # Stop on success
+        if not result.returncode and len(result.stdout.strip()) > 0:
+            return result
