@@ -57,7 +57,7 @@ def gopass_get(path: Union[Path, str], log: Logger = None) -> str:
     # Trigger error on last run (if any)
     result.check_returncode()
 
-    return result.stdout.strip()
+    return result.stdout.lstrip()
 
 
 def gopass_try_repos(path: Union[Path, str], explicit_pass = True, log: Logger = None) -> subprocess.CompletedProcess:
