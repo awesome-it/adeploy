@@ -48,8 +48,19 @@ class Test:
                     tester.run()
 
                     # Check whether secrets have to be created
-                    secrets = Secret.get_stored(build_dir, name)
-                    for secret in secrets:
+                    filters_namespace = self.args.filters_namespace
+                    filter_release = self.args.filters_release
+                    secrets = [] # Respect user filters
+                    for secret in Secret.get_stored(build_dir, name):
+
+                        deployment = secret.deployment
+                        if (filters_namespace and deployment.namespace not in filters_namespace) or \
+                                (filter_release and deployment.release not in filter_release):
+                            self.log.info(f'... Secret "{colors.blue(secret.name)}" for '
+                                          f'deployment "{colors.blue(deployment)}" skipped by user filter.')
+                            continue
+
+                        secrets.append(secret)
                         secret.test(self.log)
 
                     # Check and report orphaned secrets

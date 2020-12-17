@@ -47,7 +47,11 @@ class Render:
 
                     renderer.run()
 
-                    # Clean and store secret info in build dir
+                    # Clean and store secret info in build dir.
+                    # Note that this affects only secrets that have been registered in the previous
+                    # rendering. Secrets from deployments excluded by user filters are not stored and existing secrets
+                    # won't be removed. So any testing/deployment should also explicitly respect the user filters to
+                    # exclude secrets as well.
                     Secret.clean_build_secrets(build_dir)
                     for secret in Secret.get_registered():
                         secret.store(build_dir)
