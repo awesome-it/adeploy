@@ -51,10 +51,10 @@ def gopass_get(path: Union[Path, str], log: Logger = None) -> str:
         raise InputError(f'Found gopass version {gopass_version} but version {gopass_required_version}+ is required.')
 
     result = gopass_try_repos(path, True, log)
-    if not result:
+    if result.returncode != 0:
         result = gopass_try_repos(path, False, log)
 
-    # Trigger error on last run (if any)
+    # In error case, trigger error from last run
     result.check_returncode()
 
     return result.stdout.lstrip()
@@ -69,9 +69,10 @@ def gopass_try_repos(path: Union[Path, str], explicit_pass = True, log: Logger =
         cmd = ['gopass', 'show'] + (['--password'] if explicit_pass else []) + [str(repo_path)]
         log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
         result = subprocess.run(cmd, capture_output=True, text=True)
+        log.debug(f'... command returned {colors.bold(result.returncode)}')
 
         # Stop on success
-        if not result.returncode and len(result.stdout.strip()) > 0:
+        if result.returncode == 0 and len(result.stdout.strip()) > 0:
             break
 
     return result
