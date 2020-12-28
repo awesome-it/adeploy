@@ -121,7 +121,7 @@ is also useful for Helm templates).
 ```jinja2
 my_deployment:
   config:
-    secretName: {{ create_secret(my_key='/pass/path/to/my_secret', secret_name='optional_secret_name') }}
+    secretName: {{ create_secret(my_key='/pass/path/to/my_secret', name='optional_secret_name') }}
     secretKey: my_key
 ```
 
