@@ -6,7 +6,7 @@ import yaml as _yaml
 import adeploy.common.jinja.dict as jinja_dict
 
 
-def yaml(obj: Union[jinja_dict, dict], flow_style: bool):
+def yaml(obj: Union[jinja_dict.JinjaDict, dict], flow_style: bool):
     """Returns yaml for object"""
     if isinstance(obj, jinja_dict.JinjaDict):
         obj = obj.get_dict()
