@@ -40,11 +40,17 @@ def update(log, data, deployment):
     return "---\n".join(processed_data)
 
 
-def find_labels(doc: Union[list,dict], labels: list = []):
+def find_labels(doc: Union[list,dict], kind=None, labels=None):
+
+    if labels is None:
+        labels = []
+
+    if kind is None:
+        kind = doc.get('kind')
 
     if isinstance(doc, list):
         for elem in doc:
-            find_labels(elem, labels)
+            find_labels(elem, kind, labels)
 
     elif isinstance(doc, dict):
         for k in doc:
@@ -58,15 +64,16 @@ def find_labels(doc: Union[list,dict], labels: list = []):
 
                 labels.append(v.get('labels'))
 
-            # Match labels in deployments/statefulsets/daemonsets
-            elif k == 'selector' and 'matchLabels' in v:
-                labels.append(v.get('matchLabels'))
-
             # Selectors in services
-            elif k == 'spec' and 'selector' in v and not 'matchLabels' in v.get('selector'):
+            elif kind.lower() == 'service' and k == 'spec' and v.get('selector', False):
                 labels.append(v.get('selector'))
 
+            # Match labels in deployments/statefulsets/daemonsets
+            elif kind.lower() in ['deployment', 'statefulset', 'daemonset'] and k == 'selector':
+                labels.append(v.get('matchLabels'))
+
+
             else:
-                find_labels(v, labels)
+                find_labels(v, kind, labels)
 
     return labels
