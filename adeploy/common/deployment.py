@@ -1,3 +1,4 @@
+import copy
 from logging import Logger
 from pathlib import Path
 
@@ -63,13 +64,17 @@ class Deployment:
         return self.config
 
     def get_template_values(self):
-        return {
+
+        values = copy.deepcopy(self.config)
+        values.update({
             'name': self.name.replace('.', '-'),
             'release': self.release.replace('.', '-'),
             'namespace': self.namespace,
-            'deployment': jinja_dict.JinjaDict(self.config),
+            'deployment': self.config,
 
             # Some legacy variables
             'node_selector': self.config.get('node', {}),
-            'default_versions': self.config.get('versions', {}),
-        }
+            'default_versions': self.config.get('versions', {})
+        })
+
+        return jinja_dict.JinjaDict(values)
