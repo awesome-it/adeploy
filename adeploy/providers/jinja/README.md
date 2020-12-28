@@ -20,7 +20,7 @@
 * a `default.yml` file i.e. containing versions and
 * a `namespaces` directory containing [deployment configuration for different namespaces and releases](../../README.md#Deployment Configurations).
 
-### Templates
+## Templates
 
 Jina templates in the `templates` folder will be compiled for each namespace and deployment-release. 
 The following variables are available for the Jinja templates:
@@ -35,7 +35,7 @@ Legacy variables (do not use them in a new deployment):
 * `node_selector`: Derived from `deployment.node`
 * `default_version`: Derived from `deployment.versions` (i.e. `versions` in `default.yml`)
 
-#### Global Functions & Filters
+## Global Functions & Filters
 
 There are a various number of global functions and filters that can be used within a Jinja template:
 
@@ -63,7 +63,7 @@ sha265sum(string: str):
 
 See [adeploy/common/jinja/filters.py](adeploy/common/jinja/filters.py) for reference.
 
-#### Macros
+## Macros
 
 You can include macros or Jinja files from 
 
@@ -78,9 +78,9 @@ Example (assuming a `macros.jinja` in `/` or in `/mydeployment/templates/`):
 {% from "macros.jinja" import k8s_create_ingress, k8s_get_version with context %}
 ``` 
 
-#### Global Probe Configuration
+## Global Probes Configuration
 
-You can specify a global probe configuration in `default.yml` or in your deployment configuration as follows:
+You can specify a global probes configuration in `default.yml` or in your deployment configuration as follows:
 
 ```yaml
 _probes:
@@ -107,3 +107,17 @@ The example above will update all probes in the generated deployments with the g
 the `liveness` probe for the deployment `custom-deployment-name` will be additionally set to `300`. 
 
 Note that you can either use snake casing (í.e. `period_seconds`) or camel casing as in the official docs (i.e. `periodSeconds`). 
+
+## Global Labels Configurations
+
+Similar to labels, you can specify a global labels configuration in `default.yml` or in your deployment configuration as follows:
+
+```yaml
+_labels:
+  app.kubernetes.io/component: matomo
+  app.kubernetes.io/instance: {{ name }}-{{ release }}
+  app.kubernetes.io/part-of: {{ name }}
+```
+
+These labels will be added to all appropriate `metadata`, `matchLabels` and `selector` properties. Please note that
+you can use Jinja variables in the labels, too.  
