@@ -41,7 +41,7 @@ There are a various number of global helper functions that can be used within a 
 
 See [adeploy/common/jinja/globals.py](adeploy/common/jinja/globals.py) for a complete reference.
 
-#### get_version(package: str) / version(package: str)
+#### `get_version(package: str) / version(package: str)`
 
 Return a package version from `defaults.yml` or from the deployment config. 
 
@@ -59,7 +59,7 @@ Now you can use the following in your deployments:
   ports:
 ```
 
-#### create_secret(name: str = None, use_pass: bool = True, custom_cmd: bool = False, data: dict = None, **kwargs)
+#### `create_secret(name: str = None, use_pass: bool = True, custom_cmd: bool = False, data: dict = None, **kwargs)`
 
 Examples:
 
@@ -78,7 +78,7 @@ my_deployment:
 
 See [README.md](adeploy/README.md) for more details.
 
-#### create_tls_secret(cert_data: str, key_data: str, name: str, use_pass: bool = True, custom_cmd: bool = False)
+#### `create_tls_secret(cert_data: str, key_data: str, name: str, use_pass: bool = True, custom_cmd: bool = False)`
 
 Example:
 ```jinja2
@@ -89,7 +89,7 @@ my_deployment:
 
 See [README.md](adeploy/README.md) for more details.
 
-#### create_docker_registry_secret(server: str, username: str, password: str, email: str = None, name: str = None, use_pass: bool = True, custom_cmd: bool = False)
+#### `create_docker_registry_secret(server: str, username: str, password: str, email: str = None, name: str = None, use_pass: bool = True, custom_cmd: bool = False)`
 
 Example:
 ```jinja2
@@ -104,7 +104,7 @@ Example:
 
 See [README.md](adeploy/README.md) for more details.
                                       
-#### include_file(path: str, direct: bool = False, render: bool = True, indent: int = 4)
+#### `include_file(path: str, direct: bool = False, render: bool = True, indent: int = 4)`
 
 Example:
 ```jinja2
@@ -120,7 +120,9 @@ data:
   entrypoint-cronjob.sh: {{ include_file('files/entrypoint-cronjob.sh') }}
 ```
 
-#### create_labels(name: str = None, instance: str = default_instance, version: str = None, component: str = None, part_of: str = default_part_of, managed_by: str = 'adeploy', labels: dict = None, **kwargs)
+#### `create_labels(name: str = None, instance: str = default_instance, version: str = None, component: str = None, part_of: str = default_part_of, managed_by: str = 'adeploy', labels: dict = None, **kwargs)`
+
+Create recommended default labels following [best practice](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/). 
 
 Example:
 ```jinja2
@@ -147,7 +149,7 @@ There are a various number of global Jinja filters that can be used within a Jin
 
 See [adeploy/common/jinja/filters.py](adeploy/common/jinja/filters.py) for a complete reference.
 
-#### yaml(obj: Union[jinja_dict, dict], flow_style: bool)
+#### `yaml(obj: Union[jinja_dict, dict], flow_style: bool)`
 
 Converts a given `dict` or `adeploy.common.jinja.dict` into YAML code.  
 
@@ -158,7 +160,7 @@ spec:
     {{ ingress.get('tls') | yaml(false) | indent(4) }}
 ```
 
-#### quote(string: str)
+#### `quote(string: str)`
 
 Quotes a given string.
 
@@ -171,7 +173,7 @@ env:
     {% %}
 ```
 
-#### base64_encode(string: str)
+#### `base64_encode(string: str)`
 
 Encodes the given string into base64. 
 
