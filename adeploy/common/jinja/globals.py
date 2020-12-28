@@ -100,8 +100,9 @@ def create__create_labels(deployment, **kwargs):
                       part_of: str = default_part_of,
                       managed_by: str = 'adeploy',
                       labels: dict = None, **kwargs):
+
         if labels is None:
-            labels = {}
+            labels = kwargs
 
         if name:
             labels['app.kubernetes.io/name'] = name
@@ -116,7 +117,6 @@ def create__create_labels(deployment, **kwargs):
         if managed_by:
             labels['app.kubernetes.io/managed-by'] = managed_by
 
-        labels.update(labels or kwargs)
         return json.dumps(labels)
 
     return create_labels
