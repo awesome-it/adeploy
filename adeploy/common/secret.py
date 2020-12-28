@@ -5,10 +5,12 @@ import os
 import shutil
 import subprocess
 import tempfile
+
 from abc import ABC, abstractmethod
 from logging import Logger
 from pathlib import Path
 from pickle import dump, load
+from typing import Union
 
 from adeploy.common import colors
 from adeploy.common.errors import RenderError
@@ -22,6 +24,7 @@ class Secret(ABC):
     name: str = None
     deployment = None
     use_pass: bool = True
+    custom_cmd: bool = False
 
     _name_prefix = 'secret-'
     _secrets = {}
@@ -95,11 +98,27 @@ class Secret(ABC):
                 else:
                     log.info(f'No orphaned secrets found.')
 
-    def __init__(self, deployment, name: str = None, use_pass: bool = True):
+    def get_value(self, data: Union[Path, str], log: Logger = None, dry_run: Union[bool, str] = False) -> str:
+
+        if dry_run:
+            return '*****'
+
+        if self.custom_cmd:
+            result = subprocess.run(data, shell=True, capture_output=True, text=True)
+            result.check_returncode()
+            return result.stdout
+
+        if self.use_pass:
+            return gopass_get(data, log)
+
+        return data
+
+    def __init__(self, deployment, name: str = None, use_pass: bool = True, custom_cmd: bool = False):
 
         self.name = name if name else self.gen_name()
         self.deployment = deployment
         self.use_pass = use_pass
+        self.custom_cmd = custom_cmd
 
     def __repr__(self):
         return f'{self.deployment.name}/{self.name}'
@@ -108,7 +127,8 @@ class Secret(ABC):
         return f'{Secret._name_prefix}{hashlib.sha1(json.dumps(self.__dict__).encode()).hexdigest()}'
 
     def get_path(self, build_dir):
-        return Secret.get_secret_dir(build_dir, self.deployment.name).joinpath(self.deployment.namespace).joinpath(self.name)
+        return Secret.get_secret_dir(build_dir, self.deployment.name).joinpath(self.deployment.namespace).joinpath(
+            self.name)
 
     def store(self, build_dir: Path):
         output_path = self.get_path(build_dir)
@@ -171,9 +191,9 @@ class GenericSecret(Secret):
     type: str = "generic"
     data: dict = None
 
-    def __init__(self, deployment, data: dict, name: str = None, use_pass: bool = True):
+    def __init__(self, deployment, data: dict, name: str = None, use_pass: bool = True, custom_cmd: bool = False):
         self.data = data
-        super().__init__(deployment, name, use_pass)
+        super().__init__(deployment, name, use_pass, custom_cmd)
 
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
 
@@ -181,15 +201,8 @@ class GenericSecret(Secret):
         temp_files = []
         for k, v in self.data.items():
 
-            if dry_run:
-                value = '*****'
-            elif self.use_pass:
-                value = gopass_get(v, log)
-            else:
-                value = v
-
             fd = tempfile.NamedTemporaryFile(delete=False, mode='w')
-            fd.write(value)
+            fd.write(self.get_value(v, log, dry_run=dry_run))
             fd.close()
 
             temp_files.append(fd.name)
@@ -219,12 +232,14 @@ class TlsSecret(Secret):
     cert_data: str = None
     key_data: str = None
 
-    def __init__(self, deployment, cert_data: str, key_data: str, name: str = None, use_pass: bool = True):
+    def __init__(self, deployment, cert_data: str, key_data: str, name: str = None, use_pass: bool = True,
+                 custom_cmd: bool = False):
         self.cert_data = cert_data
         self.key_data = key_data
-        super().__init__(deployment, name, use_pass)
+        super().__init__(deployment, name, use_pass, custom_cmd)
 
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
+        # TODO: Implement TLS secret generation.
         raise NotImplementedError()
 
 
@@ -236,12 +251,12 @@ class DockerRegistrySecret(Secret):
     email: str = None
 
     def __init__(self, deployment, server: str, username: str, password: str, email: str = None, name: str = None,
-                 use_pass: bool = True):
+                 use_pass: bool = True, custom_cmd: bool = False):
         self.server = server
         self.username = username
         self.password = password
         self.email = email
-        super().__init__(deployment, name, use_pass)
+        super().__init__(deployment, name, use_pass, custom_cmd)
 
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
 
@@ -251,11 +266,7 @@ class DockerRegistrySecret(Secret):
         if self.email:
             args.append(f'--docker-email={self.email}')
 
-        password = self.password
-        if self.use_pass and not dry_run:
-            password = gopass_get(Path(self.password), log=log)
-
-        args.append(f'--docker-password={password}')
+        args.append(f'--docker-password={self.get_value(self.password, log, dry_run=dry_run)}')
 
         return kubectl_create_secret(
             log=log, name=self.name,

@@ -1,9 +1,8 @@
 import argparse
-import os
 import sys
 from pathlib import Path
 
-from adeploy import common, steps
+from adeploy import steps
 from adeploy.common import colors
 from adeploy.common.helpers import get_submodules
 
@@ -82,8 +81,9 @@ def setup_parser():
 
     parser.add_argument('--gopass-repo', dest='gopass_repo', nargs='*',
                         help='Gopass repo names, where the awesome secrets are stored. This argument can be specified '
-                             'multiple times for multiple Gpoass repos. The default can be overwritten by the env var '
-                             'ADEPLOY_GOPASS_REPOS where comma separated list of Gopass repo names is expected.')
+                             'multiple times for multiple Gpoass repos. This params can also be specified by the env '
+                             'var ADEPLOY_GOPASS_REPOS where comma separated list of Gopass repo names is expected. '
+                             'If args are specified, these take precedence and the env var is ignored.')
 
     parser.add_argument('--version', action='store_true', help='Print version and exit')
 

@@ -45,6 +45,13 @@ Deploy the manifests to the active cluster
 $ adeploy -p <provider> deploy src_dir [src_dir ...]
 ```
 
+## Providers
+
+The following providers are currently supported. Check the sub-pages for details:
+
+* Jinja: [README.md](adeploy/providers/jinja/README.md)
+* Helm v3: [README.md](adeploy/providers/helm/README.md)
+
 ## Deployment Configurations
 
 A deployment configuration is a file in the appropriate namespace folder with release name as filename:
@@ -96,24 +103,60 @@ mydeployment:
 
 ## Secrets
 
-Currently there are a few helpers in `common/secrets.py`, which can be used for implicit secret creation e.g:
+How do you create a k8s secret from sensitive information via CI/CD? Short answer: You don't, use implicit secret creation:
+The secrets are created in the initial deployment process which is done by hand in most cases. So the person that creates
+the deployment (and thus is likely to have access to the sensitive information) can use `gopass` or another password tool
+to retrieve this information and put it into secrets. All consecutive deployments (i.e. executed by CI/CD) don't need to
+re-create the secret and thus don't need access to the sensitive information. To manually re-create the secrets, 
+you must specify `adeploy --recreate-secret`. If a CI/CD needs a secret that is not yet created, it will fail as long as
+the CI/CD does not have access to the password tool which is a recommended limitation. 
 
+### Jinja Secret Functions
+
+There are the following Jinja functions in `common/secrets.py`. These Jinja global functions will create the appropriate 
+secret and return the secret name so it can be used in your YAML i.e. Jinja template or deployment configuration (so this 
+is also useful for Helm templates).
+
+#### create_secret()
 ```jinja2
-myjinjatemplate:
+my_deployment:
   config:
-    secretName: {{ create_secret(secret_name, my_key=/pass/path/to/my_secret) }}
+    secretName: {{ create_secret(my_key='/pass/path/to/my_secret', secret_name='optional_secret_name') }}
     secretKey: my_key
 ```
 
-By default the secret value is taken from `gopass` password store that must be available when for initial deployment.
-If the secret is applied another time and it is not attempt to change, the secret creation is skipped and no password store 
-is required. This is useful for automated deployment in CI/CD, the secret is only touched during the initial deployment
-which is thought to be done by a human beeing.
+Note you can also specify the args as `data` to support arbitrary secret keys:
 
-Note that you can export `ADEPLOY_GOPASS_REPOS` as comma separated a list of `gopass` repo names that are tried in the 
-defined order to find the secret. See `--gopass-repo` arg in `adeploy --help` for further help. 
+```jinja2
+my_deployment:
+  config:
+    secretName: {{ create_secret(data={'a_secret_file.dat': '/pass/path/to/my_secret'}) }}
+```
 
-You can skip the `gopass` feature by passing `use_pass=False` as follows:
+#### create_docker_registry_secret()
+```jinja2
+  template:
+    spec:
+      imagePullSecrets:
+        - name: {{ create_docker_registry_secret(
+                    server='registry.awesome-it.de',
+                    username='my_username',
+                    password='/pass/path/to/my_secret') }}
+```
+
+#### create_tls_secret()
+```jinja2
+my_deployment:
+  config:
+    tlsSecretName: {{ create_tls_secret(cert_data='/pass/path/to/my_cert.crt', key_data='/pass/path/to/my_cert.key') }}
+```
+
+### Password Tools
+
+#### Direct Method
+
+To specify a secret value without retrieving the data from `gopass` or another tool, you can skip this by 
+passing `use_pass=False` as follows:
 
 ```jinja2
 myjinjatemplate:
@@ -122,18 +165,38 @@ myjinjatemplate:
     secretKey: my_key
 ```
 
-The Jinja global function `create_secret()` will create the appropriate secret and return the secret name so it can 
-be used in your YAML i.e. Jinja template or deployment configuration.
+#### Gopass
 
-Additional there is `create_tls_secret()` and `create_docker_registry_secret()` to create the appropriate secret variants.
+By default the secret value is taken from `gopass` password store using the specified path in the `create_secret()`
+functions. A list of different repos can be specified by `--gopass-repo` or as comma separated list in the env variable 
+`ADEPLOY_GOPASS_REPOS`. So if you set `ADEPLOY_GOPASS_REPOS=a,b`, `create_secret(key='/my/path')`, the following 
+secret locations are tried:
 
+- `/my/path`
+- `a/my/path` 
+- `b/my/path`
 
-## Providers
+The first location containing a valid secret is taken. See `gopass --help` for more details.
 
-The following providers are currently supported. Check the sub-pages for details:
+#### Custom Password Tool
 
-* Jinja: [README.md](adeploy/providers/jinja/README.md)
-* Helm v3: [README.md](adeploy/providers/helm/README.md)
+If you don't use `gopass`, you can set `custom_cmd=True` and specify a custom command to retrieve the password data 
+as follows:
+
+```jinja2
+my_deployment:
+  config:
+    secretName: {{ create_secret(
+                    custom_cmd=True, 
+                    my_key='my-custom-tool --arg1=$SOME_ENV_VARS my_password', 
+                    secret_name='optional_secret_name') }}
+    secretKey: my_key
+```
+
+The stdout of the custom command is used as secret value.
+
+Note that you can use environment variables (i.e. `$SOME_ENV_VARS`) in your command which are taken from the executing
+shells environment.
 
 ## Read More
 

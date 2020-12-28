@@ -36,10 +36,10 @@ def create__get_url(deployment, **kwargs):
 def create__create_generic_secret(deployment, **create_kwargs):
     log = create_kwargs.get('log', None)
 
-    def create_secret(name: str = None, use_pass=True, data=None, **kwargs):
+    def create_secret(name: str = None, use_pass=True, custom_cmd=False, data=None, **kwargs):
         if not deployment:
             raise errors.RenderError('create_secret() cannot be used here')
-        s = secret.GenericSecret(deployment, data or kwargs, name, use_pass)
+        s = secret.GenericSecret(deployment, data or kwargs, name, use_pass, custom_cmd)
         if secret.Secret.register(s) and log:
             log.info(f'Registered generic secret "{colors.bold(s.name)}" '
                      f'for deployment "{colors.blue(deployment)} ...')
@@ -56,10 +56,10 @@ def create__create_secret(deployment, **kwargs):
 def create__create_tls_secret(deployment, **kwargs):
     log = kwargs.get('log')
 
-    def create_tls_secret(cert_data: str, key_data: str, name: str, use_pass: bool = True):
+    def create_tls_secret(cert_data: str, key_data: str, name: str, use_pass: bool = True, custom_cmd=False):
         if not deployment:
             raise errors.RenderError('create_tls_secret() cannot be used here')
-        s = secret.TlsSecret(deployment, name, cert_data, key_data, use_pass)
+        s = secret.TlsSecret(deployment, name, cert_data, key_data, use_pass, custom_cmd)
         if secret.Secret.register(s) and log:
             log.info(f'Registering TLS secret "{colors.bold(s.name)}" '
                      f'for deployment "{colors.blue(deployment)} ...')
@@ -72,10 +72,10 @@ def create__create_docker_registry_secret(deployment, **kwargs):
     log = kwargs.get('log')
 
     def create_docker_registry_secret(server: str, username: str, password: str, email: str = None, name: str = None,
-                                      use_pass: bool = True):
+                                      use_pass: bool = True, custom_cmd=False):
         if not deployment:
             raise errors.RenderError('create_docker_registry_secret() cannot be used here')
-        s = secret.DockerRegistrySecret(deployment, server, username, password, email, name, use_pass)
+        s = secret.DockerRegistrySecret(deployment, server, username, password, email, name, use_pass, custom_cmd)
         if secret.Secret.register(s) and log:
             log.info(f'Registering docker registry secret "{colors.bold(s.name)}" '
                      f'for deployment "{colors.blue(deployment)} ...')
