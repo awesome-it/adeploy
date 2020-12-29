@@ -143,10 +143,12 @@ metadata:
   name: {{ name }}-{{ release }}-matomo
   namespace: {{ namespace }}
   labels:
-    {{ create_labels(name=matomo) }}
+    # Overwrite default labels with "more_labels" and add the label "name: matomo"
+    {{ create_labels(name='matomo', labels=more_labels) }}
 spec:
   selector:
-    {{ create_labels(name=matomo) }}
+    # Overwrite default labels with "labels1" and then with "labels2" and add the label "name: matomo"
+    {{ create_labels(name='matomo', labels=[labels1, labels2, ...]) }}
   ports:
     - name: http
       port: 80
@@ -262,7 +264,7 @@ Note that you can either use snake casing (í.e. `period_seconds`) or camel casi
 
 ## Global Labels Configurations
 
-Similar to labels, you can specify a global labels configuration in `default.yml` or in your deployment configuration as follows:
+Similar to probes, you can specify a global labels configuration in `default.yml` or in your deployment configuration as follows:
 
 ```yaml
 _labels:
@@ -273,3 +275,27 @@ _labels:
 
 These labels will be added to all appropriate `metadata`, `matchLabels` and `selector` properties. Please note that
 you can use Jinja variables in the labels, too.  
+
+## Global Resources Configurations
+
+Similar to probes and labels, you can also specify resource limits in `default.yml` or in your dpeloyment configuration as follows:
+
+```yaml
+_resources:
+  # Default resources, can be overwritten by the resources in the manifest (1)
+  limits: {}
+  requests: {}
+
+  # Resources for a specific object (deployment, statefulset, replicaset, ...), can be overwritten by the resources in the manifest (2)
+  my_deployment:
+    limits: {}
+    requests: {}
+
+  # Resources for a specific container, can't be overwritten by the manifest (3)
+  my_deployment:
+    my_container:
+      limits: {}
+      requests: {}
+```
+
+**Note that the resources for a specific container (3) will overwrite the resources defined in the manifest.**

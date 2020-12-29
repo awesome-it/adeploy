@@ -20,12 +20,14 @@ def update_resources(log, doc, deployment):
 
                     r = {}
 
-                    # These are defaults and can be overwritten by the doc
+                    # These are defaults and can be overwritten by the manifest
                     r.update(default_resource.get(type, {}))
+                    r.update(default_resource.get(doc_name, {}).get(type, {}))
+
+                    # Add resources from the manifest
                     r.update(resources.get(type, {}))
 
                     # The following explicitly overwrites the values from the doc
-                    r.update(default_resource.get(doc_name, {}).get(type, {}))
                     r.update(default_resource.get(doc_name, {}).get(container_name, {}).get(type, {}))
 
                     resources[type] = r

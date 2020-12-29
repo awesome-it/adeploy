@@ -1,5 +1,6 @@
 import json
 import textwrap
+from typing import Union
 
 import jinja2
 
@@ -121,10 +122,16 @@ def create__create_labels(deployment, **kwargs):
                       component: str = None,
                       part_of: str = default_part_of,
                       managed_by: str = 'adeploy',
-                      labels: dict = None, **kwargs):
+                      labels: Union[dict, list] = None, **kwargs):
 
         if labels is None:
             labels = kwargs
+
+        if isinstance(labels, list):
+            flat_labels = {}
+            for l in labels:
+                flat_labels.update(l)
+            labels = flat_labels
 
         if name:
             labels['app.kubernetes.io/name'] = name
