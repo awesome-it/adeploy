@@ -200,7 +200,6 @@ class GenericSecret(Secret):
         args = []
         temp_files = []
         for k, v in self.data.items():
-
             fd = tempfile.NamedTemporaryFile(delete=False, mode='w')
             fd.write(self.get_value(v, log, dry_run=dry_run))
             fd.close()
@@ -229,18 +228,49 @@ class GenericSecret(Secret):
 
 class TlsSecret(Secret):
     type: str = "tls"
-    cert_data: str = None
-    key_data: str = None
+    cert: str = None
+    key: str = None
 
-    def __init__(self, deployment, cert_data: str, key_data: str, name: str = None, use_pass: bool = True,
+    def __init__(self, deployment, cert: str, key: str, name: str = None, use_pass: bool = True,
                  custom_cmd: bool = False):
-        self.cert_data = cert_data
-        self.key_data = key_data
+        self.cert = cert
+        self.key = key
         super().__init__(deployment, name, use_pass, custom_cmd)
 
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
-        # TODO: Implement TLS secret generation.
-        raise NotImplementedError()
+
+        cert = tempfile.NamedTemporaryFile(delete=False, mode='w')
+        cert.write(self.get_value(self.cert, log, dry_run=dry_run))
+        cert.close()
+
+        key = tempfile.NamedTemporaryFile(delete=False, mode='w')
+        key.write(self.get_value(self.key, log, dry_run=dry_run))
+        key.close()
+
+        args = [
+            f'--cert={cert.name}',
+            f'--key={key.name}',
+        ]
+
+        try:
+
+            result = kubectl_create_secret(
+                log=log,
+                name=self.name,
+                namespace=self.deployment.namespace,
+                type=self.type,
+                args=args,
+                output=output,
+                labels={
+                    'adeploy.name': self.deployment.name,
+                    'adeploy.release': self.deployment.release
+                })
+
+        finally:
+            os.remove(cert.name)
+            os.remove(key.name)
+
+        return result
 
 
 class DockerRegistrySecret(Secret):
@@ -259,7 +289,6 @@ class DockerRegistrySecret(Secret):
         super().__init__(deployment, name, use_pass, custom_cmd)
 
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
-
         args = [f'--docker-server={self.server}',
                 f'--docker-username={self.username}']
 

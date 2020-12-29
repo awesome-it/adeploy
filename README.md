@@ -103,7 +103,10 @@ mydeployment:
 
 ## Secrets
 
-How do you create a k8s secret from sensitive information via CI/CD? Short answer: You don't, use implicit secret creation:
+### How do you create a k8s secret from sensitive information via CI/CD?
+ 
+Short answer: You don't. Use implicit secret creation:
+
 The secrets are created in the initial deployment process which is done by hand in most cases. So the person that creates
 the deployment (and thus is likely to have access to the sensitive information) can use `gopass` or another password tool
 to retrieve this information and put it into secrets. All consecutive deployments (i.e. executed by CI/CD) don't need to
@@ -160,7 +163,7 @@ Example:
                     password='/pass/path/to/my_secret') }}
 ```
 
-#### `create_tls_secret(cert_data: str, key_data: str, name: str, use_pass: bool = True, custom_cmd: bool = False)`
+#### `create_tls_secret(cert_data: str, key_data: str, name: str = None, use_pass: bool = True, custom_cmd: bool = False)`
 
 Example:
 ```jinja2

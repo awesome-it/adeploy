@@ -12,8 +12,8 @@ from adeploy.common.jinja import env as jinja_env
 from adeploy.common.provider import Provider
 from adeploy.common.yaml import probes, labels
 
-class Renderer(Provider):
 
+class Renderer(Provider):
     templates_dir: str = None
     macros_dirs: str = None
 
@@ -92,7 +92,7 @@ class Renderer(Provider):
 
                 try:
                     data = env.get_template(template).render(**values)
-                    if len(data.replace('---','').replace('\n', '').strip()) > 0:
+                    if len(data.replace('---', '').replace('\n', '').strip()) > 0:
                         data = probes.update(self.log, data, deployment)
                         data = labels.update(self.log, data, deployment)
                         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -102,6 +102,11 @@ class Renderer(Provider):
                 except jinja2.exceptions.TemplateNotFound as e:
                     self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
                     raise RenderError(f'Jinja template error: Template "{e}" not found in "{template}"')
+
+                except jinja2.exceptions.TemplateSyntaxError as e:
+                    self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
+                    raise RenderError(
+                        f'Jinja template syntax error in "{colors.bold(e.filename)}", line {colors.bold(e.lineno)}: {e}')
 
                 except jinja2.exceptions.TemplateError as e:
                     self.log.debug(f'Used Jinja variables: {json.dumps(values)}')

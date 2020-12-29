@@ -1,5 +1,6 @@
 import base64
 import hashlib
+from pathlib import Path
 from typing import Union
 
 import yaml as _yaml
@@ -25,3 +26,7 @@ def sha256sum(string: str):
     hash = hashlib.sha256()
     hash.update(string.encode('utf-8'))
     return hash.hexdigest()
+
+
+def basename(path: str):
+    return Path(path).name

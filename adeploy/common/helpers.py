@@ -62,7 +62,11 @@ def dict_update_recursive(d: dict, u: dict) -> dict:
     if u is not None:
         for k, v in u.items():
             if isinstance(v, collections.abc.Mapping):
-                d[k] = dict_update_recursive(d.get(k, {}), v)
+                sub = {}
+                if d and k in d and d[k] and len(d[k]) > 0:
+                    sub = d[k]
+                d[k] = dict_update_recursive(sub, v)
+            # We don't merge lists! List will be overwritten completely.
             #elif isinstance(v, list):
             #    d[k] = (d[k] if k in d else []) + v
             else:

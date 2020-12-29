@@ -89,7 +89,7 @@ my_deployment:
 
 See [README.md](adeploy/README.md) for more details.
 
-#### `create_tls_secret(cert_data: str, key_data: str, name: str, use_pass: bool = True, custom_cmd: bool = False)`
+#### `create_tls_secret(cert_data: str, key_data: str, name = None: str, use_pass: bool = True, custom_cmd: bool = False)`
 
 Example:
 ```jinja2
@@ -204,6 +204,15 @@ Example:
 annotations:
   checksum/config: |
     {{ include_file("files/configmap.yml") | sha256sum }}
+```
+
+#### basename(path: str)
+
+Return the basename of a given path.
+
+Example:
+```yaml
+mypath: {{ '/this/is/my/basename' | basename }}
 ```
 
 ## Macros
