@@ -1,6 +1,8 @@
 import json
 import textwrap
 
+import jinja2
+
 import adeploy.common.colors as colors
 import adeploy.common.secret as secret
 import adeploy.common.errors as errors
@@ -23,14 +25,24 @@ def create__version(deployment, **kwargs):
 def create__create_generic_secret(deployment, **create_kwargs):
     log = create_kwargs.get('log', None)
 
-    def create_secret(name: str = None, use_pass: bool = True, custom_cmd: bool = False, data: dict = None, **kwargs):
+    def create_secret(name: str = None, use_pass: bool = True, custom_cmd: bool = False, as_ref: bool = False,
+                      data: dict = None, **kwargs):
         if not deployment:
             raise errors.RenderError('create_secret() cannot be used here')
         s = secret.GenericSecret(deployment, data or kwargs, name, use_pass, custom_cmd)
         if secret.Secret.register(s) and log:
             log.info(f'Registered generic secret "{colors.bold(s.name)}" '
                      f'for deployment "{colors.blue(deployment)} ...')
-        return s.name
+
+        if not as_ref:
+            return s.name
+
+        keys = (data or kwargs).keys()
+        if len(keys) == 0:
+            raise errors.RenderError(
+                'You must specify at least a secret key if using create_secret() with key_ref = True')
+
+        return json.dumps({'name': s.name, 'key': list(keys)[0]})
 
     return create_secret
 
@@ -73,6 +85,7 @@ def create__create_docker_registry_secret(deployment, **kwargs):
 
 def create__include_file(deployment, **kwargs):
     env = kwargs.get('env')
+    log = kwargs.get('log', None)
     values = {}
     if deployment:
         values = deployment.get_template_values()
@@ -80,7 +93,15 @@ def create__include_file(deployment, **kwargs):
     def include_file(path: str, direct: bool = False, render: bool = True, indent: int = 4):
         prefix = '|\n' if not direct else ''
         if render:
-            data = env.get_template(path).render(**values)
+            try:
+                data = env.get_template(path).render(**values)
+
+            except jinja2.exceptions.TemplateNotFound as e:
+                log and log.debug(f'Used Jinja variables: {json.dumps(values)}')
+                raise errors.RenderError(f'Jinja template error: Template "{e}" not found in "{path}"')
+            except jinja2.exceptions.TemplateError as e:
+                log and log.debug(f'Used Jinja variables: {json.dumps(values)}')
+                raise errors.RenderError(f'Jinja template error in "{colors.bold(path)}": {e}')
         else:
             data, _, _ = env.loader.get_source(env, path)
         return f'{prefix}{textwrap.indent(data, indent * " ")}'

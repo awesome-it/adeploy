@@ -59,15 +59,26 @@ Now you can use the following in your deployments:
   ports:
 ```
 
-#### `create_secret(name: str = None, use_pass: bool = True, custom_cmd: bool = False, data: dict = None, **kwargs)`
+#### `create_secret(name: str = None, use_pass: bool = True, custom_cmd: bool = False, with_key: bool = False, data: dict = None, **kwargs)`
 
 Examples:
 
 ```jinja2
-my_deployment:
-  config:
-    secretName: {{ create_secret(my_key='/pass/path/to/my_secret', name='optional_secret_name') }}
-    secretKey: my_key
+env:
+    - name: S3_SECRET_KEY
+      valueFrom:
+        secretKeyRef: 
+          name: {{ create_secret(my_key='/pass/path/to/my_secret', name='optional_secret_name') }}
+          key: my_key
+```
+
+Or using `as_ref = True`:
+
+```jinja2
+env:
+    - name: S3_SECRET_KEY
+      valueFrom:
+        secretKeyRef: {{ create_secret(as_ref=True, my_key='/pass/path/to/my_secret', name='optional_secret_name') }}
 ```
 
 ```jinja2

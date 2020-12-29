@@ -117,12 +117,26 @@ There are the following Jinja functions in `common/secrets.py`. These Jinja glob
 secret and return the secret name so it can be used in your YAML i.e. Jinja template or deployment configuration (so this 
 is also useful for Helm templates).
 
-#### create_secret()
+#### `create_secret(name: str = None, use_pass: bool = True, custom_cmd: bool = False, with_key: bool = False, data: dict = None, **kwargs)`
+
+Examples:
+
 ```jinja2
-my_deployment:
-  config:
-    secretName: {{ create_secret(my_key='/pass/path/to/my_secret', name='optional_secret_name') }}
-    secretKey: my_key
+env:
+    - name: S3_SECRET_KEY
+      valueFrom:
+        secretKeyRef: 
+          name: {{ create_secret(my_key='/pass/path/to/my_secret', name='optional_secret_name') }}
+          key: my_key
+```
+
+Or using `as_ref = True`:
+
+```jinja2
+env:
+    - name: S3_SECRET_KEY
+      valueFrom:
+        secretKeyRef: {{ create_secret(as_ref=True, my_key='/pass/path/to/my_secret', name='optional_secret_name') }}
 ```
 
 Note you can also specify the args as `data` to support arbitrary secret keys:
@@ -133,7 +147,9 @@ my_deployment:
     secretName: {{ create_secret(data={'a_secret_file.dat': '/pass/path/to/my_secret'}) }}
 ```
 
-#### create_docker_registry_secret()
+#### `create_docker_registry_secret(server: str, username: str, password: str, email: str = None, name: str = None, use_pass: bool = True, custom_cmd: bool = False)`
+
+Example:
 ```jinja2
   template:
     spec:
@@ -144,7 +160,9 @@ my_deployment:
                     password='/pass/path/to/my_secret') }}
 ```
 
-#### create_tls_secret()
+#### `create_tls_secret(cert_data: str, key_data: str, name: str, use_pass: bool = True, custom_cmd: bool = False)`
+
+Example:
 ```jinja2
 my_deployment:
   config:
