@@ -55,10 +55,11 @@ def create__create_secret(deployment, **kwargs):
 def create__create_tls_secret(deployment, **kwargs):
     log = kwargs.get('log')
 
-    def create_tls_secret(cert_data: str, key_data: str, name: str = None, use_pass: bool = True, custom_cmd: bool = False):
+    def create_tls_secret(cert: str, key: str, name: str = None, use_pass: bool = True, custom_cmd: bool = False):
         if not deployment:
             raise errors.RenderError('create_tls_secret() cannot be used here')
-        s = secret.TlsSecret(deployment, name, cert_data, key_data, use_pass, custom_cmd)
+        s = secret.TlsSecret(deployment=deployment, name=name, cert=cert, key=key, use_pass=use_pass,
+                             custom_cmd=custom_cmd)
         if secret.Secret.register(s) and log:
             log.info(f'Registering TLS secret "{colors.bold(s.name)}" '
                      f'for deployment "{colors.blue(deployment)} ...')
