@@ -98,7 +98,7 @@ def create__include_file(deployment, **kwargs):
 
             except jinja2.exceptions.TemplateNotFound as e:
                 log and log.debug(f'Used Jinja variables: {json.dumps(values)}')
-                raise errors.RenderError(f'Jinja template error: Template "{e}" not found in "{path}"')
+                raise errors.RenderError(f'Jinja template error: Template "{path}" not found.')
             except jinja2.exceptions.TemplateError as e:
                 log and log.debug(f'Used Jinja variables: {json.dumps(values)}')
                 raise errors.RenderError(f'Jinja template error in "{colors.bold(path)}": {e}')
