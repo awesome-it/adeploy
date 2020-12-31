@@ -197,7 +197,7 @@ env:
       value: {{ my_var | base64_encode }}        
 ```
 
-#### sha256sum(string: str)
+#### `sha256sum(string: str)`
 
 Returns the SHA265 sum for the given string.
 
@@ -208,7 +208,7 @@ annotations:
     {{ include_file("files/configmap.yml") | sha256sum }}
 ```
 
-#### basename(path: str)
+#### `basename(path: str)`
 
 Return the basename of a given path.
 
@@ -257,7 +257,7 @@ _probes:
       initial_delay_seconds: 300
 ``` 
 
-The example above will update all probes in the generated deployments with the given values. The `initialDelaySeconds` of
+The example above will update all probes in all generated deployments with the given values. The `initialDelaySeconds` of
 the `liveness` probe for the deployment `custom-deployment-name` will be additionally set to `300`. 
 
 Note that you can either use snake casing (í.e. `period_seconds`) or camel casing as in the official docs (i.e. `periodSeconds`). 
