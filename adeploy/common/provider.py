@@ -94,7 +94,7 @@ class Provider(ABC):
                     deployment = Deployment(self.name, deployment_release, ns)
 
                     if (filters_namespace and deployment.namespace not in filters_namespace) or \
-                            (filter_release and deployment.name not in filter_release):
+                            (filter_release and deployment.name not in filter_release and deployment.release not in filter_release):
                         self.log.info(f'... Deployment "{colors.blue(deployment)}" skipped by user filter.')
                         continue
 
