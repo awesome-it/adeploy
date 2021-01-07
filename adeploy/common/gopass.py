@@ -65,7 +65,7 @@ def gopass_try_repos(path: Union[Path, str], log: Logger = None) -> subprocess.C
         result = gopass_try(repo.joinpath(path), log=log)
         
         # Stop on success
-        if result.returncode == 0 and len(result.stdout.strip()) > 0:
+        if result and result.returncode == 0 and len(result.stdout.strip()) > 0:
             break
 
     return result
