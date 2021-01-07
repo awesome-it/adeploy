@@ -331,9 +331,8 @@ class TlsSecret(Secret):
                 })
 
         finally:
-            #os.remove(cert.name)
-            #os.remove(key.name)
-            pass
+            os.remove(cert.name)
+            os.remove(key.name)
 
         return result
 

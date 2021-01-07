@@ -51,29 +51,38 @@ def gopass_get(path: Union[Path, str], log: Logger = None) -> str:
     if parse_version(gopass_version) < parse_version(gopass_required_version):
         raise InputError(f'Found gopass version {gopass_version} but version {gopass_required_version}+ is required.')
 
-    result = gopass_try_repos(path, True, log)
-    if result.returncode != 0:
-        result = gopass_try_repos(path, False, log)
-
-    # In error case, trigger error from last run
+    result = gopass_try_repos(path, log=log)
     result.check_returncode()
 
     return result.stdout.lstrip()
 
 
-def gopass_try_repos(path: Union[Path, str], explicit_pass = True, log: Logger = None) -> subprocess.CompletedProcess:
+def gopass_try_repos(path: Union[Path, str], log: Logger = None) -> subprocess.CompletedProcess:
 
     result = None
-    for repo in [Path(r) for r in gopass_get_repos()]:
-
+    for repo in [Path(r) for r in gopass_get_repos()]:        
         repo_path = repo.joinpath(path)
-        cmd = ['gopass', 'show'] + (['--password'] if explicit_pass else []) + [str(repo_path)]
-        log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        log.debug(f'... command returned {colors.bold(result.returncode)}')
-
+        result = gopass_try(repo.joinpath(path), log=log)
+        
         # Stop on success
         if result.returncode == 0 and len(result.stdout.strip()) > 0:
             break
 
     return result
+
+
+def gopass_try(repo_path: Union[Path, str], explicit_pass=False, log: Logger = None) -> subprocess.CompletedProcess:
+
+    cmd = ['gopass', 'show'] + (['--password'] if explicit_pass else []) + [str(repo_path)]
+    log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    log.debug(f'... command returned {colors.bold(result.returncode)}')
+
+    # Stop on success
+    if result.returncode == 0 and len(result.stdout.strip()) > 0:
+
+        # Properly handle meta data
+        if result.stdout.startswith('Password: '):
+            return gopass_try(repo_path, explicit_pass=True, log=log)
+        else:
+            return result
