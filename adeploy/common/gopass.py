@@ -52,9 +52,14 @@ def gopass_get(path: Union[Path, str], log: Logger = None) -> str:
         raise InputError(f'Found gopass version {gopass_version} but version {gopass_required_version}+ is required.')
 
     result = gopass_try_repos(path, log=log)
+    if result is None:
+        raise InputError(f'Cannot find gopass value, did you specify a gopass repo?')
+        
     result.check_returncode()
-
-    return result.stdout.lstrip()
+    num_lines = len(result.stdout.strip().split("\n")) 
+    
+    # Strip front/back for single line, strip front for multi-line
+    return result.stdout.strip() if num_lines <= 1 else result.stdout.lstrip()
 
 
 def gopass_try_repos(path: Union[Path, str], log: Logger = None) -> subprocess.CompletedProcess:
@@ -68,6 +73,7 @@ def gopass_try_repos(path: Union[Path, str], log: Logger = None) -> subprocess.C
         if result and result.returncode == 0 and len(result.stdout.strip()) > 0:
             break
 
+    # Return the last possible result
     return result
 
 
