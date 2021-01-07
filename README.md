@@ -72,7 +72,7 @@ For a deployment, you can set a minimum required adeploy version i.e. in `defaul
 
 ```shell script
 _adeploy:
-  version: 0.5
+  version: 0.7
 ```
 
 ## Defaults
