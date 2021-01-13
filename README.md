@@ -199,7 +199,7 @@ secret locations are tried:
 
 The first location containing a valid secret is taken. See `gopass --help` for more details.
 
-#### Custom Password Tool
+#### Custom Password Command
 
 If you don't use `gopass`, you can set `custom_cmd=True` and specify a custom command to retrieve the password data 
 as follows:
@@ -215,6 +215,10 @@ my_deployment:
 ```
 
 The stdout of the custom command is used as secret value.
+
+Note that the command string is used to create a unique secret name. So if you are using the same command to create secrets
+i.e. using a random-password script for auto-rotation secret generation, you should make sure to add a unique expression
+to the command.
 
 Note that you can use environment variables (i.e. `$SOME_ENV_VARS`) in your command which are taken from the executing
 shells environment.

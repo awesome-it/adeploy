@@ -65,8 +65,7 @@ def gopass_get(path: Union[Path, str], log: Logger = None) -> str:
 def gopass_try_repos(path: Union[Path, str], log: Logger = None) -> subprocess.CompletedProcess:
 
     result = None
-    for repo in [Path(r) for r in gopass_get_repos()]:        
-        repo_path = repo.joinpath(path)
+    for repo in [Path(r) for r in gopass_get_repos()]:
         result = gopass_try(repo.joinpath(path), log=log)
         
         # Stop on success

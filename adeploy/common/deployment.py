@@ -4,6 +4,7 @@ from pathlib import Path
 
 import yaml
 from yaml.parser import ParserError
+from yaml.scanner import ScannerError
 
 from adeploy.common.errors import Error
 from adeploy.common.helpers import dict_update_recursive, get_defaults
@@ -57,6 +58,9 @@ class Deployment:
             self.config = dict_update_recursive(self.config, yaml.load(
                 env.get_template(config_path.name).render(defaults=self.config, **self.get_template_values()),
                 Loader=yaml.FullLoader))
+
+        except ScannerError as e:
+            raise Error(f'Unexpected error while scanning YAML "{colors.bold(config_path)}": {e}')
 
         except ParserError as e:
             raise Error(f'Unexpected error while parsing YAML "{colors.bold(config_path)}": {e}')
