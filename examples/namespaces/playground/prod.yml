@@ -20,4 +20,4 @@ ingress:
 
 secrets:
   service: {{ create_secret(custom_cmd=True, data={'my-secret': 'cat namespaces/playground/data/mysecret'}) }}
-  service_2: {{ create_secret(custom_cmd=True, data={'my-secret': 'echo yolo'}) }}
+  binary: {{ create_secret(custom_cmd=True, data={'my-secret': 'cat namespaces/playground/data/mybinary-secret'}) }}

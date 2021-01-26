@@ -57,6 +57,9 @@ spec:
         - name: secrets
           secret:
             secretName: {{ secrets.service }}
+        - name: binary-secrets
+          secret:
+            secretName: {{ secrets.binary }}
         - name: config
           configMap:
             name: {{ name }}-{{ release }}-config

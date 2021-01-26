@@ -104,9 +104,13 @@ class Secret(ABC):
             return '*****'
 
         if self.custom_cmd:
-            result = subprocess.run(data, shell=True, capture_output=True, text=True)
+            result = subprocess.run(data, shell=True, capture_output=True)                        
             result.check_returncode()
-            return result.stdout
+            
+            try:
+                return result.stdout.decode("utf-8")
+            except UnicodeDecodeError:
+                return result.stdout
 
         if self.use_pass:
             return gopass_get(data, log)
@@ -200,8 +204,9 @@ class GenericSecret(Secret):
         args = []
         temp_files = []
         for k, v in self.data.items():
-            fd = tempfile.NamedTemporaryFile(delete=False, mode='w')
-            fd.write(self.get_value(v, log, dry_run=dry_run))
+            data = self.get_value(v, log, dry_run=dry_run)
+            fd = tempfile.NamedTemporaryFile(delete=False, mode='wb' if isinstance(data, (bytes, bytearray)) else 'w')
+            fd.write(data)
             fd.close()
 
             temp_files.append(fd.name)
@@ -222,6 +227,7 @@ class GenericSecret(Secret):
         finally:
             for f in temp_files:
                 os.remove(f)
+                pass
 
         return result
 

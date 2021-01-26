@@ -56,10 +56,16 @@ def gopass_get(path: Union[Path, str], log: Logger = None) -> str:
         raise InputError(f'Cannot find gopass value, did you specify a gopass repo?')
         
     result.check_returncode()
-    num_lines = len(result.stdout.strip().split("\n")) 
-    
-    # Strip front/back for single line, strip front for multi-line
-    return result.stdout.strip() if num_lines <= 1 else result.stdout.lstrip()
+
+    if isinstance(result.stdout, (bytes, bytearray)):
+        return result.stdout.lstrip();
+        
+    else:
+        
+        num_lines = len(result.stdout.strip().split("\n")) 
+        
+        # Strip front/back for single line, strip front for multi-line
+        return result.stdout.strip() if num_lines <= 1 else result.stdout.lstrip()
 
 
 def gopass_try_repos(path: Union[Path, str], log: Logger = None) -> subprocess.CompletedProcess:
@@ -80,14 +86,19 @@ def gopass_try(repo_path: Union[Path, str], explicit_pass=False, log: Logger = N
 
     cmd = ['gopass', 'show'] + (['--password'] if explicit_pass else []) + [str(repo_path)]
     log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True)
     log.debug(f'... command returned {colors.bold(result.returncode)}')
 
     # Stop on success
     if result.returncode == 0 and len(result.stdout.strip()) > 0:
+        
+        try:
+            # Properly handle meta data
+            data = result.stdout.decode('utf-8')
+            if data.startswith('Password: '):
+                return gopass_try(repo_path, explicit_pass=True, log=log)
 
-        # Properly handle meta data
-        if result.stdout.startswith('Password: '):
-            return gopass_try(repo_path, explicit_pass=True, log=log)
-        else:
-            return result
+        except UnicodeDecodeError:
+            pass
+            
+        return result
