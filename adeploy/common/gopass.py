@@ -94,11 +94,12 @@ def gopass_try(repo_path: Union[Path, str], explicit_pass=False, log: Logger = N
         
         try:
             # Properly handle meta data
-            data = result.stdout.decode('utf-8')
-            if data.startswith('Password: '):
+            result.stdout = result.stdout.decode('utf-8')
+            if result.stdout.startswith('Password: '):
                 return gopass_try(repo_path, explicit_pass=True, log=log)
 
         except UnicodeDecodeError:
+            log.debug('Decoding failed ... assuming binary data')
             pass
             
         return result
