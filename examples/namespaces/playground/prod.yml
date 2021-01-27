@@ -21,3 +21,4 @@ ingress:
 secrets:
   service: {{ create_secret(custom_cmd=True, data={'my-secret': 'cat namespaces/playground/data/mysecret'}) }}
   binary: {{ create_secret(custom_cmd=True, data={'my-secret': 'cat namespaces/playground/data/mybinary-secret'}) }}
+  secret_from_pass: {{ create_tls_secret(cert='private/test/crt', key='private/test/key') }}

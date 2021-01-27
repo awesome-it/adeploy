@@ -303,18 +303,14 @@ class TlsSecret(Secret):
 
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
 
-        cert = tempfile.NamedTemporaryFile(delete=False, mode='w')
-        if dry_run:
-            cert.write(_DUMMY_DATA_CRT)
-        else:
-            cert.write(self.get_value(self.cert, log, dry_run=False))
+        cert_data = _DUMMY_DATA_KEY if dry_run else self.get_value(self.cert, log, dry_run=False)             
+        cert = tempfile.NamedTemporaryFile(delete=False, mode='wb' if isinstance(cert_data, (bytes, bytearray)) else 'w')
+        cert.write(cert_data)
         cert.close()
 
-        key = tempfile.NamedTemporaryFile(delete=False, mode='w')
-        if dry_run:
-            key.write(_DUMMY_DATA_KEY)
-        else:
-            key.write(self.get_value(self.key, log, dry_run=False))
+        key_data = _DUMMY_DATA_KEY if dry_run else self.get_value(self.key, log, dry_run=False)
+        key = tempfile.NamedTemporaryFile(delete=False, mode='wb' if isinstance(key_data, (bytes, bytearray)) else 'w')
+        key.write(key_data)
         key.close()
 
         args = [
