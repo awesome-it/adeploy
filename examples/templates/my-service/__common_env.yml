@@ -1,0 +1,5 @@
+env:
+  - name: VAR1
+    value: "value2"
+  - name: VAR2
+    value: "{{ common.env_var2 }}"

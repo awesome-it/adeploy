@@ -93,7 +93,7 @@ def create__include_file(deployment, **kwargs):
         values = deployment.get_template_values()
 
     def include_file(path: str, direct: bool = False, render: bool = True, indent: int = 4):
-        prefix = '|\n' if not direct else ''
+        prefix = '|\n' if not direct else '\n'
         if render:
             try:
                 data = env.get_template(path).render(**values)

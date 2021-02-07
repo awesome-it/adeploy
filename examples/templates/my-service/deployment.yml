@@ -25,6 +25,7 @@ spec:
         - name: main
           image: nginx:latest
           imagePullPolicy: Always
+          {{ include_file('my-service/__common_env.yml', direct=True, indent=10) }}
           volumeMounts:
             - mountPath: /service.conf
               name: config
