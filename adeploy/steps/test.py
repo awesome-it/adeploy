@@ -45,8 +45,6 @@ class Test:
                         colors.bold(self.args.provider)
                     )
 
-                    tester.run()
-
                     # Check whether secrets have to be created
                     filters_namespace = self.args.filters_namespace
                     filter_release = self.args.filters_release
@@ -65,6 +63,9 @@ class Test:
 
                     # Check and report orphaned secrets
                     Secret.clean_all(secrets, self.log, dry_run=True)
+
+                    # Run the test deploy
+                    tester.run()
 
                 except TestError as e:
                     self.log.error(colors.red(f'Test failed in source directory "{src_dir}":'))
