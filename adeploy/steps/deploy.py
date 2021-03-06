@@ -45,8 +45,6 @@ class Deploy:
                         colors.bold(self.args.provider)
                     )
 
-                    deployer.run()
-
                     # Create secrets
                     filters_namespace = self.args.filters_namespace
                     filter_release = self.args.filters_release
@@ -65,6 +63,9 @@ class Deploy:
 
                     # Remove unused secrets
                     Secret.clean_all(secrets, self.log, dry_run=False)
+
+                    # Do the deployments
+                    deployer.run()
 
                 except DeployError as e:
                     self.log.error(colors.red(f'Deployment failed in source directory "{src_dir}":'))

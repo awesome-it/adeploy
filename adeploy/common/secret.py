@@ -82,7 +82,13 @@ class Secret(ABC):
 
                 secrets_existing = [s for s in result.stdout.replace("'", '').split(' ') if len(s) > 0]
                 secrets_created = [s.name for s in secrets]
+
+                secrets_existing.sort()
+                secrets_created.sort()
+
                 num_orphaned = 0
+                log.debug(f'... existing secrets: {colors.bold(", ".join(secrets_existing))}')
+                log.debug(f'... created secrets: {colors.bold(", ".join(secrets_created))}')
                 for s in secrets_existing:
                     if s not in secrets_created:
                         num_orphaned += 1
