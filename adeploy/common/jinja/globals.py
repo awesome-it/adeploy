@@ -133,6 +133,9 @@ def create__create_labels(deployment, **kwargs):
                 flat_labels.update(l)
             labels = flat_labels
 
+        # Make a copy to not specified labels dict.
+        labels = labels.copy()
+
         if name:
             labels['app.kubernetes.io/name'] = name
         if instance:
