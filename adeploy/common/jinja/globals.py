@@ -124,17 +124,19 @@ def create__create_labels(deployment, **kwargs):
                       managed_by: str = 'adeploy',
                       labels: Union[dict, list] = None, **kwargs):
 
-        if labels is None:
+        if labels is not None:
+            if isinstance(labels, list):
+                flat_labels = {}
+                for l in labels:
+                    flat_labels.update(l)
+                labels = flat_labels
+            else:
+                # Make a copy to not specified labels dict.
+                labels = labels.copy()
+
+            labels.update(kwargs)
+        else:
             labels = kwargs
-
-        if isinstance(labels, list):
-            flat_labels = {}
-            for l in labels:
-                flat_labels.update(l)
-            labels = flat_labels
-
-        # Make a copy to not specified labels dict.
-        labels = labels.copy()
 
         if name:
             labels['app.kubernetes.io/name'] = name
