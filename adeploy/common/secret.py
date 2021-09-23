@@ -309,7 +309,7 @@ class TlsSecret(Secret):
 
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
 
-        cert_data = _DUMMY_DATA_KEY if dry_run else self.get_value(self.cert, log, dry_run=False)             
+        cert_data = _DUMMY_DATA_CRT if dry_run else self.get_value(self.cert, log, dry_run=False)
         cert = tempfile.NamedTemporaryFile(delete=False, mode='wb' if isinstance(cert_data, (bytes, bytearray)) else 'w')
         cert.write(cert_data)
         cert.close()
