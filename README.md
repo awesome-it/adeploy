@@ -163,13 +163,13 @@ Example:
                     password='/pass/path/to/my_secret') }}
 ```
 
-#### `create_tls_secret(cert_data: str, key_data: str, name: str = None, use_pass: bool = True, custom_cmd: bool = False)`
+#### `create_tls_secret(cert: str, key: str, name: str = None, use_pass: bool = True, custom_cmd: bool = False)`
 
 Example:
 ```jinja2
 my_deployment:
   config:
-    tlsSecretName: {{ create_tls_secret(cert_data='/pass/path/to/my_cert.crt', key_data='/pass/path/to/my_cert.key') }}
+    tlsSecretName: {{ create_tls_secret(cert='/pass/path/to/my_cert.crt', key='/pass/path/to/my_cert.key') }}
 ```
 
 ### Password Tools
