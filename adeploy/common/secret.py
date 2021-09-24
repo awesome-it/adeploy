@@ -110,7 +110,8 @@ class Secret(ABC):
             return '*****'
 
         if self.custom_cmd:
-            result = subprocess.run(data, shell=True, capture_output=True)                        
+            log.debug(f'... executing command "{colors.bold(data)}"')
+            result = subprocess.run(data, shell=True, capture_output=True)
             result.check_returncode()
             
             try:
