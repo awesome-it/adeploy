@@ -59,6 +59,22 @@ Now you can use the following in your deployments:
   ports:
 ```
 
+#### `uuid()`
+
+Generates a UUID based on the host ID and current time. This is useful i.e. to create a one-shot-container:
+
+Examples:
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ name }}-{{ release }}-provisioning-{{ uuid }}
+  namespace: {{ namespace }}
+  labels:
+    {{ labels.my_oneshot_container }}
+```
+
 #### `create_secret(name: str = None, use_pass: bool = True, custom_cmd: bool = False, with_key: bool = False, data: dict = None, **kwargs)`
 
 Examples:

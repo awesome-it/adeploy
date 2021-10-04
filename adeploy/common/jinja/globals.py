@@ -1,3 +1,4 @@
+import uuid as uuid
 import json
 import textwrap
 from typing import Union
@@ -154,3 +155,10 @@ def create__create_labels(deployment, **kwargs):
         return json.dumps(labels)
 
     return create_labels
+
+
+def create__uuid(deployment, **kwargs):
+    def gen_uuid():
+        return str(uuid.uuid1())
+
+    return gen_uuid
