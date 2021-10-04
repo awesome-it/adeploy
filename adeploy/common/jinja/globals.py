@@ -1,4 +1,6 @@
-import uuid as uuid
+import uuid
+import shortuuid
+import string
 import json
 import textwrap
 from typing import Union
@@ -158,7 +160,8 @@ def create__create_labels(deployment, **kwargs):
 
 
 def create__uuid(deployment, **kwargs):
-    def gen_uuid():
-        return str(uuid.uuid1())
+    def gen_uuid(short=False, length=8):
+        return str(uuid.uuid4()) if not short else shortuuid.ShortUUID(
+            alphabet=string.ascii_lowercase + string.digits).random(length)
 
     return gen_uuid

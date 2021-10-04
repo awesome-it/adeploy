@@ -61,7 +61,7 @@ Now you can use the following in your deployments:
 
 #### `uuid()`
 
-Generates a UUID based on the host ID and current time. This is useful i.e. to create a one-shot-container:
+Generates a random UUID. This is useful i.e. to create a one-shot-container:
 
 Examples:
 
@@ -69,7 +69,19 @@ Examples:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ name }}-{{ release }}-provisioning-{{ uuid }}
+  name: {{ name }}-{{ release }}-provisioning-{{ uuid() }}
+  namespace: {{ namespace }}
+  labels:
+    {{ labels.my_oneshot_container }}
+```
+
+If you hit the 64 characters limit for API objects, you can fallback to a short uuid:
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ name }}-{{ release }}-provisioning-{{ uuid(short=True) }}
   namespace: {{ namespace }}
   labels:
     {{ labels.my_oneshot_container }}
