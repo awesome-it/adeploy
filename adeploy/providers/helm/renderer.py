@@ -11,7 +11,7 @@ import yaml
 
 from adeploy.common import colors
 from adeploy.common.errors import RenderError
-from .common import helm_repo_add, helm_repo_pull, helm_template, HelmProvider
+from .common import helm_repo_add, helm_repo_pull, helm_template, HelmProvider, get_defaults
 
 
 class Renderer(HelmProvider):
@@ -38,7 +38,10 @@ class Renderer(HelmProvider):
 
     def parse_args(self, args: dict):
 
-        self.repo_url = args.get('repo_url', None)
+        chart_defaults = get_defaults(self.get_defaults_file(), log=self.log).get('_chart', {})
+
+        self.name = chart_defaults.get('name', self.name)
+        self.repo_url = chart_defaults.get('repo_url', args.get('repo_url', None))
 
         self.chart_dir = Path(args.get('chart_dir'))
         if not self.chart_dir.is_absolute():

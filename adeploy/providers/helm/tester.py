@@ -10,7 +10,7 @@ import yaml
 from adeploy.common import colors
 from adeploy.common.kubectl import kubectl_apply, parse_kubectrl_apply
 from adeploy.common.errors import TestError
-from adeploy.providers.helm.common import helm_install, HelmOutput, HelmProvider
+from adeploy.providers.helm.common import helm_install, HelmOutput, HelmProvider, get_defaults
 
 
 class Tester(HelmProvider):
@@ -28,6 +28,9 @@ class Tester(HelmProvider):
 
     def parse_args(self, args: dict):
         self.skip_raw_test = args.get('skip_raw_test')
+
+        chart_defaults = get_defaults(self.get_defaults_file(), log=self.log).get('_chart', {})
+        self.name = chart_defaults.get('name', self.name)
 
     def run(self):
 

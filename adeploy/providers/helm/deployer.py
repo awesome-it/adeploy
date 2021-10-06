@@ -4,7 +4,7 @@ from subprocess import CalledProcessError
 
 from adeploy.common import colors
 from adeploy.common.errors import DeployError
-from adeploy.providers.helm.common import helm_install, HelmOutput, HelmProvider
+from adeploy.providers.helm.common import helm_install, HelmOutput, HelmProvider, get_defaults
 
 
 class Deployer(HelmProvider):
@@ -16,7 +16,8 @@ class Deployer(HelmProvider):
         return parser
 
     def parse_args(self, args: dict):
-        return
+        chart_defaults = get_defaults(self.get_defaults_file(), log=self.log).get('_chart', {})
+        self.name = chart_defaults.get('name', self.name)
 
     def run(self):
 
