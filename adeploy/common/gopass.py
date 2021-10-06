@@ -84,7 +84,7 @@ def gopass_try_repos(path: Union[Path, str], log: Logger = None) -> subprocess.C
 
 def gopass_try(repo_path: Union[Path, str], explicit_pass=False, log: Logger = None) -> subprocess.CompletedProcess:
 
-    cmd = ['gopass', 'show'] + (['--password'] if explicit_pass else []) + [str(repo_path)]
+    cmd = ['gopass', 'show', '-n'] + (['--password'] if explicit_pass else []) + [str(repo_path)]
     log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
     result = subprocess.run(cmd, capture_output=True)
     log.debug(f'... command returned {colors.bold(result.returncode)}')
