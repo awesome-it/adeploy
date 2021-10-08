@@ -55,15 +55,16 @@ class Deployment:
         try:
             # Compile config with default Jinja renderer i.e. to provide globals and filters
             env = jinja_env.create([config_path.parent], deployment=self, log=log)
-            self.config = dict_update_recursive(self.config, yaml.load(
-                env.get_template(config_path.name).render(defaults=self.config, **self.get_template_values()),
-                Loader=yaml.FullLoader))
+            template = env.get_template(config_path.name).render(defaults=self.config, **self.get_template_values())
+            self.config = dict_update_recursive(self.config, yaml.load(template, Loader=yaml.FullLoader))
 
         except ScannerError as e:
-            raise Error(f'Unexpected error while scanning YAML "{colors.bold(config_path)}": {e}')
+            raise Error(f'Unexpected error while scanning YAML "{colors.bold(config_path)}": {e}\n'
+                        f'{colors.bold("Template")}:\n{template}')
 
         except ParserError as e:
-            raise Error(f'Unexpected error while parsing YAML "{colors.bold(config_path)}": {e}')
+            raise Error(f'Unexpected error while parsing YAML "{colors.bold(config_path)}": {e}\n'
+                        f'{colors.bold("Template")}:\n{template}')
 
         return self.config
 

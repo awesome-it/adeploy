@@ -143,7 +143,7 @@ Example:
 
 See [README.md](adeploy/README.md) for more details.
                                       
-#### `include_file(path: str, direct: bool = False, render: bool = True, indent: int = 4)`
+#### `include_file(path: str, direct: bool = False, render: bool = True, indent: int = 4, skip=[], escape=[])`
 
 Example:
 ```jinja2
@@ -158,6 +158,22 @@ data:
   entrypoint-common.sh: {{ include_file('files/entrypoint-common.sh') }}
   entrypoint-cronjob.sh: {{ include_file('files/entrypoint-cronjob.sh') }}
 ```
+
+You can include the file content as a string using `skip` to remove characters and `escape` to escape characters as follows:
+
+```jinja2
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ name }}-{{ release }}-config
+  namespace: {{ namespace }}
+  labels:
+    {{ create_labels(component='config') }}
+data:
+  single-line-string: {{ include_file('files/my-config-sccript.gohtml', direct=True, render=False, indent=0, skip=['\n', '\r'], escape=['\"'])) }}
+```
+
+This will direct include the content of `my-config-script.gohtml`, remove newlines and escape quotes `"` as `\"`.
 
 #### `create_labels(name: str = None, instance: str = default_instance, version: str = None, component: str = None, part_of: str = default_part_of, managed_by: str = 'adeploy', labels: dict = None, **kwargs)`
 

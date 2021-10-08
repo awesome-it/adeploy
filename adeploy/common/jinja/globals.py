@@ -95,8 +95,14 @@ def create__include_file(deployment, **kwargs):
     if deployment:
         values = deployment.get_template_values()
 
-    def include_file(path: str, direct: bool = False, render: bool = True, indent: int = 4):
-        prefix = '|\n' if not direct else '\n'
+    def include_file(path: str, direct: bool = False, render: bool = True, indent: int = 4, skip=None, escape=None):
+
+        if not skip:
+            skip = []
+
+        if not escape:
+            escape = []
+
         if render:
             try:
                 data = env.get_template(path).render(**values)
@@ -109,6 +115,23 @@ def create__include_file(deployment, **kwargs):
                 raise errors.RenderError(f'Jinja template error in "{colors.bold(path)}": {e}')
         else:
             data, _, _ = env.loader.get_source(env, path)
+
+        if direct:
+            prefix = '\n'
+        else:
+            prefix = '|\n'
+
+        for token in skip:
+            replace = ''
+            if type(token) is tuple:
+                token, replace = token
+            data = data.replace(token, replace)
+            prefix = prefix.replace(token, replace)
+
+        for token in escape:
+            data = data.replace(token, f'\\{token}')
+            prefix = prefix.replace(token, f'\\{token}')
+
         return f'{prefix}{textwrap.indent(data, indent * " ")}'
 
     return include_file
