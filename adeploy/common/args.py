@@ -55,7 +55,7 @@ def setup_parser():
     parser.add_argument('-n', '--name', dest="deployment_name", default=None,
                         help='Specify a deployment name. This will overwrite deployment name derived from repo dir')
 
-    parser.add_argument('--adepoly-dir', dest='adeploy_dir',
+    parser.add_argument('--adeploy-dir', dest='adeploy_dir',
                         help='Configuration directory for adeploy', default=Path.home().joinpath('.adeploy'),
                         metavar='adeploy_dir', type=Path)
 
@@ -72,14 +72,14 @@ def setup_parser():
     parser.add_argument('--recreate-secrets', dest='recreate_secrets', action='store_true',
                         help='Force to re-create secrets. This might invoke a password store to retrieve secrets.')
 
-    parser.add_argument('--filter-namespace', dest='filters_namespace', nargs='*',
+    parser.add_argument('--filter-namespace', dest='filters_namespace', nargs='+', action='append',
                         help='Only include specified namespace. Argument can be specified multiple times.')
 
-    parser.add_argument('--filter-release', dest='filters_release', nargs='*',
+    parser.add_argument('--filter-release', dest='filters_release', nargs='+', action='append',
                         help='Only include specified deployment release i.e. "prod", "testing". '
                              'Argument can be specified multiple times.')
 
-    parser.add_argument('--gopass-repo', dest='gopass_repo', nargs='*',
+    parser.add_argument('--gopass-repo', dest='gopass_repo', nargs='+', action='append',
                         help='Gopass repo names, where the awesome secrets are stored. This argument can be specified '
                              'multiple times for multiple Gpoass repos. This params can also be specified by the env '
                              'var ADEPLOY_GOPASS_REPOS where comma separated list of Gopass repo names is expected. '

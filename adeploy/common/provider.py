@@ -69,9 +69,6 @@ class Provider(ABC):
 
     def load_deployments(self):
 
-        filters_namespace = self.args.filters_namespace
-        filter_release = self.args.filters_release
-
         self.log.debug(
             f'Scanning for deployment variables in "{self.namespaces_dir}/*/*.({"|".join(self.extensions)})" ...')
 
@@ -93,8 +90,7 @@ class Provider(ABC):
                     deployment_release = deployment_release_config.stem
                     deployment = Deployment(self.name, deployment_release, ns)
 
-                    if (filters_namespace and deployment.namespace not in filters_namespace) or \
-                            (filter_release and deployment.name not in filter_release and deployment.release not in filter_release):
+                    if deployment.skipped(self.args):
                         self.log.info(f'... Deployment "{colors.blue(deployment)}" skipped by user filter.')
                         continue
 

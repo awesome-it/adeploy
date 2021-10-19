@@ -27,8 +27,9 @@ def gopass_get_version():
 def gopass_get_repos() -> [str]:
     repos = [""]
 
-    if get_args().gopass_repo and len(get_args().gopass_repo) > 0:
-        repos += get_args().gopass_repo
+    gopass_repos = get_args().gopass_repo
+    if gopass_repos and len(gopass_repos) > 0:
+        repos += [r[0] for r in gopass_repos]
 
     elif os.getenv('ADEPLOY_GOPASS_REPOS', False):
         repos += os.getenv('ADEPLOY_GOPASS_REPOS', '').split(',')

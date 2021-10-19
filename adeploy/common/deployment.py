@@ -28,6 +28,16 @@ class Deployment:
     def __repr__(self):
         return f'{self.namespace}/{self.name}-{self.release}'
 
+    def skipped(self, args):
+        filters_namespace = [t[0] for t in args.filters_namespace] if args.filters_namespace else None
+        filters_release = [t[0] for t in args.filters_release] if args.filters_release else None
+
+        if (filters_namespace and self.namespace not in filters_namespace) or \
+                (filters_release and self.name not in filters_release and self.release not in filters_release):
+            return True
+
+        return False
+
     def load_config(self, config_path: Path, defaults_file: Path = None, log: Logger = None):
 
         if log:
