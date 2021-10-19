@@ -82,9 +82,9 @@ def gopass_try_repos(path: Union[Path, str], log: Logger = None) -> subprocess.C
     return result
 
 
-def gopass_try(repo_path: Union[Path, str], explicit_pass=False, log: Logger = None) -> subprocess.CompletedProcess:
+def gopass_try(repo_path: Union[Path, str], explicit_pass=False, skip_parsing=True, log: Logger = None) -> subprocess.CompletedProcess:
 
-    cmd = ['gopass', 'show', '-n'] + (['--password'] if explicit_pass else []) + [str(repo_path)]
+    cmd = ['gopass', 'show'] + (['-n'] if skip_parsing else []) + (['--password'] if explicit_pass else []) + [str(repo_path)]
     log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
     result = subprocess.run(cmd, capture_output=True)
     log.debug(f'... command returned {colors.bold(result.returncode)}')
@@ -95,8 +95,10 @@ def gopass_try(repo_path: Union[Path, str], explicit_pass=False, log: Logger = N
         try:
             # Properly handle meta data
             result.stdout = result.stdout.decode('utf-8')
+            if result.stdout.startswith('GOPASS-SECRET-1.0'):
+                return gopass_try(repo_path, explicit_pass=explicit_pass, skip_parsing=False, log=log)
             if result.stdout.startswith('Password: '):
-                return gopass_try(repo_path, explicit_pass=True, log=log)
+                return gopass_try(repo_path, explicit_pass=True, skip_parsing=skip_parsing, log=log)
 
         except UnicodeDecodeError:
             log.debug('Decoding failed ... assuming binary data')
