@@ -36,11 +36,11 @@ If no chart folder is given, an upstream chart can be automatically downloaded u
 $ adeploy [--name customer_chart_name] -p helm render . --repo-url https://chart.url
 ```
 
-Chart repo url, name and the chart version can be set in the `defaults.yml` (or `defaults/<release>.yml`) for the appropriate deployments:
+Chart repository URL, name and the chart version can be set in the `defaults.yml` (or `defaults/<release>.yml`) for the appropriate deployments:
 
 ```yaml
 _chart:
-    repo-url: https://chart.url
+    repo_url: https://chart.url
     name: chart-name
     version: 0.0.0
 ```

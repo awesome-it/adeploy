@@ -77,6 +77,8 @@ class Renderer(HelmProvider):
 
                     raise RenderError(f'No chart repo URL specified while chart dir is empty. '
                                       f'Please either add a Helm chart to "{colors.bold(self.chart_dir)}" or '
+                                      f'specify a chart repo URL using "_chart:repo_url" in "defaults.yml" or '
+                                      f'in the namespace configuration or '
                                       f'specify a chart repo URL using --repo-url to download the chart repo.')
 
                 self.log.info(f'Adding chart repo from {colors.blue(self.repo_url)} ...')
