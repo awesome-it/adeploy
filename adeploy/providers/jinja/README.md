@@ -322,7 +322,7 @@ you can use Jinja variables in the labels, too.
 
 ## Global Resources Configurations
 
-Similar to probes and labels, you can also specify resource limits in `default.yml` or in your dpeloyment configuration as follows:
+Similar to probes and labels, you can also specify resource limits in `default.yml` or in your deployment configuration as follows:
 
 ```yaml
 _resources:

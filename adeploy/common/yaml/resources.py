@@ -14,6 +14,7 @@ def update_resources(log, doc, deployment):
                 doc_name = doc.get('metadata').get('name')
                 container_name = container.get('name')
                 resources = container.get('resources', {})
+                container['resources'] = resources # Update in case of newly created resource object!
 
                 log.debug(f'...... Updating limits and requests for {colors.blue(doc_name + "/" + container_name)} ...')
                 for type in ['limits', 'requests']:
