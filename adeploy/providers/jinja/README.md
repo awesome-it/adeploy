@@ -175,6 +175,13 @@ data:
 
 This will direct include the content of `my-config-script.gohtml`, remove newlines and escape quotes `"` as `\"`.
 
+You can also use external URLs with `include_file(path=https://....)` to download and render definitions e.g. from GitHub:
+
+```jinja2
+# Download and include CRD for ServiceMonitors
+{{ include_file('https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml', direct=True, render=False, indent=0) }}
+```
+
 #### `create_labels(name: str = None, instance: str = default_instance, version: str = None, component: str = None, part_of: str = default_part_of, managed_by: str = 'adeploy', labels: dict = None, **kwargs)`
 
 Create recommended default labels following [best practice](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/). 

@@ -1,11 +1,13 @@
+import os
 import uuid
 import shortuuid
 import string
 import json
 import textwrap
-from typing import Union
-
+import urllib.request
 import jinja2
+
+from typing import Union
 
 import adeploy.common.colors as colors
 import adeploy.common.secret as secret
@@ -103,6 +105,12 @@ def create__include_file(deployment, **kwargs):
         if not escape:
             escape = []
 
+        tmp_path = None
+        if path.startswith('http'):
+            tmp_path, _ = urllib.request.urlretrieve(path)
+            env.loader.searchpath.append(os.path.dirname(tmp_path))
+            path = os.path.basename(tmp_path)
+
         if render:
             try:
                 data = env.get_template(path).render(**values)
@@ -115,6 +123,11 @@ def create__include_file(deployment, **kwargs):
                 raise errors.RenderError(f'Jinja template error in "{colors.bold(path)}": {e}')
         else:
             data, _, _ = env.loader.get_source(env, path)
+
+        # Clean temporary stuff
+        if tmp_path is not None:
+            env.loader.searchpath = filter(lambda p: p != os.path.dirname(path), env.loader.searchpath)
+            os.remove(tmp_path)
 
         if direct:
             prefix = '\n'
