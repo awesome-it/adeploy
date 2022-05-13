@@ -79,6 +79,9 @@ def setup_parser():
                         help='Only include specified deployment release i.e. "prod", "testing". '
                              'Argument can be specified multiple times.')
 
+    parser.add_argument('--show-configs', dest='show_configs', action='store_true', default=False,
+                        help='Print out rendered namespace configurations and quit.')
+
     parser.add_argument('--gopass-repo', dest='gopass_repo', nargs='+', action='append',
                         help='Gopass repo names, where the awesome secrets are stored. This argument can be specified '
                              'multiple times for multiple Gpoass repos. This params can also be specified by the env '
@@ -95,8 +98,13 @@ def setup_parser():
                                           help=f'Call module "{module_name}", '
                                                f'type: {sys.argv[0]} {module_name} --help for more options')
         subparser.add_argument("src_dirs",
-                               help="Directory containing deployment sources i.e. Kustomize or Helm Chart",
+                               help="Directory containing deployment sources",
                                nargs='*', default='.', metavar='src_dir')
+
+        if module_name == 'config':
+            subparser.add_argument("-o,--out", dest='config_out', default="",
+                                   help="Filename to store the rendered namespace configurations as JSON.")
+
         subparser.add_argument(f'--{module_name}', default=True, help=argparse.SUPPRESS)
 
     return parser

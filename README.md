@@ -12,16 +12,16 @@ $ pip install [--user] git+https://github.com/awesome-it/adeploy
 Check the help section of `adeploy`:
 ```bash
 $ adeploy --help
-$ adeploy -p <provider> (render|test|deploy) --help
+$ adeploy -p <provider> (render|config|test|deploy) --help
 ```
 
-#### Example: Helm Chart Deployment
+### Example: Helm Chart Deployment
 
 Dowload an Helm chart and examine k8s resources that will be deployed before you apply them to k8s:
 
 ![adeploy-jinja-001.svg](https://awesome-it.de/wp-content/uploads/2020/09/adeploy-helm-001.svg)
 
-#### Render
+### Render
 Render manifests (to a "build" dir). This calls the renderer (i.e. Jinja, Helm, Kustomize, ...)
 ```bash
 $ adeploy -p <provider> [-b ./build] render <args> src_dir [src_dir ...]
@@ -31,15 +31,28 @@ For example:
 $ adeploy -p jinja render ../deployments/alertmanager
 ```
 
+### Config
+This is for debugging and testing purpose. You can print out the rendered namespace configurations i.e. variables that
+can be used in Jinja for your deployments as follows:
+
+```bash
+$ adeploy -p <provider> config . [--out /path/to/output.json]
+{
+  <release>: <config>,
+  <release>: <config>,
+  ...
+}
+```
+
 The rendered manifest (or similar depending on the provider) files is stored to `./build/<name>`.
 
-#### Test
+### Test
 Runs a dry run using the appropriate provider (requires a valid k8s config):
 ```bash
 $ adeploy -p <provider> test src_dir [src_dir ...]
 ```
 
-#### Deploy
+### Deploy
 Deploy the manifests to the active cluster
 ```bash
 $ adeploy -p <provider> deploy src_dir [src_dir ...]

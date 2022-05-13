@@ -1,5 +1,6 @@
 import glob
 import os
+import sys
 
 from abc import ABC, abstractmethod
 from argparse import Namespace
@@ -107,5 +108,9 @@ class Provider(ABC):
                                           f'current version is {version("adeploy")}')
 
                     deployments.append(deployment)
+
+        if self.args.show_configs:
+            print("Hello World")
+            sys.exit(0)
 
         return deployments
