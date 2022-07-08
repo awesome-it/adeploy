@@ -23,7 +23,7 @@ def helm_repo_pull(log, repo, name, version, dest):
 
 
 def helm_template(log, deployment: Deployment, chart_path, values_path):
-    args = ['template', '--validate', deployment.release, chart_path, '-n', deployment.namespace, '-f', values_path]
+    args = ['template', deployment.release, chart_path, '-n', deployment.namespace, '-f', values_path]
 
     chart_version, old_app_version = helm_prepare_chart(log, deployment, chart_path)
 
