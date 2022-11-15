@@ -6,6 +6,7 @@ from pathlib import Path
 from subprocess import CalledProcessError
 
 import yaml
+from yaml.scanner import ScannerError
 
 from adeploy.common import colors
 from adeploy.common.kubectl import kubectl_apply, parse_kubectrl_apply
@@ -73,10 +74,12 @@ class Tester(HelmProvider):
                 # Test to apply via kubectl and server-dry-run
                 self.log.info(f'... Testing raw manifests from "{colors.bold(manifest_path)}" (may fail) ...')
                 manifest_files = []
+                cur_manifest_file = None
+                keep_files = []
                 try:
                     # Split manifest into single resources ...
                     with open(manifest_path) as fd_in:
-                        for manifest in fd_in.read().split('---'):
+                        for manifest in fd_in.read().split('---\n'):
                             if len(manifest.replace('\n', '').strip()) > 0:
                                 fd_out = tempfile.NamedTemporaryFile(delete=False, mode='w')
                                 fd_out.write(manifest)
@@ -86,6 +89,7 @@ class Tester(HelmProvider):
                     for single_manifest_path in manifest_files:
 
                         # Determine destination namespace
+                        cur_manifest_file = single_manifest_path
                         with open(single_manifest_path) as fd:
                             manifest_yaml = yaml.load(fd, Loader=yaml.FullLoader)
 
@@ -129,10 +133,18 @@ class Tester(HelmProvider):
                     self.log.warning(f'Helm install might work anyways, so ignore and continue.')
                     pass
 
+                except ScannerError as e:
+                    keep_files.append(cur_manifest_file)  # Keep file for debugging purpose.
+                    raise TestError(f'Error when loading YAML file "{cur_manifest_file}": {e}')
+
                 # Clean up
                 finally:
                     for path in manifest_files:
-                        os.remove(path)
+                        if path in keep_files:
+                            self.log.warning(
+                                f'Keeping temporary file "{path}" for debugging purpose. Please remove manually!')
+                        else:
+                            os.remove(path)
 
             except CalledProcessError as e:
                 raise TestError(f'Error in Helm deployment "{colors.blue(deployment)}": {e.stderr}')
