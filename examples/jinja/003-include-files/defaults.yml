@@ -1,0 +1,15 @@
+versions:
+  nginx: 1.23
+  redis: 7
+
+nginx:
+  image: nginx
+
+redis:
+  image: redis
+
+common:
+  my_env_var: this_is_my_variable
+  another_env_var: |
+    Scripts or keys including newslines
+    are supported by Jinja

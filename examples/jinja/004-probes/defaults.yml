@@ -1,0 +1,30 @@
+versions:
+  nginx: 1.23
+  redis: 7
+
+nginx:
+  image: nginx
+
+redis:
+  image: redis
+
+# See https://github.com/awesome-it/adeploy/tree/master/adeploy/providers/jinja#global-probes-configuration
+_probes:
+  liveness:
+    initial_delay_seconds: 60
+    period_seconds: 30
+    timeout_seconds: 5
+    failure_threshold: 5
+    success_threshold: 1
+
+  readiness:
+    initial_delay_seconds: 5
+    period_seconds: 5
+    timeout_seconds: 5
+    failure_threshold: 10
+    success_threshold: 1
+
+  # Some custom definitions for a selected deployment:
+  {{ name }}-{{ release }}-redis:
+    readiness:
+      initial_delay_seconds: 10

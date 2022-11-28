@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ name }}-{{ release }}-config
+  namespace: {{ namespace }}
+  labels:
+    app.kubernetes.io/part-of: {{ name }}
+    app.kubernetes.io/instance: {{ release }}
+    app.kubernetes.io/component: config
+data:
+  nginx.conf: {{ include_file('files/nginx.conf') }}

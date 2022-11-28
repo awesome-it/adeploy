@@ -1,0 +1,3 @@
+# Inherit from defaults.yml
+#versions:
+#  nginx: <version>

@@ -1,0 +1,14 @@
+versions:
+  nginx: 1.23
+
+nginx:
+  image: nginx
+
+# Create best practise labels for nginx deployment
+labels:
+  nginx: {{ create_labels(name='nginx') }}
+
+# Set global labels for all resources of this adeploy project,
+# see https://github.com/awesome-it/adeploy/tree/master/adeploy/providers/jinja#global-labels-configurations
+_labels:
+  my.custom.labels/test: my-label

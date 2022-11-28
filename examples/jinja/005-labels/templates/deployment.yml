@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ name }}-{{ release }}
+  namespace: {{ namespace }}
+  labels: {{ labels.nginx }}
+spec:
+  selector:
+    matchLabels: {{ labels.nginx }}
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels: {{ labels.nginx }}
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: main
+          image: {{ nginx.image }}:{{ version('nginx') }}
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+            - name: https
+              containerPort: 443
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 2

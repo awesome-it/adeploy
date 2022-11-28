@@ -1,0 +1,5 @@
+versions:
+  nginx: 1.23
+
+nginx:
+  image: nginx

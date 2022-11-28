@@ -1,0 +1,7 @@
+env:
+  - name: VAR1
+    value: "my_common_var"
+  - name: VAR2
+    value: "{{ common.my_env_var }}"
+  - name: VAR2
+    value: "{{ common.another_env_var }}"
