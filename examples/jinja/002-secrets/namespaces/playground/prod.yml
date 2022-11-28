@@ -7,6 +7,6 @@ secrets:
                server='registry.awesome-it.de',
                username='sa_registry_ro',
                custom_cmd=True,
-               password='cat secrets/my_secret_prod') }}
+               password='cat namespaces/playground/secrets/my_secret_prod') }}
 
-  my_secret: {{ create_secret(as_ref=True, custom_cmd=True, my_secret='cat secrets/my_secret_prod') }}
+  my_secret: {{ create_secret(as_ref=True, custom_cmd=True, my_secret='cat namespaces/playground/secrets/my_secret_prod') }}

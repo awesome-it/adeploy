@@ -1,6 +1,6 @@
 ---
 kind: Ingress
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 metadata:
   name: {{ name }}-{{ release }}-ingress
   namespace: {{ namespace }}
@@ -9,8 +9,11 @@ metadata:
     {{ name }}: "{{ value }}"
     {% endfor %}
   labels:
+    app.kubernetes.io/part-of: {{ name }}
+    app.kubernetes.io/instance: {{ release }}
     app.kubernetes.io/component: ingress
 spec:
+  ingressClassName: {{ ingress.className }}
   {% if ingress.get('tls', False) %}
   tls:
     {{ ingress.get('tls') | yaml(false) | indent(4) }}
@@ -20,8 +23,11 @@ spec:
     - host: {{ host }}
       http:
         paths:
-          - backend:
-              serviceName: myservice
-              servicePort: http
-            path: /
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: myservice
+                port:
+                  name: http
   {% endfor %}
