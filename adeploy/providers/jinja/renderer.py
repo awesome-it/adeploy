@@ -2,7 +2,11 @@ import argparse
 import glob
 import json
 import os
+import shutil
+import time
 from pathlib import Path
+from watchdog.observers import Observer
+from watchdog.events import FileModifiedEvent, FileSystemEventHandler
 
 import jinja2
 
@@ -16,6 +20,9 @@ from adeploy.common.yaml import update
 class Renderer(Provider):
     templates_dir: str = None
     macros_dirs: str = None
+    watch_for_changes: bool = False
+    templates_watchers: list = []
+    restart_rendering = False
 
     @staticmethod
     def get_parser():
@@ -28,11 +35,14 @@ class Renderer(Provider):
         parser.add_argument("--macros", dest='macros_dirs', nargs='+',
                             help='Directory containing Jinja macros to use. Can be specified mutliple times.'
                                  'By default, macros are loaded from the template dir and its parent dir')
+        parser.add_argument("-w", "--watch", dest='watch_for_changes', action='store_true', default=False,
+                            help='Keep running, watch for changes, render immediately')
         return parser
 
     def parse_args(self, args):
         self.templates_dir = args.get('templates_dir')
         self.macros_dirs = args.get('macros_dirs')
+        self.watch_for_changes = args.get('watch_for_changes')
 
     def load_templates(self, extensions=None):
 
@@ -63,6 +73,38 @@ class Renderer(Provider):
 
         return templates_dir, sorted([f.replace(f'{templates_dir}/', '') for f in files])
 
+    def render_template(self, deployment, template, env):
+        values = deployment.get_template_values()
+
+        output_path = Path(self.build_dir) \
+            .joinpath(deployment.namespace) \
+            .joinpath(self.name) \
+            .joinpath(deployment.release) \
+            .joinpath(template)
+
+        self.log.info(f'... render "{colors.bold(template)}" in "{colors.bold(output_path)}" ...')
+
+        try:
+            data = env.get_template(template).render(**values)
+            if len(data.replace('---', '').replace('\n', '').strip()) > 0:
+                data = update(self.log, data, deployment)
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(output_path, 'w') as fd:
+                    fd.write(data)
+
+        except jinja2.exceptions.TemplateNotFound as e:
+            self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
+            raise RenderError(f'Jinja template error: Template "{e}" not found in "{template}"')
+
+        except jinja2.exceptions.TemplateSyntaxError as e:
+            self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
+            raise RenderError(
+                f'Jinja template syntax error in "{colors.bold(e.filename)}", line {colors.bold(e.lineno)}: {e}')
+
+        except jinja2.exceptions.TemplateError as e:
+            self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
+            raise RenderError(f'Jinja template error in "{colors.bold(template)}": {e}')
+
     def run(self):
 
         self.log.debug(f'Working on deployment "{self.name}" ...')
@@ -79,36 +121,72 @@ class Renderer(Provider):
 
             self.log.info(f'Rendering deployment "{colors.blue(deployment)}" ...')
 
+            if self.watch_for_changes:
+                self.create_restart_watcher(
+                    path=os.path.join(self.namespaces_dir, deployment.namespace, f'{deployment.release}.yml'),
+                    recursive=False
+                )
             for template in templates:
-                values = deployment.get_template_values()
+                self.render_template(deployment, template, env)
+                if self.watch_for_changes:
+                    self.create_template_watcher(deployment, template, env, jinja_pathes)
 
-                output_path = Path(self.build_dir) \
-                    .joinpath(deployment.namespace) \
-                    .joinpath(self.name) \
-                    .joinpath(deployment.release) \
-                    .joinpath(template)
+        if not self.watch_for_changes:
+            return True
+        # Watch for changes
+        self.create_restart_watcher(path=os.path.join(self.src_dir, self.templates_dir), recursive=True)
+        self.create_restart_watcher(path=str(self.defaults_path), recursive=False)
+        self.log.info(f'Initial rendering finished. Watching for changes ...')
+        try:
+            while True:
+                time.sleep(1)
+                if self.restart_rendering:
+                    self.log.debug(f'Stopping all file watchers...')
+                    for observer in self.templates_watchers:
+                        observer.stop()
+                        observer.join()
+                    self.templates_watchers = []
+                    shutil.rmtree(self.build_dir)
+                    self.restart_rendering = False
+                    self.run()
+        except KeyboardInterrupt:
+            return True
 
-                self.log.info(f'... render "{colors.bold(template)}" in "{colors.bold(output_path)}" ...')
+    def get_restarting_event_handler(self) -> FileSystemEventHandler:
+        event_handler = FileSystemEventHandler()
+        event_handler.on_created = lambda event: self.handle_create_and_delete_event(event)
+        event_handler.on_deleted = lambda event: self.handle_create_and_delete_event(event)
+        return event_handler
 
-                try:
-                    data = env.get_template(template).render(**values)
-                    if len(data.replace('---', '').replace('\n', '').strip()) > 0:
-                        data = update(self.log, data, deployment)
-                        output_path.parent.mkdir(parents=True, exist_ok=True)
-                        with open(output_path, 'w') as fd:
-                            fd.write(data)
+    def create_restart_watcher(self, path: str, recursive: bool):
+        self.log.debug(f'Watching for changes in "{path}" ...')
+        observer = Observer()
+        observer.schedule(self.get_restarting_event_handler(), path, recursive)
+        self.templates_watchers.append(observer)
+        observer.start()
 
-                except jinja2.exceptions.TemplateNotFound as e:
-                    self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
-                    raise RenderError(f'Jinja template error: Template "{e}" not found in "{template}"')
+    def create_template_watcher(self, deployment, template, env, paths):
+        for path in paths:
+            if os.path.exists(os.path.join(path, template)):
+                template_path = os.path.join(path, template)
+                self.log.debug(f'Watching for changes in template "{template_path}" ...')
+                observer = Observer()
+                event_handler = FileSystemEventHandler()
+                event_handler.on_modified = lambda event: self.handle_modified_event(deployment, template, env, event)
+                observer.schedule(event_handler, template_path, recursive=False)
+                self.templates_watchers.append(observer)
+                observer.start()
+                return
+        raise RenderError(f'Could not create watcher for template "{template}"')
 
-                except jinja2.exceptions.TemplateSyntaxError as e:
-                    self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
-                    raise RenderError(
-                        f'Jinja template syntax error in "{colors.bold(e.filename)}", line {colors.bold(e.lineno)}: {e}')
+    def handle_create_and_delete_event(self, event):
+        self.restart_rendering = True
 
-                except jinja2.exceptions.TemplateError as e:
-                    self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
-                    raise RenderError(f'Jinja template error in "{colors.bold(template)}": {e}')
-
-        return True
+    def handle_modified_event(self, deployment, template, env, event):
+        if isinstance(event, FileModifiedEvent):
+            self.log.debug(f'{template} modified. Rendering...')
+            try:
+                self.render_template(deployment, template, env)
+            except RenderError as e:
+                self.log.error(colors.red(f'Error rendering template "{template}":'))
+                self.log.error(colors.red_bold(str(e)))
