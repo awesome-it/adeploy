@@ -180,6 +180,8 @@ class Renderer(Provider):
         raise RenderError(f'Could not create watcher for template "{template}"')
 
     def handle_create_and_delete_event(self, event):
+        if event.src_path.endswith('~'):
+            return
         self.restart_rendering = True
 
     def handle_modified_event(self, deployment, template, env, event):
