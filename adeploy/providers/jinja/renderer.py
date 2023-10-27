@@ -21,7 +21,7 @@ class Renderer(Provider):
     templates_dir: str = None
     macros_dirs: str = None
     watch_for_changes: bool = False
-    templates_watchers: list = []
+    watchers: list = []
     restart_rendering = False
 
     @staticmethod
@@ -142,10 +142,10 @@ class Renderer(Provider):
                 time.sleep(1)
                 if self.restart_rendering:
                     self.log.debug(f'Stopping all file watchers...')
-                    for observer in self.templates_watchers:
+                    for observer in self.watchers:
                         observer.stop()
                         observer.join()
-                    self.templates_watchers = []
+                    self.watchers = []
                     shutil.rmtree(self.build_dir)
                     self.restart_rendering = False
                     self.run()
@@ -162,7 +162,7 @@ class Renderer(Provider):
         self.log.debug(f'Watching for changes in "{path}" ...')
         observer = Observer()
         observer.schedule(self.get_restarting_event_handler(), path, recursive)
-        self.templates_watchers.append(observer)
+        self.watchers.append(observer)
         observer.start()
 
     def create_template_watcher(self, deployment, template, env, paths):
@@ -174,7 +174,7 @@ class Renderer(Provider):
                 event_handler = FileSystemEventHandler()
                 event_handler.on_modified = lambda event: self.handle_modified_event(deployment, template, env, event)
                 observer.schedule(event_handler, template_path, recursive=False)
-                self.templates_watchers.append(observer)
+                self.watchers.append(observer)
                 observer.start()
                 return
         raise RenderError(f'Could not create watcher for template "{template}"')
