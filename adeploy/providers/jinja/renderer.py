@@ -11,7 +11,7 @@ from watchdog.events import FileModifiedEvent, FileSystemEventHandler
 import jinja2
 
 from adeploy.common import colors
-from adeploy.common.errors import RenderError
+from adeploy.common.errors import DeployError, RenderError, TestError
 from adeploy.common.jinja import env as jinja_env
 from adeploy.common.provider import Provider
 from adeploy.common.yaml import update
@@ -21,6 +21,8 @@ class Renderer(Provider):
     templates_dir: str = None
     macros_dirs: str = None
     watch_for_changes: bool = False
+    auto_test: bool = False
+    auto_deploy: bool = False
     watchers: list = []
     restart_rendering = False
 
@@ -37,12 +39,18 @@ class Renderer(Provider):
                                  'By default, macros are loaded from the template dir and its parent dir')
         parser.add_argument("-w", "--watch", dest='watch_for_changes', action='store_true', default=False,
                             help='Keep running, watch for changes, render immediately')
+        parser.add_argument("--auto-test", dest='auto_test', action='store_true', default=False,
+                            help='Automatically test on changes. (requires --watch)')
+        parser.add_argument("--auto-deploy", dest='auto_deploy', action='store_true', default=False,
+                            help='Automatically deploy on changes. (requires --watch)')
         return parser
 
     def parse_args(self, args):
         self.templates_dir = args.get('templates_dir')
         self.macros_dirs = args.get('macros_dirs')
         self.watch_for_changes = args.get('watch_for_changes')
+        self.auto_test = args.get('auto_test')
+        self.auto_deploy = args.get('auto_deploy')
 
     def load_templates(self, extensions=None):
 
@@ -73,16 +81,19 @@ class Renderer(Provider):
 
         return templates_dir, sorted([f.replace(f'{templates_dir}/', '') for f in files])
 
-    def render_template(self, deployment, template, env):
-        values = deployment.get_template_values()
-
-        output_path = Path(self.build_dir) \
+    def get_template_output_path(self, deployment, template):
+        return Path(self.build_dir) \
             .joinpath(deployment.namespace) \
             .joinpath(self.name) \
             .joinpath(deployment.release) \
             .joinpath(template)
 
-        self.log.info(f'... render "{colors.bold(template)}" in "{colors.bold(output_path)}" ...')
+    def render_template(self, deployment, template, env, prefix='...'):
+        values = deployment.get_template_values()
+
+        output_path = self.get_template_output_path(deployment, template)
+
+        self.log.info(f'{prefix} render "{colors.bold(template)}" in "{colors.bold(output_path)}" ...')
 
         try:
             data = env.get_template(template).render(**values)
@@ -188,7 +199,21 @@ class Renderer(Provider):
         if isinstance(event, FileModifiedEvent):
             self.log.debug(f'{template} modified. Rendering...')
             try:
-                self.render_template(deployment, template, env)
+                self.render_template(deployment, template, env, prefix="Autorender")
+                if self.auto_test:
+                    from adeploy.providers.jinja import Tester
+                    tester = Tester(self.name, self.src_dir, self.build_dir, self.namespaces_dir, self.args, self.log, self.defaults_path)
+                    tester.test_maifest(self.get_template_output_path(deployment, template), prefix="Autotest: ")
+                    if self.auto_deploy:
+                        from adeploy.providers.jinja import Deployer
+                        deployer = Deployer(self.name, self.src_dir, self.build_dir, self.namespaces_dir, self.args, self.log, self.defaults_path)
+                        deployer.deploy_manifest(self.get_template_output_path(deployment, template), prefix="Autodeploy: ")
             except RenderError as e:
                 self.log.error(colors.red(f'Error rendering template "{template}":'))
+                self.log.error(colors.red_bold(str(e)))
+            except TestError as e:
+                self.log.error(colors.red(f'Error testing rendered manifest for "{template}":'))
+                self.log.error(colors.red_bold(str(e)))
+            except DeployError as e:
+                self.log.error(colors.red(f'Error deploying rendered manifest for "{template}":'))
                 self.log.error(colors.red_bold(str(e)))
