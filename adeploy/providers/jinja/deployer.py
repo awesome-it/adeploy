@@ -6,7 +6,7 @@ from subprocess import CalledProcessError
 
 from adeploy.common import colors
 from adeploy.common.kubectl import kubectl_apply, parse_kubectrl_apply
-from adeploy.common.errors import TestError
+from adeploy.common.errors import DeployError
 from adeploy.common.provider import Provider
 
 
@@ -49,4 +49,4 @@ class Deployer(Provider):
                     parse_kubectrl_apply(self.log, result.stdout)
 
                 except CalledProcessError as e:
-                    raise TestError(f'Error in manifest dir "{manifest_path}": {e.stderr}')
+                    raise DeployError(f'Error in manifest dir "{manifest_path}": {e.stderr}')
