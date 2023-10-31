@@ -92,18 +92,18 @@ class Watcher(Provider):
                 recursive=False
             )
             for template in templates:
-                self.renderer.render_template(deployment, template, prefix='Initial rendering: ')
+                self.renderer.render_template(deployment, template, prefix='Initial rendering:')
                 if self.deploy_on_start and os.path.exists(self.renderer.get_template_output_path(deployment, template)):
                     self.tester.test_maifest(self.renderer.get_template_output_path(deployment, template),
-                                             prefix="Initial testing: ")
+                                             prefix="Initial testing:")
                     self.deployer.deploy_manifest(self.renderer.get_template_output_path(deployment, template),
-                                                  prefix="Initial deployment: ")
+                                                  prefix="Initial deployment:")
                 self.create_template_watcher(deployment, template, self.renderer.jinja_pathes)
 
         # Watch for changes
         self.create_restart_watcher(path=os.path.join(self.src_dir, self.templates_dir), recursive=True)
         self.create_restart_watcher(path=str(self.defaults_path), recursive=False)
-        self.log.info(f'Initial rendering finished. Watching for changes ...')
+        self.log.info(f'Startup finished. Watching for changes ...')
         try:
             while True:
                 time.sleep(1)
@@ -155,19 +155,13 @@ class Watcher(Provider):
         if isinstance(event, FileModifiedEvent):
             self.log.debug(f'{template} modified. Rendering...')
             try:
-                self.renderer.render_template(deployment, template, prefix="Autorender")
+                self.renderer.render_template(deployment, template, prefix="Autorender:")
                 if self.auto_test:
-                    from adeploy.providers.jinja import Tester
-                    tester = Tester(self.name, self.src_dir, self.build_dir, self.namespaces_dir, self.args, self.log,
-                                    self.defaults_path)
-                    tester.test_maifest(self.renderer.get_template_output_path(deployment, template),
-                                        prefix="Autotest: ")
+                    self.tester.test_maifest(self.renderer.get_template_output_path(deployment, template),
+                                             prefix="Autotest:")
                     if self.auto_deploy:
-                        from adeploy.providers.jinja import Deployer
-                        deployer = Deployer(self.name, self.src_dir, self.build_dir, self.namespaces_dir, self.args,
-                                            self.log, self.defaults_path)
-                        deployer.deploy_manifest(self.renderer.get_template_output_path(deployment, template),
-                                                 prefix="Autodeploy: ")
+                        self.deployer.deploy_manifest(self.renderer.get_template_output_path(deployment, template),
+                                                      prefix="Autodeploy:")
             except RenderError as e:
                 self.log.error(colors.red(f'Error rendering template "{template}":'))
                 self.log.error(colors.red_bold(str(e)))
