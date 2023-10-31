@@ -17,6 +17,7 @@ class Watcher(Provider):
     macros_dirs: str = None
     auto_test: bool = False
     auto_deploy: bool = False
+    deploy_on_start : bool = False
     watchers: list = []
     restart_rendering = False
     renderer = None
@@ -38,6 +39,8 @@ class Watcher(Provider):
                             help='Automatically test on changes.')
         parser.add_argument("--deploy", dest='auto_deploy', action='store_true', default=False,
                             help='Automatically deploy on changes. (requires --test)')
+        parser.add_argument("--deploy-on-start", dest='deploy_on_start', action='store_true', default=False,
+                            help='Deploy on start.')
         return parser
 
     def parse_args(self, args):
@@ -45,6 +48,7 @@ class Watcher(Provider):
         self.macros_dirs = args.get('macros_dirs')
         self.auto_test = args.get('auto_test')
         self.auto_deploy = args.get('auto_deploy')
+        self.deploy_on_start = args.get('deploy_on_start')
 
     def __init__(self, name: str, src_dir: str or Path, build_dir: str or Path, namespaces_dir: str or Path,
                  args: argparse.Namespace, log: Logger, provider, **kwargs):
@@ -79,14 +83,21 @@ class Watcher(Provider):
         self.log.debug(f'Working on deployment "{self.name}" ...')
         template_dir, templates = self.renderer.load_templates()
         for deployment in self.renderer.load_deployments():
-            self.log.info(f'Rendering deployment "{colors.blue(deployment)}" ...')
-
+            if not self.deploy_on_start:
+                self.log.info(f'Rendering deployment "{colors.blue(deployment)}" ...')
+            else:
+                self.log.info(f'Deploying deployment "{colors.blue(deployment)}" ...')
             self.create_restart_watcher(
                 path=os.path.join(self.namespaces_dir, deployment.namespace, f'{deployment.release}.yml'),
                 recursive=False
             )
             for template in templates:
-                self.renderer.render_template(deployment, template)
+                self.renderer.render_template(deployment, template, prefix='Initial rendering: ')
+                if self.deploy_on_start and os.path.exists(self.renderer.get_template_output_path(deployment, template)):
+                    self.tester.test_maifest(self.renderer.get_template_output_path(deployment, template),
+                                             prefix="Initial testing: ")
+                    self.deployer.deploy_manifest(self.renderer.get_template_output_path(deployment, template),
+                                                  prefix="Initial deployment: ")
                 self.create_template_watcher(deployment, template, self.renderer.jinja_pathes)
 
         # Watch for changes
