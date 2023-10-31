@@ -102,10 +102,10 @@ class Provider(ABC):
 
                     # Check valid deployment versions
                     deployment_version = deployment.config.get('_adeploy', {}).get('version', '0.0.0')
-                    if parse_version(str(deployment_version)) > parse_version(version('adeploy').split('-')[0]):
-                        raise RenderError(f'Deployment requires at least '
-                                          f'adeploy version {deployment_version}, '
-                                          f'current version is {version("adeploy")}')
+                    #if parse_version(str(deployment_version)) > parse_version(version('adeploy').split('-')[0]):
+                    #    raise RenderError(f'Deployment requires at least '
+                    #                      f'adeploy version {deployment_version}, '
+                    #                      f'current version is {version("adeploy")}')
 
                     deployments.append(deployment)
 

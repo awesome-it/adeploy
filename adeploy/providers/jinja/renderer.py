@@ -2,16 +2,13 @@ import argparse
 import glob
 import json
 import os
-import shutil
-import time
+from logging import Logger
 from pathlib import Path
-from watchdog.observers import Observer
-from watchdog.events import FileModifiedEvent, FileSystemEventHandler
 
 import jinja2
 
 from adeploy.common import colors
-from adeploy.common.errors import DeployError, RenderError, TestError
+from adeploy.common.errors import RenderError
 from adeploy.common.jinja import env as jinja_env
 from adeploy.common.provider import Provider
 from adeploy.common.yaml import update
@@ -20,11 +17,6 @@ from adeploy.common.yaml import update
 class Renderer(Provider):
     templates_dir: str = None
     macros_dirs: str = None
-    watch_for_changes: bool = False
-    auto_test: bool = False
-    auto_deploy: bool = False
-    watchers: list = []
-    restart_rendering = False
 
     @staticmethod
     def get_parser():
@@ -37,49 +29,50 @@ class Renderer(Provider):
         parser.add_argument("--macros", dest='macros_dirs', nargs='+',
                             help='Directory containing Jinja macros to use. Can be specified mutliple times.'
                                  'By default, macros are loaded from the template dir and its parent dir')
-        parser.add_argument("-w", "--watch", dest='watch_for_changes', action='store_true', default=False,
-                            help='Keep running, watch for changes, render immediately')
-        parser.add_argument("--auto-test", dest='auto_test', action='store_true', default=False,
-                            help='Automatically test on changes. (requires --watch)')
-        parser.add_argument("--auto-deploy", dest='auto_deploy', action='store_true', default=False,
-                            help='Automatically deploy on changes. (requires --watch)')
         return parser
+
+    def __init__(self, templates_dir, name: str, src_dir: str or Path, build_dir: str or Path,
+                 namespaces_dir: str or Path, args: argparse.Namespace, log: Logger, **kwargs):
+
+        self.templates_dir = templates_dir
+        self.src_dir = src_dir
+        self.build_dir = build_dir
+        self.namespaces_dir = namespaces_dir
+        super().__init__(name, src_dir, build_dir, namespaces_dir, args, log, **kwargs)
+        if not os.path.isabs(templates_dir):
+            self.templates_dir = f'{self.src_dir}/{templates_dir}'
+
+        if self.templates_dir[-1] == '/':
+            self.templates_dir = self.templates_dir[:-1]
+        self. jinja_pathes = ['.', '..', self.templates_dir, str(Path(self.templates_dir).parent), str(Path(self.templates_dir).parent.parent)]
+        self.log.debug(f'Using Jinja file system loader with pathes: {", ".join(self.jinja_pathes)}')
+        self.env = jinja_env.create(self.jinja_pathes, self.log)
 
     def parse_args(self, args):
         self.templates_dir = args.get('templates_dir')
         self.macros_dirs = args.get('macros_dirs')
-        self.watch_for_changes = args.get('watch_for_changes')
-        self.auto_test = args.get('auto_test')
-        self.auto_deploy = args.get('auto_deploy')
 
     def load_templates(self, extensions=None):
 
         if extensions is None:
             extensions = ['yaml', 'yml']
 
-        templates_dir = self.templates_dir
-        if not os.path.isabs(templates_dir):
-            templates_dir = f'{self.src_dir}/{templates_dir}'
-
-        if templates_dir[-1] == '/':
-            templates_dir = templates_dir[:-1]
-
-        self.log.debug(f'Scanning source dir with pattern "{templates_dir}/**/*.({"|".join(extensions)})" ...')
+        self.log.debug(f'Scanning source dir with pattern "{self.templates_dir}/**/*.({"|".join(extensions)})" ...')
 
         files = []
         for ext in extensions:
-            files.extend(glob.glob(f'{templates_dir}/**/*.{ext}', recursive=True))
+            files.extend(glob.glob(f'{self.templates_dir}/**/*.{ext}', recursive=True))
 
         # Ignore files starting with "_" and "."
         files = [f for f in files if Path(f).name[0] not in ['.', '_']]
 
         if len(files) == 0:
-            raise RenderError(f'No template files found in "{templates_dir}"')
+            raise RenderError(f'No template files found in "{self.templates_dir}"')
 
         self.log.debug(f'Found templates: ')
         [self.log.debug(f'- {f}') for f in files]
 
-        return templates_dir, sorted([f.replace(f'{templates_dir}/', '') for f in files])
+        return self.templates_dir, sorted([f.replace(f'{self.templates_dir}/', '') for f in files])
 
     def get_template_output_path(self, deployment, template):
         return Path(self.build_dir) \
@@ -88,15 +81,14 @@ class Renderer(Provider):
             .joinpath(deployment.release) \
             .joinpath(template)
 
-    def render_template(self, deployment, template, env, prefix='...'):
+    def render_template(self, deployment, template, prefix='...'):
+        jinja_env.register_globals(self.env, deployment, self.log)
         values = deployment.get_template_values()
-
         output_path = self.get_template_output_path(deployment, template)
-
         self.log.info(f'{prefix} render "{colors.bold(template)}" in "{colors.bold(output_path)}" ...')
 
         try:
-            data = env.get_template(template).render(**values)
+            data = self.env.get_template(template).render(**values)
             if len(data.replace('---', '').replace('\n', '').strip()) > 0:
                 data = update(self.log, data, deployment)
                 output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -117,103 +109,10 @@ class Renderer(Provider):
             raise RenderError(f'Jinja template error in "{colors.bold(template)}": {e}')
 
     def run(self):
-
         self.log.debug(f'Working on deployment "{self.name}" ...')
-
         template_dir, templates = self.load_templates()
-
-        jinja_pathes = ['.', '..', template_dir, str(Path(template_dir).parent), str(Path(template_dir).parent.parent)]
-        self.log.debug(f'Using Jinja file system loader with pathes: {", ".join(jinja_pathes)}')
-        env = jinja_env.create(jinja_pathes, self.log)
-
         for deployment in self.load_deployments():
-
-            jinja_env.register_globals(env, deployment, self.log)
-
             self.log.info(f'Rendering deployment "{colors.blue(deployment)}" ...')
-
-            if self.watch_for_changes:
-                self.create_restart_watcher(
-                    path=os.path.join(self.namespaces_dir, deployment.namespace, f'{deployment.release}.yml'),
-                    recursive=False
-                )
             for template in templates:
-                self.render_template(deployment, template, env)
-                if self.watch_for_changes:
-                    self.create_template_watcher(deployment, template, env, jinja_pathes)
-
-        if not self.watch_for_changes:
-            return True
-        # Watch for changes
-        self.create_restart_watcher(path=os.path.join(self.src_dir, self.templates_dir), recursive=True)
-        self.create_restart_watcher(path=str(self.defaults_path), recursive=False)
-        self.log.info(f'Initial rendering finished. Watching for changes ...')
-        try:
-            while True:
-                time.sleep(1)
-                if self.restart_rendering:
-                    self.log.debug(f'Stopping all file watchers...')
-                    for observer in self.watchers:
-                        observer.stop()
-                        observer.join()
-                    self.watchers = []
-                    shutil.rmtree(self.build_dir)
-                    self.restart_rendering = False
-                    self.run()
-        except KeyboardInterrupt:
-            return True
-
-    def get_restarting_event_handler(self) -> FileSystemEventHandler:
-        event_handler = FileSystemEventHandler()
-        event_handler.on_created = lambda event: self.handle_create_and_delete_event(event)
-        event_handler.on_deleted = lambda event: self.handle_create_and_delete_event(event)
-        return event_handler
-
-    def create_restart_watcher(self, path: str, recursive: bool):
-        self.log.debug(f'Watching for changes in "{path}" ...')
-        observer = Observer()
-        observer.schedule(self.get_restarting_event_handler(), path, recursive)
-        self.watchers.append(observer)
-        observer.start()
-
-    def create_template_watcher(self, deployment, template, env, paths):
-        for path in paths:
-            if os.path.exists(os.path.join(path, template)):
-                template_path = os.path.join(path, template)
-                self.log.debug(f'Watching for changes in template "{template_path}" ...')
-                observer = Observer()
-                event_handler = FileSystemEventHandler()
-                event_handler.on_modified = lambda event: self.handle_modified_event(deployment, template, env, event)
-                observer.schedule(event_handler, template_path, recursive=False)
-                self.watchers.append(observer)
-                observer.start()
-                return
-        raise RenderError(f'Could not create watcher for template "{template}"')
-
-    def handle_create_and_delete_event(self, event):
-        if event.src_path.endswith('~'):
-            return
-        self.restart_rendering = True
-
-    def handle_modified_event(self, deployment, template, env, event):
-        if isinstance(event, FileModifiedEvent):
-            self.log.debug(f'{template} modified. Rendering...')
-            try:
-                self.render_template(deployment, template, env, prefix="Autorender")
-                if self.auto_test:
-                    from adeploy.providers.jinja import Tester
-                    tester = Tester(self.name, self.src_dir, self.build_dir, self.namespaces_dir, self.args, self.log, self.defaults_path)
-                    tester.test_maifest(self.get_template_output_path(deployment, template), prefix="Autotest: ")
-                    if self.auto_deploy:
-                        from adeploy.providers.jinja import Deployer
-                        deployer = Deployer(self.name, self.src_dir, self.build_dir, self.namespaces_dir, self.args, self.log, self.defaults_path)
-                        deployer.deploy_manifest(self.get_template_output_path(deployment, template), prefix="Autodeploy: ")
-            except RenderError as e:
-                self.log.error(colors.red(f'Error rendering template "{template}":'))
-                self.log.error(colors.red_bold(str(e)))
-            except TestError as e:
-                self.log.error(colors.red(f'Error testing rendered manifest for "{template}":'))
-                self.log.error(colors.red_bold(str(e)))
-            except DeployError as e:
-                self.log.error(colors.red(f'Error deploying rendered manifest for "{template}":'))
-                self.log.error(colors.red_bold(str(e)))
+                self.render_template(deployment, template)
+        return True
