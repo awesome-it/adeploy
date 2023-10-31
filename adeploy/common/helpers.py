@@ -30,20 +30,12 @@ def get_providers() -> dict:
     for module_finder, name, ispkg in pkgutil.iter_modules([os.path.dirname(providers.__file__)]):
         if ispkg:
             module = module_finder.find_module(name).load_module(name)
-            if name == "jinja":
-                found[name] = namedtuple('Provider', 'renderer tester deployer watcher')(
-                        renderer=getattr(module, 'Renderer'),
-                        tester=getattr(module, 'Tester'),
-                        deployer=getattr(module, 'Deployer'),
-                        watcher=getattr(module, 'Watcher')
-                    )
-            else:
-                found[name] = namedtuple('Provider', 'renderer tester deployer')(
-                        renderer=getattr(module, 'Renderer'),
-                        tester=getattr(module, 'Tester'),
-                        deployer=getattr(module, 'Deployer')
-                    )
-
+            found[name] = namedtuple('Provider', 'renderer tester deployer watcher')(
+                    renderer=getattr(module, 'Renderer'),
+                    tester=getattr(module, 'Tester'),
+                    deployer=getattr(module, 'Deployer'),
+                    watcher=getattr(module, 'Watcher')
+                )
     return found
 
 
