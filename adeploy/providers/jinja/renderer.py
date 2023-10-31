@@ -33,11 +33,6 @@ class Renderer(Provider):
 
     def __init__(self, templates_dir, name: str, src_dir: str or Path, build_dir: str or Path,
                  namespaces_dir: str or Path, args: argparse.Namespace, log: Logger, **kwargs):
-
-        self.templates_dir = templates_dir
-        self.src_dir = src_dir
-        self.build_dir = build_dir
-        self.namespaces_dir = namespaces_dir
         super().__init__(name, src_dir, build_dir, namespaces_dir, args, log, **kwargs)
         if not os.path.isabs(templates_dir):
             self.templates_dir = f'{self.src_dir}/{templates_dir}'
