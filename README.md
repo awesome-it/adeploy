@@ -12,12 +12,12 @@ $ pip install [--user] git+https://github.com/awesome-it/adeploy
 Check the help section of `adeploy`:
 ```bash
 $ adeploy --help
-$ adeploy -p <provider> (render|config|test|deploy) --help
+$ adeploy -p <provider> (render|config|test|deploy|watch) --help
 ```
 
 ### Example: Helm Chart Deployment
 
-Dowload an Helm chart and examine k8s resources that will be deployed before you apply them to k8s:
+Download an Helm chart and examine k8s resources that will be deployed before you apply them to k8s:
 
 ![adeploy-jinja-001.svg](https://awesome-it.de/wp-content/uploads/2020/09/adeploy-helm-001.svg)
 
@@ -58,6 +58,11 @@ Deploy the manifests to the active cluster
 $ adeploy -p <provider> deploy src_dir [src_dir ...]
 ```
 
+### Watch
+Watches a project for changes and render, test or deploy on change detection. 
+```bash
+$ adeploy -p <provider> watch 
+```
 ## Providers
 
 The following providers are currently supported. Check the sub-pages for details:

@@ -21,6 +21,14 @@ class Deployer(Provider):
     def parse_args(self, args: dict):
         return
 
+    def deploy_manifest(self, manifest_path, prefix=''):
+        try:
+            result = kubectl_apply(self.log, manifest_path)
+            parse_kubectrl_apply(self.log, result.stdout, prefix=prefix)
+
+        except CalledProcessError as e:
+            raise DeployError(f'Error in manifest dir "{manifest_path}": {e.stderr}')
+
     def run(self):
 
         self.log.debug(f'Working on deployment "{self.name}" ...')
@@ -43,10 +51,4 @@ class Deployer(Provider):
                 files.extend(glob.glob(f'{manifests_dir}/**/*.{ext}', recursive=True))
 
             for manifest_path in files:
-
-                try:
-                    result = kubectl_apply(self.log, manifest_path)
-                    parse_kubectrl_apply(self.log, result.stdout)
-
-                except CalledProcessError as e:
-                    raise DeployError(f'Error in manifest dir "{manifest_path}": {e.stderr}')
+                self.deploy_manifest(manifest_path)

@@ -24,6 +24,22 @@ class Tester(Provider):
     def parse_args(self, args: dict):
         return
 
+    def test_maifest(self, manifest_path, prefix=''):
+        try:
+
+            default_ns, fake_ns = kubectl_set_fake_namespace(self.log)
+            manifests = kubectl_apply(self.log, manifest_path, dry_run='client', output='json')
+            kubectl_set_default_namespace(self.log, default_ns)
+
+            result = kubectl_apply(self.log, manifest_path, dry_run='server')
+            parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout),
+                                 fake_ns=fake_ns,
+                                 default_ns=default_ns,
+                                 prefix=prefix)
+
+        except CalledProcessError as e:
+            raise TestError(f'Error in manifest dir "{manifest_path}": {e.stderr}')
+
     def run(self):
 
         self.log.debug(f'Working on deployment "{self.name}" ...')
@@ -42,17 +58,4 @@ class Tester(Provider):
                 files.extend(glob.glob(f'{manifests_dir}/**/*.{ext}', recursive=True))
 
             for manifest_path in files:
-
-                try:
-
-                    default_ns, fake_ns = kubectl_set_fake_namespace(self.log)
-                    manifests = kubectl_apply(self.log, manifest_path, dry_run='client', output='json')
-                    kubectl_set_default_namespace(self.log, default_ns)
-
-                    result = kubectl_apply(self.log, manifest_path, dry_run='server')
-                    parse_kubectrl_apply(self.log, result.stdout, manifests=json.loads(manifests.stdout),
-                                         fake_ns=fake_ns,
-                                         default_ns=default_ns)
-
-                except CalledProcessError as e:
-                    raise TestError(f'Error in manifest dir "{manifest_path}": {e.stderr}')
+                self.test_maifest(manifest_path)
