@@ -81,6 +81,7 @@ class Watcher(Provider):
 
     def run(self):
         self.log.debug(f'Working on deployment "{self.name}" ...')
+        self.clean_build_dir()
         template_dir, templates = self.renderer.load_templates()
         for deployment in self.renderer.load_deployments():
             if not self.deploy_on_start:
@@ -113,7 +114,6 @@ class Watcher(Provider):
                         observer.stop()
                         observer.join()
                     self.watchers = []
-                    shutil.rmtree(self.build_dir)
                     self.restart_rendering = False
                     self.run()
         except KeyboardInterrupt:
