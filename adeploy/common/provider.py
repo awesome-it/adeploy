@@ -130,7 +130,7 @@ class Provider(ABC):
                                           f'current version is {version("adeploy")}')
 
                     # Check valid target cluster
-                    deployment_target_cluster = deployment.config.get('_adeploy', {}).get('target_cluster_url', None)
+                    deployment_target_cluster = deployment.config.get('_adeploy', {}).get('target_cluster_apiserver_url', None)
                     if deployment_target_cluster and deployment_target_cluster != self.current_cluster:
                         raise WrongClusterError(f'Deployment target cluster is "{deployment_target_cluster}", '
                                                 f'but current cluster is {self.current_cluster}')

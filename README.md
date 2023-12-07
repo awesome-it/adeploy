@@ -99,7 +99,7 @@ A target cluster can be specified in the deployment configuration as follows:
 
 ```shell script
 _adeploy:
-  target_cluster_url: <apiserver url>
+  target_cluster_apiserver_url: <apiserver url>
 ```
 
 ## Defaults
