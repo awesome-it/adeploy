@@ -114,7 +114,6 @@ class Watcher(Provider):
                         observer.stop()
                         observer.join()
                     self.watchers = []
-                    self.clean_build_dir()
                     self.restart_rendering = False
                     self.run()
         except KeyboardInterrupt:
