@@ -67,7 +67,6 @@ class Secret(ABC):
 
     @staticmethod
     def clean_all(secrets, log, dry_run: bool = True):
-        return
         deployments = {}
         for s in secrets:
             key = str(s.deployment)
@@ -190,7 +189,6 @@ class Secret(ABC):
         # Creating the secret using kubectl
         try:
             log.info(f'... creating secret "{colors.bold(self)}" ...')
-            return
             self.create(log)
         except subprocess.CalledProcessError as e:
             raise RenderError(f'Error while creating secret "{colors.bold(self.name)}": {e}\n{e.stderr.strip()}')
