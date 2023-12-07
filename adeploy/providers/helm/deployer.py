@@ -26,7 +26,8 @@ class Deployer(HelmProvider):
         for deployment in self.load_deployments():
 
             self.log.info(f'Deploying Helm chart "{colors.blue(deployment)}" ...')
-
+            if not self.verify_current_cluster_is_last_cluster(deployment):
+                continue
             try:
                 values_path = Path(self.build_dir) \
                     .joinpath(deployment.namespace) \
@@ -46,8 +47,7 @@ class Deployer(HelmProvider):
                               f'app version {colors.bold(result.app_version)}{last_update}: '
                               f'{colors.green_bold(result.description)}, '
                               f'status {colors.green_bold(result.status) if is_success else colors.red_bold(result.status)}')
-
+                self.save_current_cluster_as_last_cluster(deployment)
             except CalledProcessError as e:
                 raise DeployError(f'Error while deploying chart "{self.name}": {e.stderr}')
 
-        return True

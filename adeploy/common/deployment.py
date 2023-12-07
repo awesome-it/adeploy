@@ -19,11 +19,15 @@ class Deployment:
     config: dict
     hooks: dict
 
-    def __init__(self, name: str, release: str, namespace: str):
+    def __init__(self, name: str, release: str, namespace: str, build_dir: str):
         self.name = name
         self.release = release
         self.namespace = namespace
         self.hooks = {}
+        self.manifests_dir = Path(build_dir) \
+                .joinpath(self.namespace) \
+                .joinpath(self.name) \
+                .joinpath(self.release)
 
     def __repr__(self):
         return f'{self.namespace}/{self.name}-{self.release}'
