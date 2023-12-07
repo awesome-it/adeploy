@@ -146,18 +146,18 @@ class Provider(ABC):
     def verify_current_cluster_is_last_cluster(self, deployment) -> bool:
         if os.path.exists(os.path.join(deployment.manifests_dir, '.last_cluster_api_url')):
             with open(os.path.join(deployment.manifests_dir, '.last_cluster_api_url'), 'r') as f:
-                last_cluster = f.read()
+                last_cluster = f.read().strip()
                 if last_cluster != self.current_cluster:
                     if not self.args.force:
                         self.log.error(f'Cluster changed, skipping deployment "{deployment}".\n'
                                        f'Use the correct cluster, force deployment with --force or remove the file '
                                        f'{os.path.join(deployment.manifests_dir, ".last_cluster_api_url")}\n'
-                                       f'Last deployed cluster: {last_cluster}'
+                                       f'Last deployed cluster: {last_cluster}\n'
                                        f'Current cluster: {self.current_cluster}')
                         return False
                     else:
                         self.log.warning(f'Cluster changed, but force deployment is enabled.\n'
-                                         f'Last deployed cluster: {last_cluster}'
+                                         f'Last deployed cluster: {last_cluster}\n'
                                          f'Current cluster: {self.current_cluster}')
         return True
 

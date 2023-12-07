@@ -25,9 +25,9 @@ class Deployment:
         self.namespace = namespace
         self.hooks = {}
         self.manifests_dir = Path(build_dir) \
-                .joinpath(self.namespace) \
-                .joinpath(self.name) \
-                .joinpath(self.release)
+            .joinpath(self.namespace) \
+            .joinpath(self.name) \
+            .joinpath(self.release)
 
     def __repr__(self):
         return f'{self.namespace}/{self.name}-{self.release}'
