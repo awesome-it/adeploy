@@ -105,6 +105,7 @@ class Renderer(Provider):
 
     def run(self):
         self.log.debug(f'Working on deployment "{self.name}" ...')
+        self.clean_build_dir()
         template_dir, templates = self.load_templates()
         for deployment in self.load_deployments():
             self.log.info(f'Rendering deployment "{colors.blue(deployment)}" ...')

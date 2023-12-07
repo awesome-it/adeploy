@@ -135,6 +135,7 @@ class Renderer(HelmProvider):
     def run(self):
 
         self.log.debug(f'Working on deployment "{self.name}" ...')
+        self.clean_build_dir()
 
         self.build_chart()
         self.run_hooks()

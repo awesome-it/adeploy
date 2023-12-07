@@ -1,5 +1,6 @@
 import glob
 import os
+import shutil
 import sys
 
 from abc import ABC, abstractmethod
@@ -44,6 +45,12 @@ class Provider(ABC):
     @staticmethod
     def get_absolute(base_dir: Path, path: str) -> Path:
         return Path(path if os.path.isabs(path) else base_dir.joinpath(path))
+
+    def clean_build_dir(self):
+        if self.build_dir.exists():
+            self.log.debug(f'Cleaning build dir "{colors.bold(self.build_dir)}" ...')
+            shutil.rmtree(self.build_dir)
+            self.build_dir.mkdir(parents=True)
 
     def get_defaults_file(self) -> Path:
 
@@ -102,10 +109,10 @@ class Provider(ABC):
 
                     # Check valid deployment versions
                     deployment_version = deployment.config.get('_adeploy', {}).get('version', '0.0.0')
-                    if parse_version(str(deployment_version)) > parse_version(version('adeploy').split('-')[0]):
-                        raise RenderError(f'Deployment requires at least '
-                                          f'adeploy version {deployment_version}, '
-                                          f'current version is {version("adeploy")}')
+                    # if parse_version(str(deployment_version)) > parse_version(version('adeploy').split('-')[0]):
+                    #    raise RenderError(f'Deployment requires at least '
+                    #                      f'adeploy version {deployment_version}, '
+                    #                      f'current version is {version("adeploy")}')
 
                     deployments.append(deployment)
 
