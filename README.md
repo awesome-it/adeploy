@@ -93,6 +93,15 @@ _adeploy:
   version: 0.7
 ```
 
+### Target cluster
+
+A target cluster can be specified in the deployment configuration as follows:
+
+```shell script
+_adeploy:
+  target_cluster_url: <apiserver url>
+```
+
 ## Defaults
 
 You can specify defaults (for all deployment configurations) in a separate defaults file or directory i.e. if you
