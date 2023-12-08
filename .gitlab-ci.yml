@@ -1,0 +1,14 @@
+stages:          # List of stages for jobs, and their order of execution
+  - test
+
+test_oldest_python_version:   # This job runs in the test stage.
+  stage: test    # It only starts when the job in the build stage completes successfully.
+  image: registry.awesome-it.de/upstream-dockerhub/python:latest
+  script:
+    - python runner.py --version
+
+test_newest_python_version:   # This job also runs in the test stage.
+  stage: test    # It can run at the same time as unit-test-job (in parallel).
+  image: registry.awesome-it.de/upstream-dockerhub/python:3.8
+  script:
+    - python runner.py --version
