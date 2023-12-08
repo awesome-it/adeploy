@@ -14,7 +14,8 @@ import adeploy.common.jinja.env as jinja_env
 def get_submodules(pkg):
     modules = []
     for module_finder, name, ispkg in pkgutil.iter_modules([os.path.dirname(pkg.__file__)]):
-        module = module_finder.find_module(name).load_module(name)
+        module_spec = module_finder.find_spec(name)
+        module = module_spec.loader.load_module()
         class_name = list(filter(lambda m: module.__name__ == m.lower(), dir(module)))[0]
         modules.append((module, class_name))
 

@@ -6,6 +6,7 @@ import tempfile
 import random
 from logging import Logger
 from pathlib import Path
+from typing import Optional
 
 import yaml
 
@@ -192,7 +193,7 @@ def parse_kubectrl_apply(log, stdout, manifests: dict = None, fake_ns: str = Non
                      f'{colors.gray(status) if status == "unchanged" else colors.green(status)}')
 
 
-def kubectl_get_current_api_server_url(log: Logger) -> str | None:
+def kubectl_get_current_api_server_url(log: Logger) -> Optional[str]:
     args = ['config', 'view', '--minify', '--output', 'jsonpath="{.clusters[*].cluster.server}"']
     try:
         return json.loads(kubectl(log=log, args=args).stdout)
