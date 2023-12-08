@@ -22,5 +22,11 @@ class DeployError(Error):
     """ Exception raised for errors in the tester."""
     pass
 
+
+class WrongClusterError(Error):
+    """ Exception raised if wrong cluster is targeted."""
+    pass
+
+
 if __name__ == '__main__':
     pass

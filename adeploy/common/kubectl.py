@@ -14,7 +14,7 @@ from adeploy.common.errors import TestError
 from adeploy.common.helpers import dict_update_recursive
 
 # See kubectl_init()
-KUBECONF=None
+KUBECONF = None
 
 
 def kubectl_add_default_context(log: Logger):
@@ -125,7 +125,6 @@ def kubectl(log: Logger, args: list, namespace: str = None) -> subprocess.Comple
 
 
 def kubectl_init(args):
-
     global KUBECONF
 
     # Create temporary kube config to not change users kubeconf
@@ -191,3 +190,12 @@ def parse_kubectrl_apply(log, stdout, manifests: dict = None, fake_ns: str = Non
                      f'resource: {colors.bold(resource)}, '
                      f'name: {colors.bold(resource_name)}: '
                      f'{colors.gray(status) if status == "unchanged" else colors.green(status)}')
+
+
+def kubectl_get_current_api_server_url(log: Logger) -> str | None:
+    args = ['config', 'view', '--minify', '--output', 'jsonpath="{.clusters[*].cluster.server}"']
+    try:
+        return json.loads(kubectl(log=log, args=args).stdout)
+    except subprocess.CalledProcessError as e:
+        log.error(f'Could not get current api server url: {e.stderr}')
+        return None

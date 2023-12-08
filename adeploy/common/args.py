@@ -45,6 +45,8 @@ def setup_parser():
 
     parser.add_argument('-s', '--skip-colors', dest='skip_colors', action='store_true')
 
+    parser.add_argument('-f', '--force', dest='force', action='store_true')
+
     parser.add_argument('-p', '--provider', dest='provider',
                         help='The provider to use, type --providers to get a list of supported providers.',
                         required='--providers' not in sys.argv and '--version' not in sys.argv)

@@ -1,5 +1,6 @@
 import argparse
 import glob
+import os.path
 
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -35,20 +36,20 @@ class Deployer(Provider):
 
         for deployment in self.load_deployments():
 
-            manifests_dir = Path(self.build_dir) \
-                .joinpath(deployment.namespace) \
-                .joinpath(self.name) \
-                .joinpath(deployment.release)
+            if not self.verify_current_cluster_is_last_cluster(deployment):
+                continue
 
-            self.log.info(f'Applying manifests for deployment "{colors.blue(deployment)}" in "{manifests_dir}" ...')
+            self.log.info(f'Applying manifests for deployment "{colors.blue(deployment)}" in "{deployment.manifests_dir}" ...')
 
-            if not manifests_dir.exists():
+            if not deployment.manifests_dir.exists():
                 self.log.info(f'... skip deployment without manifests')
                 continue
 
             files = []
             for ext in ['yaml', 'yml']:
-                files.extend(glob.glob(f'{manifests_dir}/**/*.{ext}', recursive=True))
+                files.extend(glob.glob(f'{deployment.manifests_dir}/**/*.{ext}', recursive=True))
 
             for manifest_path in files:
                 self.deploy_manifest(manifest_path)
+
+            self.save_current_cluster_as_last_cluster(deployment)
