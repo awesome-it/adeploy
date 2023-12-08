@@ -3,7 +3,7 @@ stages:          # List of stages for jobs, and their order of execution
 
 test_oldest_python_version:   # This job runs in the test stage.
   stage: test    # It only starts when the job in the build stage completes successfully.
-  image: registry.awesome-it.de/upstream-dockerhub/python:latest
+  image: registry.awesome-it.de/upstream-dockerhub/python:3.12
   script:
     - python -m venv venv
     - source venv/bin/activate
