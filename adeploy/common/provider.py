@@ -162,7 +162,7 @@ class Provider(ABC):
         return True
 
     def save_current_cluster_as_last_cluster(self, deployment):
-        if not os.path.exists(os.path.join(deployment.manifests_dir, '.last_cluster_api_url')):
+        if self.current_cluster and not os.path.exists(os.path.join(deployment.manifests_dir, '.last_cluster_api_url')):
             self.log.info(f'Saving current cluster as last deployed cluster')
             with open(os.path.join(deployment.manifests_dir, '.last_cluster_api_url'), 'w') as f:
                 f.write(self.current_cluster)
