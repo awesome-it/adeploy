@@ -1,4 +1,5 @@
 import os
+import pathlib
 import uuid
 import shortuuid
 import string
@@ -148,6 +149,24 @@ def create__include_file(deployment, **kwargs):
         return f'{prefix}{textwrap.indent(data, indent * " ")}'
 
     return include_file
+
+
+def create__list_dir(deployment, **kwargs):
+    env = kwargs.get('env')
+    log = kwargs.get('log', None)
+    templates_dir = kwargs.get('templates_dir', None)
+
+    def list_dir(dir: str, direct: bool = False, render: bool = True, indent: int = 4, skip=None, escape=None):
+        contents = {}
+        for item in pathlib.Path(pathlib.Path(templates_dir) / dir).iterdir():
+            if item.is_file():
+                env.loader.searchpath.append(str(item.parent))
+                include_file = create__include_file(deployment,  env=env, log=log)
+                contents[item.name] = include_file(str(item.relative_to(templates_dir)), direct, render, indent, skip, escape)
+
+        return contents
+
+    return list_dir
 
 
 # See https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/#labels

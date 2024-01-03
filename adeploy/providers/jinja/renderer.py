@@ -39,9 +39,9 @@ class Renderer(Provider):
 
         if self.templates_dir[-1] == '/':
             self.templates_dir = self.templates_dir[:-1]
-        self. jinja_pathes = ['.', '..', self.templates_dir, str(Path(self.templates_dir).parent), str(Path(self.templates_dir).parent.parent)]
+        self.jinja_pathes = ['.', '..', self.templates_dir, str(Path(self.templates_dir).parent), str(Path(self.templates_dir).parent.parent)]
         self.log.debug(f'Using Jinja file system loader with pathes: {", ".join(self.jinja_pathes)}')
-        self.env = jinja_env.create(self.jinja_pathes, self.log)
+        self.env = jinja_env.create(self.jinja_pathes, log=self.log, templates_dir=self.templates_dir)
 
     def parse_args(self, args):
         self.templates_dir = args.get('templates_dir')
@@ -77,7 +77,7 @@ class Renderer(Provider):
             .joinpath(template)
 
     def render_template(self, deployment, template, prefix='...'):
-        jinja_env.register_globals(self.env, deployment, self.log)
+        jinja_env.register_globals(self.env, deployment, self.log, self.templates_dir)
         values = deployment.get_template_values()
         output_path = self.get_template_output_path(deployment, template)
         self.log.info(f'{prefix} render "{colors.bold(template)}" in "{colors.bold(output_path)}" ...')

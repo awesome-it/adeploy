@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from argparse import Namespace
 from logging import Logger
 from pathlib import Path
-from importlib_metadata import version
+from importlib.metadata import version
 from packaging.version import parse as parse_version
 
 from adeploy.common import colors

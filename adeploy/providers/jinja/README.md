@@ -182,6 +182,26 @@ You can also use external URLs with `include_file(path=https://....)` to downloa
 {{ include_file('https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml', direct=True, render=False, indent=0) }}
 ```
 
+#### `list_dir(dir: str, direct: bool = False, render: bool = True, indent: int = 4, skip=[], escape=[])`
+
+Include (and render) all files from a directory `dir`. The directory is added as search path for the Jinja environment.
+Expect `dir`, you can pass the same parameters as for `include_file` for further processing the files inside `dir`.
+
+Example:
+```jinja2
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ name }}-{{ release }}-config
+  namespace: {{ namespace }}
+  labels:
+    {{ create_labels(component='config') }}
+data:
+  {% for name, content in list_dir('files') %}
+  {{ name }}: {{ content }}
+  {% endfor %}
+```
+
 #### `create_labels(name: str = None, instance: str = default_instance, version: str = None, component: str = None, part_of: str = default_part_of, managed_by: str = 'adeploy', labels: dict = None, **kwargs)`
 
 Create recommended default labels following [best practice](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/). 

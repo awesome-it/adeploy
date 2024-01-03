@@ -5,7 +5,8 @@ import os
 import sys
 
 from colorama import init
-from importlib_metadata import version, PackageNotFoundError
+from importlib.metadata import version, PackageNotFoundError
+
 
 from . import steps
 from .common import colors

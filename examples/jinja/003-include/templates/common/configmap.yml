@@ -9,3 +9,6 @@ metadata:
     app.kubernetes.io/component: config
 data:
   nginx.conf: {{ include_file('files/nginx.conf') }}
+  {% for name, content in list_dir('files/conf.d').items() %}
+  {{ name }}: {{ content }}
+  {% endfor %}
