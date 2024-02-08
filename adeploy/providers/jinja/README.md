@@ -87,7 +87,7 @@ metadata:
     {{ labels.my_oneshot_container }}
 ```
 
-#### `create_secret(name: str = None, use_pass: bool = True, custom_cmd: bool = False, with_key: bool = False, data: dict = None, **kwargs)`
+#### `create_secret(name: str = None, use_pass: bool = True, use_gopass_cat: bool = True, custom_cmd: bool = False, with_key: bool = False, data: dict = None, **kwargs)`
 
 Examples:
 
@@ -117,7 +117,7 @@ my_deployment:
 
 See [README.md](adeploy/README.md) for more details.
 
-#### `create_tls_secret(cert_data: str, key_data: str, name = None: str, use_pass: bool = True, custom_cmd: bool = False)`
+#### `create_tls_secret(cert_data: str, key_data: str, name = None: str, use_pass: bool = True, use_gopass_cat: bool = True, custom_cmd: bool = False)`
 
 Example:
 ```jinja2

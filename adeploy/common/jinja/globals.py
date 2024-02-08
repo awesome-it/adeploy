@@ -32,11 +32,12 @@ def create__version(deployment, **kwargs):
 def create__create_generic_secret(deployment, **create_kwargs):
     log = create_kwargs.get('log', None)
 
-    def create_secret(name: str = None, use_pass: bool = True, custom_cmd: bool = False, as_ref: bool = False,
+    def create_secret(name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
+                      custom_cmd: bool = False, as_ref: bool = False,
                       data: dict = None, **kwargs):
         if not deployment:
             raise errors.RenderError('create_secret() cannot be used here')
-        s = secret.GenericSecret(deployment, data or kwargs, name, use_pass, custom_cmd)
+        s = secret.GenericSecret(deployment, data or kwargs, name, use_pass, use_gopass_cat, custom_cmd)
         if secret.Secret.register(s) and log:
             log.info(f'Registered generic secret "{colors.bold(s.name)}" '
                      f'for deployment "{colors.blue(deployment)} ...')
@@ -62,10 +63,12 @@ def create__create_secret(deployment, **kwargs):
 def create__create_tls_secret(deployment, **kwargs):
     log = kwargs.get('log')
 
-    def create_tls_secret(cert: str, key: str, name: str = None, use_pass: bool = True, custom_cmd: bool = False):
+    def create_tls_secret(cert: str, key: str, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
+                          custom_cmd: bool = False):
         if not deployment:
             raise errors.RenderError('create_tls_secret() cannot be used here')
         s = secret.TlsSecret(deployment=deployment, name=name, cert=cert, key=key, use_pass=use_pass,
+                             use_gopass_cat=use_gopass_cat,
                              custom_cmd=custom_cmd)
         if secret.Secret.register(s) and log:
             log.info(f'Registering TLS secret "{colors.bold(s.name)}" '
@@ -161,8 +164,9 @@ def create__list_dir(deployment, **kwargs):
         for item in pathlib.Path(pathlib.Path(templates_dir) / dir).iterdir():
             if item.is_file():
                 env.loader.searchpath.append(str(item.parent))
-                include_file = create__include_file(deployment,  env=env, log=log)
-                contents[item.name] = include_file(str(item.relative_to(templates_dir)), direct, render, indent, skip, escape)
+                include_file = create__include_file(deployment, env=env, log=log)
+                contents[item.name] = include_file(str(item.relative_to(templates_dir)), direct, render, indent, skip,
+                                                   escape)
 
         return contents
 

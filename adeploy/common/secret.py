@@ -24,6 +24,7 @@ class Secret(ABC):
     name: str = None
     deployment = None
     use_pass: bool = True
+    use_gopass_cat: bool = True
     custom_cmd: bool = False
 
     _name_prefix = 'secret-'
@@ -113,18 +114,19 @@ class Secret(ABC):
             log.debug(f'... executing command "{colors.bold(data)}"')
             result = subprocess.run(data, shell=True, capture_output=True)
             result.check_returncode()
-            
+
             try:
                 return result.stdout.decode("utf-8")
             except UnicodeDecodeError:
                 return result.stdout
 
         if self.use_pass:
-            return gopass_get(data, log)
+            return gopass_get(data, log, use_cat=self.use_gopass_cat)
 
         return data
 
-    def __init__(self, deployment, name: str = None, use_pass: bool = True, custom_cmd: bool = False):
+    def __init__(self, deployment, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
+                 custom_cmd: bool = False):
 
         self.name = name if name else self.gen_name()
         self.deployment = deployment
@@ -138,7 +140,8 @@ class Secret(ABC):
         return f'{Secret._name_prefix}{hashlib.sha1(json.dumps(self.__dict__).encode()).hexdigest()}'
 
     def get_path(self, build_dir):
-        return Secret.get_secret_dir(build_dir, self.deployment.name).joinpath(self.deployment.namespace).joinpath(self.deployment.release).joinpath(
+        return Secret.get_secret_dir(build_dir, self.deployment.name).joinpath(self.deployment.namespace).joinpath(
+            self.deployment.release).joinpath(
             self.name)
 
     def store(self, build_dir: Path):
@@ -202,9 +205,10 @@ class GenericSecret(Secret):
     type: str = "generic"
     data: dict = None
 
-    def __init__(self, deployment, data: dict, name: str = None, use_pass: bool = True, custom_cmd: bool = False):
+    def __init__(self, deployment, data: dict, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
+                 custom_cmd: bool = False):
         self.data = data
-        super().__init__(deployment, name, use_pass, custom_cmd)
+        super().__init__(deployment, name, use_pass, use_gopass_cat, custom_cmd)
 
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
 
@@ -303,15 +307,16 @@ class TlsSecret(Secret):
     key: str = None
 
     def __init__(self, deployment, cert: str, key: str, name: str = None, use_pass: bool = True,
-                 custom_cmd: bool = False):
+                 use_gopass_cat: bool = True, custom_cmd: bool = False):
         self.cert = cert
         self.key = key
-        super().__init__(deployment, name, use_pass, custom_cmd)
+        super().__init__(deployment, name, use_pass, use_gopass_cat, custom_cmd)
 
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
 
         cert_data = _DUMMY_DATA_CRT if dry_run else self.get_value(self.cert, log, dry_run=False)
-        cert = tempfile.NamedTemporaryFile(delete=False, mode='wb' if isinstance(cert_data, (bytes, bytearray)) else 'w')
+        cert = tempfile.NamedTemporaryFile(delete=False,
+                                           mode='wb' if isinstance(cert_data, (bytes, bytearray)) else 'w')
         cert.write(cert_data)
         cert.close()
 
