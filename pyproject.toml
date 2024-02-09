@@ -9,6 +9,10 @@ requires = [
 [tool.setuptools.package-data]
 adeploy = ["_version.py"]
 
+# See https://setuptools-scm.readthedocs.io/en/latest/usage/
+[tool.setuptools_scm]
+git_describe_command = "git describe --abbrev=4"
+
 [project]
 name = "adeploy_awesomeit"
 dynamic = ["version", "dependencies"]
