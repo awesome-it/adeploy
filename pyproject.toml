@@ -1,0 +1,40 @@
+[build-system]
+# Consider all git-tracked files as data-files
+# https://stackoverflow.com/a/73062301
+requires = [
+  "setuptools>=60",
+  "setuptools-scm>=8.0"]
+
+# Add _version.py to package data
+[tool.setuptools.package-data]
+adeploy = ["_version.py"]
+
+[project]
+name = "adeploy_awesomeit"
+dynamic = ["version", "dependencies"]
+authors = [
+  { name="Daniel Morlock", email="daniel.morlock@awesome-it.de" },
+  { name="Daniel Bross", email="daniel.bross@awesome-it.de" },
+  { name="Robin Lutz", email="robin.lutz@awesome-it.de" },
+  { name="Adrian Vielsack", email="adrian.vielsack@awesome-it.de" },
+  { name="Philip Flohr", email="philip.flohr@awesome-it.de" }
+]
+description = "Universal deployment tool for Kubernetes that supports rendering and deployment of lightweight Jinja templated k8s manifests as well as complex Helm charts."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent"
+]
+
+# Read dependencies from requirementx.txt: https://stackoverflow.com/a/73600610
+[ tool.setuptools.dynamic ]
+dependencies = {file = ["requirements.txt"]}
+
+[project.scripts]
+adeploy = "adeploy.main:main"
+
+[project.urls]
+Homepage = "https://github.com/awesome-it/adeploy"
+Issues = "https://github.com/awesome-it/adeploy/issues"

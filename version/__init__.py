@@ -1,5 +1,4 @@
 __all__ = ("get_git_version")
-
 from subprocess import Popen, PIPE
 
 
@@ -16,11 +15,11 @@ def call_git_describe(abbrev=4):
 
 
 def get_git_version(abbrev=4):
-
     # Try to get the current version using “git describe”.
     version = call_git_describe(abbrev)
     if version is None:
-        raise ValueError("Cannot find the version number!")
+        print("Cannot find the version number!")
+        return None
 
     return version
 

@@ -39,9 +39,18 @@ def main():
         if args.version:
             try:
                 print(version('adeploy'))
+                sys.exit(0)
             except PackageNotFoundError:
-                print('0.0.0')
-            sys.exit(0)
+                pass
+
+            try:
+                print(version('adeploy_awesomeit'))
+                sys.exit(0)
+            except PackageNotFoundError:
+                pass
+
+            print("0.0.0")
+            sys.exit(1)
 
         # Load renderer from provider
         provider = get_provider(args.provider)
