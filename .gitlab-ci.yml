@@ -1,32 +1,7 @@
-stages:          # List of stages for jobs, and their order of execution
-  - test
-
-test_oldest_python_version:   # This job runs in the test stage.
-  stage: test    # It only starts when the job in the build stage completes successfully.
-  image: registry.awesome-it.de/upstream-dockerhub/python:3.8
-  script:
-    - apt-get update
-    - apt-get install -y apt-transport-https ca-certificates curl gpg
-    - curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-    - echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
-    - apt-get update
-    - apt-get install -y kubectl
-    - python -m venv venv
-    - source venv/bin/activate
-    - pip install -r requirements.txt
-    - python runner.py --version
-
-test_newest_python_version:   # This job also runs in the test stage.
-  stage: test    # It can run at the same time as unit-test-job (in parallel).
-  image: registry.awesome-it.de/upstream-dockerhub/python:3.12
-  script:
-    - apt-get update
-    - apt-get install -y apt-transport-https ca-certificates curl gpg
-    - curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-    - echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
-    - apt-get update
-    - apt-get install -y kubectl
-    - python -m venv venv
-    - source venv/bin/activate
-    - pip install -r requirements.txt
-    - python runner.py --version
+include:
+  - project: awesome/cicd
+    file: common.yml
+    ref: v1.0
+  - project: awesome/cicd
+    file: python.yml
+    ref: v1.0
