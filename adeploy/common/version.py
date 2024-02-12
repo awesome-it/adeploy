@@ -1,5 +1,18 @@
-__all__ = ("get_git_version")
+from importlib.metadata import version, PackageNotFoundError
 from subprocess import Popen, PIPE
+
+
+def get_package_version():
+    try:
+        return version('adeploy')
+    except PackageNotFoundError:
+        pass
+
+    try:
+        # Fallback to package name on test.pypi.org
+        return version('adeploy_awesomeit')
+    except PackageNotFoundError:
+        pass
 
 
 def call_git_describe(abbrev=4):
@@ -16,13 +29,9 @@ def call_git_describe(abbrev=4):
 
 def get_git_version(abbrev=4):
     # Try to get the current version using “git describe”.
-    version = call_git_describe(abbrev)
-    if version is None:
+    git_version = call_git_describe(abbrev)
+    if git_version is None:
         print("Cannot find the version number!")
         return None
 
-    return version
-
-
-if __name__ == "__main__":
-    print(get_git_version())
+    return git_version

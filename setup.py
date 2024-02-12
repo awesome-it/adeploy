@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
-from version import get_git_version
+from adeploy.common.version import get_git_version
 
 here = path.abspath(path.dirname(__file__))
 

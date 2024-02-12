@@ -7,13 +7,13 @@ from abc import ABC, abstractmethod
 from argparse import Namespace
 from logging import Logger
 from pathlib import Path
-from importlib.metadata import version
 from packaging.version import parse as parse_version
 
 from adeploy.common import colors
 from adeploy.common.deployment import Deployment
 from adeploy.common.errors import RenderError, WrongClusterError
 from adeploy.common.kubectl import kubectl_get_current_api_server_url
+from adeploy.common.version import get_package_version
 
 
 class Provider(ABC):
@@ -123,11 +123,12 @@ class Provider(ABC):
                     self.log.debug(f'Using config from "{colors.bold(deployment_release_config)}" ...')
 
                     # Check valid deployment versions
+                    version = get_package_version()
                     deployment_version = deployment.config.get('_adeploy', {}).get('version', '0.0.0')
-                    if parse_version(str(deployment_version)) > parse_version(version('adeploy').split('-')[0]):
+                    if parse_version(str(deployment_version)) > parse_version(version.split('-')[0]):
                         raise RenderError(f'Deployment requires at least '
                                           f'adeploy version {deployment_version}, '
-                                          f'current version is {version("adeploy")}')
+                                          f'current version is {version}')
 
                     # Check valid target cluster
                     deployment_target_cluster = deployment.config.get('_adeploy', {}).get('target_cluster_apiserver_url', None)

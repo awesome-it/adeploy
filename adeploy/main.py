@@ -5,8 +5,6 @@ import os
 import sys
 
 from colorama import init
-from importlib.metadata import version, PackageNotFoundError
-
 
 from . import steps
 from .common import colors
@@ -15,6 +13,7 @@ from .common.errors import InputError, Error
 from .common.helpers import get_provider, get_submodules, get_providers
 from .common.logging import setup as setup_logging, get_logger
 from .common.kubectl import kubectl_init
+from .common.version import get_package_version
 
 log = get_logger('adeploy')
 
@@ -37,20 +36,13 @@ def main():
             sys.exit(0)
 
         if args.version:
-            try:
-                print(version('adeploy'))
+            version = get_package_version()
+            if version:
+                print(version)
                 sys.exit(0)
-            except PackageNotFoundError:
-                pass
-
-            try:
-                print(version('adeploy_awesomeit'))
-                sys.exit(0)
-            except PackageNotFoundError:
-                pass
-
-            print("0.0.0")
-            sys.exit(1)
+            else:
+                print("0.0.0")
+                sys.exit(1)
 
         # Load renderer from provider
         provider = get_provider(args.provider)
