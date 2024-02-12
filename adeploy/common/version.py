@@ -34,4 +34,5 @@ def get_git_version(abbrev=4):
         print("Cannot find the version number!")
         return None
 
-    return git_version
+    # Remove potential git appendix
+    return git_version.split('-')[0]
