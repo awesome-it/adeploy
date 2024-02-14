@@ -17,7 +17,7 @@ def get_package_version():
 
 def call_git_describe(abbrev=4):
     try:
-        p = Popen(['git', 'describe', '--tags', '--contains', '--abbrev=%d' % abbrev],
+        p = Popen(['git', 'describe', '--tags', '--abbrev=%d' % abbrev],
                   stdout=PIPE, stderr=PIPE, universal_newlines=True)
         p.stderr.close()
         line = p.stdout.readlines()[0]

@@ -11,7 +11,7 @@ adeploy = ["_version.py"]
 
 # See https://setuptools-scm.readthedocs.io/en/latest/usage/
 [tool.setuptools_scm]
-git_describe_command = "git describe --tags --contains --abbrev=4"
+git_describe_command = "git describe --tags --abbrev=4"
 
 [project]
 name = "adeploy_awesomeit"
