@@ -1,0 +1,30 @@
+site_name: adeploy
+
+theme:
+  name: material
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - About: 'index.md'
+  - Install: 'install.md'
+  - Usage: 'usage.md'
+  - Jinja Deployment:
+    - Quickstart: 'jinja/index.md'
+  - Helm Deployment:
+    - Quickstart: 'helm/index.md'

@@ -1,2 +1,10 @@
 versions:
   nginx: 1.22
+
+nginx:
+  image: registry.awesome-it.de/upstream-docker/library/nginx
+  locations:
+    {% for name in ["service-1", "service-2"] %}
+    - name: {{ name }}
+      upstream: 0.0.0.0:{{ 8000 + loop.index0 }}
+    {% endfor %}

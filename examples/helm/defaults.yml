@@ -3,7 +3,8 @@ _chart:
   name: hello-world
   version: 0.1.0
 
-# These are the default values taken from values.yaml. You can use the default configuration for global overwriting:
+# The following are default values from values.yaml of the Helm Chart,
+# see https://github.com/helm/examples/blob/main/charts/hello-world/values.yaml.
 
 replicaCount: 1
 
