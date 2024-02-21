@@ -250,6 +250,43 @@ to the command.
 Note that you can use environment variables (i.e. `$SOME_ENV_VARS`) in your command which are taken from the executing
 shells environment.
 
+## Writing Docs
+
+In order to create the docs, you need to install `mkdocs-material` and dependencies as follows:
+
+```bash
+pipx install mkdocs-material
+pipx inject mkdocs-material mkdocs-asciinema
+```
+
+Now you run the `mkdocs` live preview at http://127.0.0.1:8000/ as follows:
+
+```bash
+mkdocs serve
+```
+
+Or generate static docs as:
+
+```bash
+mkdocs build
+```
+
+### Terminal records via `asciinema`
+
+Install `asciinema` as follows:
+
+```bash
+pipx install asciinema
+```
+
+To record you terminal sessions, use the following:
+
+```bash
+asciinema rec -c "bash --rcfile ~/.bashrc-asciinema" --rows 10 --cols 75 <output_file>.cast
+```
+
+Make sure to set your `PS1` variable to `$ ` in your `~/.bashrc-asciinema`.
+
 ## Read More
 
 * https://awesome-it.de/2020/09/11/adeploy-an-universal-deployment-tool-for-kubernetes/

@@ -1,4 +1,10 @@
-# These are the default values taken from values.yaml. You can use the namespace configuration to overwrite them for this namespace:
+_chart:
+  repo_url: https://helm.github.io/examples
+  name: hello-world
+  version: 0.1.0
+
+# The following are default values from values.yaml of the Helm Chart,
+# see https://github.com/helm/examples/blob/main/charts/hello-world/values.yaml.
 
 replicaCount: 1
 
@@ -13,7 +19,7 @@ fullnameOverride: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
-  create: true
+  create: false
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.

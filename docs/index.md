@@ -12,15 +12,15 @@ We’ve added support for ...
 * **extending** upstream Helm Charts with custom Jinja-templates manifests
 * handy templating for **labels, annotations, probes, resource limits** and other metadata
 
-... and even more to make your daily work with Kubernetes easier.
+... and even more to make your daily work with k8s easier.
 
 ## Examples
 
 This is how you can render, test (preview) and deploy a Helm Chart:
-![adeploy-helm-001.svg](https://awesome-it.de/wp-content/uploads/2020/09/adeploy-helm-001.svg)
+![asciicast](helm.cast)
 
 Or you can render, test (preview) and deploy Jinja-templated manifests:
-![adeploy-jinja-001.svg](https://awesome-it.de/wp-content/uploads/2020/09/adeploy-jinja-001.svg)
+![asciicast](jinja.cast)
 
 You'll find more examples in the [example](https://github.com/awesome-it/adeploy/tree/master/examples) directory or 
 follow the [install guide](install.md) to get started.

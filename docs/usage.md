@@ -96,7 +96,7 @@ these versions using the `version(name)` macro that falls back to a `latest` str
 --8<-- "examples/jinja/001-general-structure/defaults.yml::3"
 ```
 
-``` {.jinja title="templates/deployment.yml"  hl_lines="5"}
+``` {.jinja title="templates/deployment.yml" hl_lines="5"}
     spec:
       terminationGracePeriodSeconds: 60
       containers:

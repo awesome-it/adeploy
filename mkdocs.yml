@@ -5,9 +5,11 @@ theme:
 
 markdown_extensions:
   - admonition
+  - pymdownx.details
   - toc:
       permalink: true
   - attr_list
+  - def_list
   - md_in_html
   - pymdownx.superfences
   - pymdownx.highlight:
@@ -19,6 +21,20 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra_css:
+  - assets/css/badges.css
+  - assets/css/asciinema-player.css
+
+extra_javascript:
+  - assets/js/asciinema-player.min.js
+
+plugins:
+  - search
+  - mkdocs-asciinema
 
 nav:
   - About: 'index.md'
@@ -28,3 +44,9 @@ nav:
     - Quickstart: 'jinja/index.md'
   - Helm Deployment:
     - Quickstart: 'helm/index.md'
+    - Hooks: 'helm/hooks.md'
+  - Common Tools: 'common/index.md'
+
+# Hooks
+hooks:
+  - docs/hooks/badges.py
