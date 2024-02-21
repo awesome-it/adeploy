@@ -44,8 +44,7 @@ For the namespace `playground` and release `test` the configuration look as foll
 ```
 
 Note that the namespace/release configuration will be rendered using Jinja. So you can use the variables from 
-`defaults.yml`, [Jinja native macros and filters](https://jinja.palletsprojects.com/) and most of the additional 
-[Jinja macros, filters and functions provided by `adeploy`](jinja/reference.md) 
+`defaults.yml`, [Jinja native macros and filters](https://jinja.palletsprojects.com/) and the [Jinja macros, filters and functions provided by `adeploy`](../common/index.md). 
 
 
 ### Render
@@ -114,7 +113,7 @@ Helm is internally invoked using `helm uprade --install`, so `adeploy -p helm de
 
 ---
 
-There is even more, please see the next topics for more advanced topics when using `adeploy` for Helm deployments. 
+There is even more, have a look at the advanced topics using `adeploy` for Helm deployments. 
 
-There is also some [common tooling](common/index.md) i.e. Jinja helper functions to create labels, secrets, resource limits 
-etc. that can be used in both Helm and Jinja deployment templates.
+There is also some [common tools](../common/index.md) i.e. Jinja helper functions to create labels, secrets, resource limits 
+etc. that can be used in both Helm and Jinja deployments.
