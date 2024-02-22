@@ -9,17 +9,21 @@ redis:
   image: redis
 
 
-# Set global resource configuration, see https://github.com/awesome-it/adeploy/tree/master/adeploy/providers/jinja#global-resources-configurations
+# Set global resource configuration
 _resources:
+
   # Default resources, can be overwritten by the resources in the manifest (1)
+  # --8<-- [start:global-scope] -->
   limits:
     cpu: 1000m
     memory: 265Mi
   requests:
     cpu: 500m
     memory: 128Mi
+  # --8<-- [end:global-scope] -->
 
   # Resources for a specific object (deployment, statefulset, replicaset, ...), can be overwritten by the resources in the manifest (2)
+  # --8<-- [start:workload-scope] -->
   nginx:
     limits:
       cpu: 1000m
@@ -27,8 +31,10 @@ _resources:
     requests:
       cpu: 500m
       memory: 128Mi
+  # --8<-- [end:workload-scope] -->
 
   # Resources for a specific container, can't be overwritten by the manifest (3)
+  # --8<-- [start:container-scope] -->
   redis:
     main:
       limits:
@@ -37,3 +43,4 @@ _resources:
       requests:
         cpu: 500m
         memory: 128Mi
+    # --8<-- [end:container-scope] -->

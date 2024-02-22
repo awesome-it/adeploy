@@ -201,54 +201,6 @@ my_deployment:
 
 ### Password Tools
 
-#### Direct Method
-
-To specify a secret value without retrieving the data from `gopass` or another tool, you can skip this by 
-passing `use_pass=False` as follows:
-
-```jinja2
-myjinjatemplate:
-  config:
-    secretName: {{ create_secret(secret_name, use_pass=False, my_key=my_secret_value) }}
-    secretKey: my_key
-```
-
-#### Gopass
-
-By default the secret value is taken from `gopass` password store using the specified path in the `create_secret()`
-functions. A list of different repos can be specified by `--gopass-repo` or as comma separated list in the env variable 
-`ADEPLOY_GOPASS_REPOS`. So if you set `ADEPLOY_GOPASS_REPOS=a,b`, `create_secret(key='/my/path')`, the following 
-secret locations are tried:
-
-- `/my/path`
-- `a/my/path` 
-- `b/my/path`
-
-The first location containing a valid secret is taken. See `gopass --help` for more details.
-
-#### Custom Password Command
-
-If you don't use `gopass`, you can set `custom_cmd=True` and specify a custom command to retrieve the password data 
-as follows:
-
-```jinja2
-my_deployment:
-  config:
-    secretName: {{ create_secret(
-                    custom_cmd=True, 
-                    my_key='my-custom-tool --arg1=$SOME_ENV_VARS my_password', 
-                    secret_name='optional_secret_name') }}
-    secretKey: my_key
-```
-
-The stdout of the custom command is used as secret value.
-
-Note that the command string is used to create a unique secret name. So if you are using the same command to create secrets
-i.e. using a random-password script for auto-rotation secret generation, you should make sure to add a unique expression
-to the command.
-
-Note that you can use environment variables (i.e. `$SOME_ENV_VARS`) in your command which are taken from the executing
-shells environment.
 
 ## Writing Docs
 

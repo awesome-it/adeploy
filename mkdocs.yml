@@ -2,9 +2,12 @@ site_name: adeploy
 
 theme:
   name: material
+  features:
+    - navigation.indexes
 
 markdown_extensions:
   - admonition
+  - footnotes
   - pymdownx.details
   - toc:
       permalink: true
@@ -41,11 +44,22 @@ nav:
   - Install: 'install.md'
   - Usage: 'usage.md'
   - Jinja Deployment:
-    - Quickstart: 'jinja/index.md'
+    - 'jinja/index.md'
   - Helm Deployment:
-    - Quickstart: 'helm/index.md'
+    - 'helm/index.md'
     - Hooks: 'helm/hooks.md'
-  - Common Tools: 'common/index.md'
+  - Common:
+    - 'common/index.md'
+    - Secrets: 'common/secrets.md'
+    - Labels: 'common/labels.md'
+    - Resource Limits: 'common/resource-limits.md'
+    - Probes: 'common/probes.md'
+    - Jinja Functions: 'common/functions.md'
+    - Jinja Filters: 'common/filters.md'
+    - Jinja Macros: 'common/macros.md'
+
+exclude_docs: |
+  _*.md
 
 # Hooks
 hooks:

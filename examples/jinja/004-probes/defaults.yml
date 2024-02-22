@@ -10,7 +10,10 @@ redis:
 
 # See https://github.com/awesome-it/adeploy/tree/master/adeploy/providers/jinja#global-probes-configuration
 _probes:
+  # --8<-- [start:global-scope] -->
   liveness:
+    exec:
+      command: ["/tmp/health.sh"]
     initial_delay_seconds: 60
     period_seconds: 30
     timeout_seconds: 5
@@ -23,8 +26,11 @@ _probes:
     timeout_seconds: 5
     failure_threshold: 10
     success_threshold: 1
+  # --8<-- [end:global-scope] -->
 
   # Some custom definitions for a selected deployment:
+  # --8<-- [start:workload-scope] -->
   {{ name }}-{{ release }}-redis:
     readiness:
       initial_delay_seconds: 10
+  # --8<-- [end:workload-scope] -->

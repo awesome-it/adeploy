@@ -1,7 +1,5 @@
 # Helm Deployment
 
-## Quickstart
-
 To start an Helm deployment i.e. [hello-world](https://github.com/helm/examples/blob/main/charts/hello-world) with 
 release `test` in the namespace `playground` using `adeploy`, create the basic repository structure as follows:
 
@@ -11,7 +9,7 @@ mkdir -p namespaces/playground
 touch defaults.yml namespaces/playground/test.yml
 ```
 
-### Default Variables
+## Default Variables
 
 Add the Helm Chart repo, the Chart version and default variables to configure the Helm Chart: 
 
@@ -32,7 +30,7 @@ Add the Helm Chart repo, the Chart version and default variables to configure th
     ``` {.yaml title="defaults.yml"}
     --8<-- "examples/helm/001-quickstart/defaults.yml"
     ```
-### Namespace/Release Configuration
+## Namespace/Release Configuration
 
 In the next step, the namespace and the release of the deployment must be defined by creating the namespace/release 
 configuration in `namespaces/<namespace>/<release>.yml`.
@@ -47,7 +45,7 @@ Note that the namespace/release configuration will be rendered using Jinja. So y
 `defaults.yml`, [Jinja native macros and filters](https://jinja.palletsprojects.com/) and the [Jinja macros, filters and functions provided by `adeploy`](../common/index.md). 
 
 
-### Render
+## Render
 
 After the Helm Chart configuration consisting of [Default Variables](#default-variables) and [Namespace/Release Configuration](#namespacerelease-configuration)
 has been created, the Helm deployment template can be rendered using `adeploy`:
@@ -68,13 +66,13 @@ This will ...
     On each render command, the `build` directory will be generated from scratch. So it is recommended to exclude
     the build folder from Git.
 
-### Test
+## Test
 
 Using these files, the deployment can now be applied in dry-run using the `server` strategy. Meaning that the API resources
 are submitted using server-side requests but not persisted by the API. This can be done as follows:
 
 ```{.bash}
-adeploy -p helm test .
+adeploy -p helm test
 ```
 ??? example "Example run ..."
     ![asciicast](helm-test.cast)
@@ -92,12 +90,12 @@ adeploy.Test ...... namespace: playground resource: deployment.apps, name: test-
 adeploy.Test Testing finished
 ```
 
-### Deploy
+## Deploy
 
 The rendered Helm deployment can be deployed to the cluster as follows:
 
 ```{.bash}
-adeploy -p helm deploy .
+adeploy -p helm deploy
 ```
 ??? example "Example run ..."
     ![asciicast](helm-deploy.cast)
@@ -113,7 +111,7 @@ Helm is internally invoked using `helm uprade --install`, so `adeploy -p helm de
 
 ---
 
-There is even more, have a look at the advanced topics using `adeploy` for Helm deployments. 
+Have a look at the advanced topics like [hooks](hooks.md) about how to use `adeploy` for patching upstream Helm 
+deployments.
 
-There is also some [common tools](../common/index.md) i.e. Jinja helper functions to create labels, secrets, resource limits 
-etc. that can be used in both Helm and Jinja deployments.
+--8<-- "docs/common/_more.md"

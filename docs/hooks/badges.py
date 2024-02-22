@@ -13,7 +13,7 @@ from re import Match
 # Hooks
 # -----------------------------------------------------------------------------
 
-# @todo
+
 def on_page_markdown(
         markdown: str, *, page: Page, config: MkDocsConfig, files: Files
 ):
@@ -23,6 +23,8 @@ def on_page_markdown(
         args = args.strip()
         if type == "version":
             return _badge_for_version(args, page, files)
+        elif type == "provider":
+            return _badge_for_provider(args, page, files)
 
         # Otherwise, raise an error
         raise RuntimeError(f"Unknown shortcode: {type}")
@@ -40,6 +42,14 @@ def _badge_for_version(version: str, page: Page, files: Files):
     icon = "material-tag-outline"
     tooltip = f"Minimum Version: {version}"
     return _badge(icon=icon, text=f"{version}", tooltip=tooltip, type="version")
+
+
+# Create badge for version
+def _badge_for_provider(provider: str, page: Page, files: Files):
+    # Return badge
+    icon = "material-cog"
+    tooltip = f"Supported by {provider.capitalize()} provider"
+    return _badge(icon=icon, text=provider, tooltip=tooltip, type="provider")
 
 
 # Create badge
