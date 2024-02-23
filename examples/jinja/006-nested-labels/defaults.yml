@@ -1,0 +1,10 @@
+versions:
+  nginx: 1.23
+
+nginx:
+  image: nginx
+
+# Create labels to updated them using nested create_label() calls.
+# --8<-- [start:create_labels] -->
+labels: {{ create_labels(component="my-deployment") }}
+# --8<-- [end:create_labels] -->

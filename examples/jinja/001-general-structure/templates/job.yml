@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ name }}-{{ release }}-ping-{{ uuid() }}
+  namespace: {{ namespace }}
+  labels:
+    app.kubernetes.io/part-of: {{ name }}
+    app.kubernetes.io/instance: {{ release }}
+    app.kubernetes.io/component: nginx
+spec:
+  template:
+    metadata:
+      name: {{ name }}-{{ release }}-ping-{{ uuid() }}
+      labels:
+        app.kubernetes.io/part-of: {{ name }}
+        app.kubernetes.io/instance: {{ release }}
+        app.kubernetes.io/component: nginx
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ping
+          image: {{ nginx.image }}:{{ version('nginx') }}
+          imagePullPolicy: Always
+          command: ["/bin/true"]
+          args: []

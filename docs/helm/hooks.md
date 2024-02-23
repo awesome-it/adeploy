@@ -1,7 +1,7 @@
 # Helm Deployment
 
-## Hooks
-<!-- md:version 0.4.0 -->
+## Hooks 
+<!-- md:version 0.4.0 --><!-- md:provider Helm -->
 
 During rendering the Helm deployment templates, `adeploy` will run hooks (i.e. executables scripts) from the `hooks`
 directory after the Helm chart was downloaded and extracted.

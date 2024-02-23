@@ -28,16 +28,31 @@ markdown_extensions:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
+hooks:
+  - docs/hooks/badges.py
+  - docs/hooks/asciinema.py
+
 extra_css:
   - assets/css/badges.css
   - assets/css/asciinema-player.css
+  - assets/css/docstrings.css
 
 extra_javascript:
+  - assets/js/asciinema-init.js
   - assets/js/asciinema-player.min.js
 
 plugins:
   - search
-  - mkdocs-asciinema
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            docstring_section_style: spacy
+            parameter_headings: true
+            show_symbol_type_heading: true
+            separate_signature: true
+            show_signature_annotations: true
 
 nav:
   - About: 'index.md'
@@ -51,6 +66,7 @@ nav:
   - Common:
     - 'common/index.md'
     - Secrets: 'common/secrets.md'
+    - Includes: 'common/includes.md'
     - Labels: 'common/labels.md'
     - Resource Limits: 'common/resource-limits.md'
     - Probes: 'common/probes.md'
@@ -60,7 +76,3 @@ nav:
 
 exclude_docs: |
   _*.md
-
-# Hooks
-hooks:
-  - docs/hooks/badges.py

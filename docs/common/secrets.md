@@ -21,6 +21,9 @@ in CI/CD pipelines.
 
 The idea behind handling secret in `adeploy` is to separate the process of deployment in two overlapping parts:
 
+1. [Deployment with creating or updating secrets](#deployment-with-creating-or-updating-secrets)
+2. [Deployment without handling secrets](#deployment-without-handling-secrets)
+
 ### Deployment with creating or updating secrets
 
 Since the first part requires to retrieve sensitive data i.e. passwords, tokens or certificates, this should be executed
@@ -43,7 +46,8 @@ most common case when changing k8s deployments.
     [deployment without handling secrets](#deployment-without-handling-secrets) which fully supports a CI/CD based
     automation process.
 
-## Jinja Helpers <!-- md:provider Jinja --><!-- md:provider Helm -->
+## Jinja Helpers 
+<!-- md:provider Jinja --><!-- md:provider Helm -->
 
 To make `adpeloy` create secrets if they do not exist but leave them untouched if they do exist, you must use one of the
 following Jinja functions:
@@ -212,4 +216,4 @@ spec:
 ---
 
 Find more examples in the [examples folder](https://github.com/awesome-it/adeploy/tree/master/examples) or see
-the [Jinja Function Reference](functions.md#create_secret) for details.
+the [`create_secret()`](functions.md#adeploy.common.jinja.globals.Handler.create_secret) for details.

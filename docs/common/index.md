@@ -5,6 +5,9 @@
 ## [Secrets](secrets.md)
 --8<-- "docs/common/secrets.md:summary"
 
+## [Includes](includes.md)
+--8<-- "docs/common/includes.md:summary"
+
 ##  [Manage Labels](labels.md)
 --8<-- "docs/common/labels.md:summary"
 

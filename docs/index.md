@@ -17,10 +17,10 @@ We’ve added support for ...
 ## Examples
 
 This is how you can render, test (preview) and deploy a Helm Chart:
-![asciicast](helm.cast)
+![asciicast](helm.cast){ auto_play="true" loop="true" }
 
 Or you can render, test (preview) and deploy Jinja-templated manifests:
-![asciicast](jinja.cast)
+![asciicast](jinja.cast){ auto_play="true" loop="true" }
 
 You'll find more examples in the [example](https://github.com/awesome-it/adeploy/tree/master/examples) directory or 
 follow the [install guide](install.md) to get started.

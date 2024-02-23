@@ -5,7 +5,8 @@ Next to labels and resources, `adeploy` also allows to update liveness, readines
 workload scope at a single point in the default or namespace/release configuration.
 <!-- --8<-- [end:summary] -->
 
-## Global Probes Configuration <!-- md:provider Jinja -->
+## Global Probes Configuration 
+<!-- md:provider Jinja -->
 
 `adeploy` introduces the reserved variable `__probes` that allows to update probes on a global or workload scope.
 
