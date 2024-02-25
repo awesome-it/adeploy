@@ -82,7 +82,7 @@ By default, the secret value is taken from [Gopass password store](https://www.g
 and setup on the local machine that will run the [trusted deployment](#deployment-with-creating-or-updating-secrets). 
 
 The path to the password of the Gopass repo must be specified in the `create_secret()` functions:
-
+<!-- --8<-- [start:example-gopass] -->
 ```{.jinja}
 my_deployment:
   config:
@@ -91,6 +91,7 @@ my_deployment:
 ```
 
 This will create a secret containing with a key `my_secret` and value from `gopass cat /my/path`.
+<!-- --8<-- [end:example-gopass] -->
 
 A list of different Gopass repos can be specified in `--gopass-repo` or as comma separated list in the environment 
 variable `ADEPLOY_GOPASS_REPOS`. 
@@ -161,6 +162,7 @@ myjinjatemplate:
 
 ### Create Image Pull Secret
 
+<!-- --8<-- [start:example-docker] -->
 ```{.jinja title="namespaces/playground/prod.yml"}
 secrets:
   registry: {{ create_docker_registry_secret(
@@ -183,9 +185,11 @@ spec:
         - name: {{ secrets.registry }}
       containers:
 ```
+<!-- --8<-- [end:example-docker] -->
 
 ### Create TLS Secrets for Ingress
 
+<!-- --8<-- [start:example-tls] -->
 ```{.jinja title="namespaces/playground/prod.yml"}
 ingress:
   className: external
@@ -212,6 +216,7 @@ spec:
   rules:
     ...
 ```
+<!-- --8<-- [end:example-tls] -->
 
 ---
 

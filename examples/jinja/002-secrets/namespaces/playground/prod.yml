@@ -8,4 +8,6 @@ secrets:
                custom_cmd=True,
                password='cat namespaces/playground/secrets/my_secret_prod') }}
 
+  # --8<-- [start:example-ref]
   my_secret: {{ create_secret(as_ref=True, custom_cmd=True, my_secret='cat namespaces/playground/secrets/my_secret_prod') }}
+  # --8<-- [end:example-ref]

@@ -307,21 +307,83 @@ class Handler(object):
                       custom_cmd: bool = False, as_ref: bool = False,
                       data: dict = None, **kwargs):
 
-        """ Create k8s secrets
+        """ Creates k8s secrets
 
-        TODO: TBC
+        Creates a k9s secret if it does not exist and returns the secret name. It won't overwrite any existing secret.
+        If `adeploy --recreate-secrets` was specified, the secret will be re-created. This can be used to update the
+        secret or auto-rotate random hashes.
+
+        See [Secrets](secrets.md) for details and examples.
 
         Args:
-            name:
-            use_pass:
-            use_gopass_cat:
-            custom_cmd:
-            as_ref:
-            data:
-            **kwargs:
+            name: An optional secret name. If not specified, a unique secret name will be created that is deterministic
+                to the given secret data.
+            use_pass: Set `False` to use [direct method](secrets.md#direct-method) and set the secret value in your
+                configuration. Note that this is highly discouraged.
+            use_gopass_cat: `adeploy` is using `gopass cat` to retrieve passwords in order to support
+                [binary values](https://github.com/gopasspw/gopass/blob/master/docs/features.md#support-for-binary-content)
+                in Gopass. Set `False` to use `gopass show` instead.
+            custom_cmd: Use a custom bash command to retrieve a password and skip using Gopass.
+            as_ref: Format the return value as a YAML object including `name` and `key` so that it can be used i.e.
+                in `valueFrom.secretKeyRef`.
+            data: A dict containing secret key as key and the secret value which is either a direct value, a custom
+                command or a Gopass path.
+            **kwargs: Alernatively to the dict in `data`, the secret key and value can be specified in kwargs.
 
         Returns:
+            str: Either a YAML dict including `name` and `key` to use in `valueFrom.secretKeyRef` or the generated or
+                 specified secret name.
 
+        !!!example "Example: Create a secret for a password stored in Gopass"
+
+            Use the following in your `defaults.yml` or in our namespace/release configuration:
+
+            --8<-- "docs/common/secrets.md:example-gopass"
+
+        !!!example "Example: Return a secret reference"
+
+            You can set `use_ref=True` in order to return a formatted YAML object containing `key` and `name`:
+
+            ```{.yaml title="namespaces/playground/prod.yml"}
+              my_secret: {{ create_secret(as_ref=True, my_secret='/my/path') }}
+              ```
+
+            Your can now use the returned YAML object in your templates as follows:
+
+            ```{.yaml title="templates/deployment.yml"}
+            env:
+            - name: MY_SECRET
+              valueFrom:
+                secretKeyRef: {{ secrets.my_secret }}
+            ```
+
+        !!!example "Example: Use a custom command to retrieve a password"
+
+            Set `custom_cmd=True` to skip Gopass and specify a custom bash command:
+
+            ```{.yaml title="namespaces/playground/prod.yml"}
+            secrets:
+              my_secret: {{ create_secret(custom_cmd=True, my_secret='/usr/bin/passwd-gen 32 -n "My Random Password"') }}
+            ```
+
+            You can use this secret as usual:
+
+            ```{.yaml title="templates/deployment.ml"}
+            env:
+            - name: MY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ secrets.my_secret }}
+                  key: my_secret
+            ```
+
+            Note that the secret name is determined deterministically from the specified secret data i.e. `my_secret`
+            and `/usr/bin/passwd-gen 32 -n "My Random Password"`. So if you need multiple secret i.e. from command
+            `passwd-gen`, you should specify a custom string i.e. `My Random Password` to make the name unique.
+
+            Note that this will create a secret with a random password. You can rotate this random password using
+            `adeploy --recreate-secrets` otherwise the random password will not change since `adeploy` will not overwrite
+            existing secrets.
         """
 
         if not self.deployment:
@@ -344,7 +406,28 @@ class Handler(object):
 
     def create_tls_secret(self, cert: str, key: str, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
                           custom_cmd: bool = False):
+        """ Creates a secret from type `kubernetes.io/tls`
 
+        Creates a TLS secret from type `kubernetes.io/tls` by using [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+        In doing so, you can specify a Gopass path (default), a custom command (`custom_cmd=True`) or direct data
+        (`use_pass=False`) for the `cert` and `key` values.
+
+        See [Create TLS Secrets](secrets.md#create-tls-secrets-for-ingress) for details and exmaples.
+
+        Args:
+            cert: Gopass path to a TLS certificate, a custom command or direct certificate data.
+            key: Gopass path to the TLS certificate key, a custom command or direct key data.
+            name: An optional name for the secret, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+            use_pass: Skip using Gopass in order to directly specify the TLS certificate and key, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+            use_gopass_cat: Skip using `gopass cat` in favor of `gopass show`, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+            custom_cmd: Use a custom command to retrieve the data. See [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+
+        Returns:
+            str: The generated or specified secret name, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+
+        !!!example
+            --8<-- "docs/common/secrets.md:example-tls"
+        """
         if not self.deployment:
             raise errors.RenderError('create_tls_secret() cannot be used here')
 
@@ -358,11 +441,40 @@ class Handler(object):
         return s.name
 
     def create_docker_registry_secret(self, server: str, username: str, password: str, email: str = None, name: str = None,
-                                      use_pass: bool = True, custom_cmd: bool = False):
+                                      use_pass: bool = True, use_gopass_cat: bool = True, custom_cmd: bool = False):
+        """ Creates a secret from type "kubernetes.io/dockerconfigjson"
+
+        Creates a secret from type "kubernetes.io/dockerconfigjson" that can be used i.e. as an image pull secret. This
+        function is using [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create), hence you can either
+        retrieve the secret from Gopass (default), use a custom command (`custom_cmd=True`) or specify the data in place.
+
+        See [Create Image Pull Secret](secrets.md#create-image-pull-secret) for details and examples.
+
+        Args:
+            server: The server name for the Docker registry. Must be specified directly.
+            username: The username for the Docker registry. Must be specified directly.
+            password: The password for the Docker registry. You can either pass a Gopass path (default), a custom command
+                or specify the password in place.
+            email: An optional email address (specified directly) that is added to the secret if specified.
+            name: An optional name for the secret. Auto-generated deterministically if not specified.
+            use_pass: Skip using Gopass in order to directly specify the Docker registry credentials,
+                see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+            use_gopass_cat: Skip using `gopass cat` in favor of `gopass show`,
+                see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+            custom_cmd: Use a custom command to retrieve the data.
+                See [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+
+        Returns:
+            str: The generated or specified secret name, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+
+        !!!example
+            --8<-- "docs/common/secrets.md:example-docker"
+        """
         if not self.deployment:
             raise errors.RenderError('create_docker_registry_secret() cannot be used here')
 
-        s = secret.DockerRegistrySecret(self.deployment, server, username, password, email, name, use_pass, custom_cmd)
+        s = secret.DockerRegistrySecret(self.deployment, server, username, password, email, name,
+                                        use_pass, use_gopass_cat, custom_cmd)
         if secret.Secret.register(s) and self.log:
             self.log.info(f'Registering docker registry secret "{colors.bold(s.name)}" '
                      f'for deployment "{colors.blue(self.deployment)} ...')
