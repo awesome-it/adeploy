@@ -33,10 +33,12 @@ spec:
         - name: main
           image: {{ nginx.image }}:{{ version('nginx') }}
           imagePullPolicy: Always
+          # --8<-- [start:example-ref]
           env:
             - name: MY_SECRET
               valueFrom:
                 secretKeyRef: {{ secrets.my_secret }}
+          # --8<-- [end:example-ref]
           ports:
             - name: http
               containerPort: 80

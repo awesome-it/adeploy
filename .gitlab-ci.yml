@@ -3,5 +3,89 @@ include:
     file: common.yml
     ref: v1.0
   - project: awesome/cicd
+    file: mkdocs.yml
+    ref: v1.0
+  - project: awesome/cicd
     file: python.yml
     ref: v1.0
+
+.install_common: &install_common |
+  test -z "$SLEEP" || debug_sleep
+  apt-get update
+  apt-get install -y apt-transport-https ca-certificates curl gpg jq
+
+.install_helm: &install_helm |
+  test -z "$SLEEP" || debug_sleep
+  helm_version=$(curl -s https://api.github.com/repos/helm/helm/releases  | jq '.[] | select( .tag_name | contains("v3")) | select( .tag_name | contains("rc") | not ) | .tag_name' -r | head -n1)
+  curl -L https://get.helm.sh/helm-${helm_version}-linux-amd64.tar.gz | tar xvz
+  mv linux-amd64/helm /usr/bin/helm
+  chmod +x /usr/bin/helm
+  rm -r linux-amd64
+  echo "Installed helm $(helm version --short)"  
+
+.install_kubectl: &install_kubectl |
+  test -z "$SLEEP" || debug_sleep
+  kubectl_version=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+  curl -LO https://storage.googleapis.com/kubernetes-release/release/${kubectl_version}/bin/linux/amd64/kubectl
+  mv kubectl /usr/bin/kubectl
+  chmod +x /usr/bin/kubectl
+  echo "Installed kubectl $(kubectl version --client -o json | jq .clientVersion.gitVersion -r)"  
+
+.install_adeploy: &install_adeploy |
+  test -z "$SLEEP" || debug_sleep
+  python -m venv adeploy
+  source adeploy/bin/activate
+  pip install -e .
+  echo "Installed adeploy $(python runner.py --version)"
+
+.test_adeploy_jinja: &test_adeploy_jinja |
+  test -z "$SLEEP" || debug_sleep
+  for dir in examples/jinja/*
+  do
+    pushd $dir
+      mv build build.orig
+      python ../../../runner.py -d -p jinja render .
+      if [[ -e ".exclude-from-test" ]] ; then
+        diff -ru --exclude-from=../../.exclude-from-test --exclude-from=.exclude-from-test build build.orig
+      else 
+        diff -ru --exclude-from=../../.exclude-from-test build build.orig
+      fi
+    popd
+  done  
+
+.test_adeploy_helm: &test_adeploy_helm |
+  test -z "$SLEEP" || debug_sleep
+  for dir in examples/helm/*
+  do
+    pushd $dir
+      mv build build.orig
+      python ../../../runner.py -d -p helm --skip-validate render .
+      if [[ -e ".exclude-from-test" ]] ; then
+        diff -ru --exclude-from=../../.exclude-from-test --exclude-from=.exclude-from-test build build.orig
+      else 
+        diff -ru --exclude-from=../../.exclude-from-test build build.orig
+      fi
+    popd
+  done
+
+adeploy-test-python3.8:
+  stage: test
+  image: registry.awesome-it.de/upstream-dockerhub/python:3.8
+  script:
+    - *install_common
+    - *install_kubectl
+    - *install_adeploy
+    - *test_adeploy_jinja
+    - *install_helm
+    - *test_adeploy_helm
+
+adeploy-test-python3.12:
+  stage: test
+  image: registry.awesome-it.de/upstream-dockerhub/python:3.12
+  script:
+    - *install_common
+    - *install_kubectl
+    - *install_adeploy
+    - *test_adeploy_jinja
+    - *install_helm
+    - *test_adeploy_helm

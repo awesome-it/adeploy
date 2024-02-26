@@ -1,0 +1,19 @@
+.mdx-badge {
+    border: 1px solid #999;
+    color: black;
+    border-radius: 5px;
+    padding: 2px 4px;
+    font-size: small;
+    margin-right: 8px;
+}
+
+.mdx-badge .mdx-badge__icon {
+    padding-right: 4px;
+}
+
+.mdx-badge--version  .mdx-badge__icon {
+    color: #1e96da;
+}
+.mdx-badge--provider .mdx-badge__icon {
+    color: #60da1e;
+}

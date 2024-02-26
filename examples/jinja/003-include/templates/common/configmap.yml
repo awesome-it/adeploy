@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/instance: {{ release }}
     app.kubernetes.io/component: config
 data:
-  nginx.conf: {{ include_file('files/nginx.conf') }}
-  {% for name, content in list_dir('files/conf.d').items() %}
+  nginx.conf: {{ include_file('files/nginx.conf', render=False) }}
+  {% for name, content in list_dir('files/conf.d', render=False).items() %}
   {{ name }}: {{ content }}
   {% endfor %}

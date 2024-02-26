@@ -12,12 +12,14 @@ metadata:
     app.kubernetes.io/part-of: {{ name }}
     app.kubernetes.io/instance: {{ release }}
     app.kubernetes.io/component: ingress
+# --8<-- [start:example-filter-yaml]
 spec:
   ingressClassName: {{ ingress.className }}
   {% if ingress.get('tls', False) %}
   tls:
     {{ ingress.get('tls') | yaml(false) | indent(4) }}
   {% endif %}
+# --8<-- [end:example-filter-yaml]
   rules:
   {% for host in ingress.get('hosts') %}
     - host: {{ host }}

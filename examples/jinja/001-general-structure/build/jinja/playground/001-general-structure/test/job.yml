@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: 001-general-structure-test-ping-a2f1c798-7ab1-473f-afbb-4bcf618392ce
+  namespace: playground
+  labels:
+    app.kubernetes.io/part-of: 001-general-structure
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/component: nginx
+spec:
+  template:
+    metadata:
+      name: 001-general-structure-test-ping-ba3a2cfb-3e34-4648-8643-28693126d84d
+      labels:
+        app.kubernetes.io/part-of: 001-general-structure
+        app.kubernetes.io/instance: test
+        app.kubernetes.io/component: nginx
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: ping
+        image: nginx:1.23
+        imagePullPolicy: Always
+        command: ["/bin/true"]
+        args: []

@@ -1,0 +1,7 @@
+/*
+There is no option to skip showing the source code of the complete referenced object (i.e. globals.GlobalsHandler)
+so we just hide the source code as a dirty workaround.
+ */
+.doc.doc-object .first > details.quote {
+    display: none;
+}

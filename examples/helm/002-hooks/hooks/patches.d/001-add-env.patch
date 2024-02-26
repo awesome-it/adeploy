@@ -1,0 +1,12 @@
+--- templates/deployment.yaml.orig	2024-02-21 16:01:21.572456859 +0100
++++ templates/deployment.yaml	2024-02-21 16:01:41.272583136 +0100
+@@ -19,6 +19,9 @@
+         - name: {{ .Chart.Name }}
+           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+           imagePullPolicy: {{ .Values.image.pullPolicy }}
++          env:
++            - name: MY_ENV
++              value: MY_VALUE
+           ports:
+             - name: http
+               containerPort: 80

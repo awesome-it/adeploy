@@ -3,3 +3,7 @@ versions:
 
 nginx:
   image: nginx
+  listen: 0.0.0.0:80
+  locations:
+    - name: default
+      upstream: 0.0.0.0:8000
