@@ -1,16 +1,17 @@
+# --8<-- [start:use_labels] -->
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: 005-labels-prod
   namespace: playground
-  labels: {'app.kubernetes.io/name': 'nginx', 'app.kubernetes.io/instance': 'prod',
+  labels: {'app.kubernetes.io/name': 'nginx', 'app.kubernetes.io/instance': '005-labels-prod',
     'app.kubernetes.io/part-of': '005-labels', 'app.kubernetes.io/managed-by': 'adeploy',
-    my.custom.labels/test: my-label}
+    app.kubernetes.io/component: nginx, my.custom.labels/test: my-label}
 spec:
   selector:
-    matchLabels: {'app.kubernetes.io/name': 'nginx', 'app.kubernetes.io/instance': 'prod',
+    matchLabels: {'app.kubernetes.io/name': 'nginx', 'app.kubernetes.io/instance': '005-labels-prod',
       'app.kubernetes.io/part-of': '005-labels', 'app.kubernetes.io/managed-by': 'adeploy',
-      my.custom.labels/test: my-label}
+      app.kubernetes.io/component: nginx, my.custom.labels/test: my-label}
   replicas: 1
   strategy:
     type: RollingUpdate
@@ -19,9 +20,10 @@ spec:
       maxUnavailable: 0
   template:
     metadata:
-      labels: {'app.kubernetes.io/name': 'nginx', 'app.kubernetes.io/instance': 'prod',
+      labels: {'app.kubernetes.io/name': 'nginx', 'app.kubernetes.io/instance': '005-labels-prod',
         'app.kubernetes.io/part-of': '005-labels', 'app.kubernetes.io/managed-by': 'adeploy',
-        my.custom.labels/test: my-label}
+        app.kubernetes.io/component: nginx, my.custom.labels/test: my-label}
+# --8<-- [end:use_labels] -->
     spec:
       terminationGracePeriodSeconds: 60
       containers:

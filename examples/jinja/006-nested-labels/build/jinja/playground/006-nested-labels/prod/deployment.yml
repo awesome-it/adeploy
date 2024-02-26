@@ -4,12 +4,9 @@ kind: Deployment
 metadata:
   name: 006-nested-labels-prod
   namespace: playground
-  labels:
-    app.kubernetes.io/name: "nginx"
-    app.kubernetes.io/instance: "prod"
-    app.kubernetes.io/component: "my-deployment"
-    app.kubernetes.io/part-of: "006-nested-labels"
-    app.kubernetes.io/managed-by: "adeploy"
+  labels: {"app.kubernetes.io/instance": "prod", "app.kubernetes.io/component": "my-deployment",
+    "app.kubernetes.io/part-of": "006-nested-labels", "app.kubernetes.io/managed-by": "adeploy",
+    "app.kubernetes.io/name": "nginx"}
 spec:
   selector:
     matchLabels: {"app.kubernetes.io/instance": "prod", "app.kubernetes.io/component": "my-deployment",
