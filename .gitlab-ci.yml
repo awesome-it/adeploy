@@ -46,9 +46,9 @@ include:
       mv build build.orig
       python ../../../runner.py -d -p jinja render .
       if [[ -e ".exclude-from-test" ]] ; then
-        diff -ru --exclude-from=.exclude-from-test build build.orig
+        diff -ru --exclude-from=../../.exclude-from-test --exclude-from=.exclude-from-test build build.orig
       else 
-        diff -ru build build.orig
+        diff -ru --exclude-from=../../.exclude-from-test build build.orig
       fi
     popd
   done  
@@ -61,9 +61,9 @@ include:
       mv build build.orig
       python ../../../runner.py -d -p helm --skip-validate render .
       if [[ -e ".exclude-from-test" ]] ; then
-        diff -ru --exclude-from=.exclude-from-test build build.orig
+        diff -ru --exclude-from=../../.exclude-from-test --exclude-from=.exclude-from-test build build.orig
       else 
-        diff -ru build build.orig
+        diff -ru --exclude-from=../../.exclude-from-test build build.orig
       fi
     popd
   done
