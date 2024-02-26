@@ -35,7 +35,7 @@ include:
   test -z "$SLEEP" || debug_sleep
   python -m venv adeploy
   source adeploy/bin/activate
-  pip install -r requirements.txt  
+  pip install -e .
   echo "Installed adeploy $(python runner.py --version)"
 
 .test_adeploy_jinja: &test_adeploy_jinja |
