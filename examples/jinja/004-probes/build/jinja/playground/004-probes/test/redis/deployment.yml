@@ -37,11 +37,7 @@ spec:
         livenessProbe:
           exec:
             command:
-            - redis-cli
-            - ping
-# This is now defined in defaults.yml (or namespace configurations)
-#            initialDelaySeconds: 5
-#            timeoutSeconds: 5
+            - /tmp/health.sh
           initialDelaySeconds: 60
           periodSeconds: 30
           timeoutSeconds: 5

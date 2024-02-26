@@ -44,6 +44,9 @@ spec:
 #            initialDelaySeconds: 3
 #            timeoutSeconds: 2
 #            failureThreshold: 2
+          exec:
+            command:
+            - /tmp/health.sh
           initialDelaySeconds: 60
           periodSeconds: 30
           timeoutSeconds: 5
