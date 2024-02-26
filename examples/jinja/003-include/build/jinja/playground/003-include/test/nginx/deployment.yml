@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: 003-include-test-nginx
+  namespace: playground
+  labels:
+    app.kubernetes.io/part-of: 003-include
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/component: nginx
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: 003-include
+      app.kubernetes.io/instance: test
+      app.kubernetes.io/component: nginx
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  # --8<-- [start:template] -->
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: 003-include
+        app.kubernetes.io/instance: test
+        app.kubernetes.io/component: nginx
+      annotations:
+        checksum/config: |
+          03f8a593782c48c9746a99f2797d1ea8b8755a3957b85e55a640919c8beee1ce
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                - test
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - back
+              - key: app.kubernetes.io/part-of
+                operator: In
+                values:
+                - 003-include
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: main
+        image: nginx:1.23
+        imagePullPolicy: Always
+
+        env:
+        - name: VAR1
+          value: "my_common_var"
+        - name: VAR2
+          value: "this_is_my_variable"
+        - name: VAR2
+          value: "Scripts or keys including newslines are supported by Jinja"
+        volumeMounts:
+        - mountPath: /etc/nginx/nginx.conf
+          name: config
+          subPath: nginx.conf
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: 003-include-test-config
+  # --8<-- [end:template] -->

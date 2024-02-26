@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: 003-include-test-config
+  namespace: playground
+  labels:
+    app.kubernetes.io/part-of: 003-include
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/component: config
+data:
+  nginx.conf: |
+    user  nginx;
+    worker_processes  auto;
+
+    error_log  /var/log/nginx/error.log notice;
+    pid        /var/run/nginx.pid;
+
+
+    events {
+        worker_connections  1024;
+    }
+
+
+    http {
+        include       /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+
+        log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                          '$status $body_bytes_sent "$http_referer" '
+                          '"$http_user_agent" "$http_x_forwarded_for"';
+
+        access_log  /var/log/nginx/access.log  main;
+
+        sendfile        on;
+        #tcp_nopush     on;
+
+        keepalive_timeout  65;
+
+        #gzip  on;
+
+        include /etc/nginx/conf.d/*.conf;
+    }
+
+  alpha.json: |
+    {
+        "name": "Alpha",
+        "content": "This is a config file to include in configmap.yml"
+    }
+
+  beta.json: |-
+    {
+        "name": "Beta",
+        "content": "This is a another config file to include in configmap.yml"
+    }
