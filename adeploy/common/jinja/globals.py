@@ -172,13 +172,13 @@ class Handler(object):
         Reads the content of the specified file and returns the corresponding format to include the read content
         into your YAML manifest file or your config map.
 
-        See [Includes](../includes.md) for details and examples.
+        See [Includes](includes.md) for details and examples.
 
         Args:
             path: The path to the file to include. This path must be relative to the project directory where
                 `defaults.yml` is located.
             direct: Set `True` to skip adding YAML block formatting. This is useful if you include
-                [YAML parts](../includes.md#include-yaml-parts) directly to a YAML document.
+                [YAML parts](includes.md#include-yaml-parts) directly to a YAML document.
             render: Set `True` to render the content after reading using `adeploy`.
             indent: Indents the content block for the specified amount.
             skip: A list of characters to remove from the read file content.

@@ -1,7 +1,7 @@
-# Jinja Functions
+# Jinja Filters
 <!-- md:provider Jinja --> <!-- md:provider Helm -->
 
-::: adeploy.common.jinja.globals.Handler
+::: adeploy.common.jinja.filters
     handler: python
     options:
       show_bases: false
