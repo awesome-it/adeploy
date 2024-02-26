@@ -1,0 +1,36 @@
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: 002-secrets-ingress-test-ingress
+  namespace: playground
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  labels:
+    app.kubernetes.io/part-of: 002-secrets-ingress
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/component: ingress
+# --8<-- [start:example-filter-yaml]
+spec:
+  ingressClassName: external
+
+  tls:
+  - hosts:
+    - mydomain.com
+    secretName: secret-dcf2a6e7bd78ee395f73f6434b19a9044790c00a
+
+
+# --8<-- [end:example-filter-yaml]
+  rules:
+  - host: test.mydomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: myservice
+            port:
+              name: http

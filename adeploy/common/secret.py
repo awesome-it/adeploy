@@ -132,6 +132,7 @@ class Secret(ABC):
         self.deployment = deployment
         self.use_pass = use_pass
         self.custom_cmd = custom_cmd
+        self.use_gopass_cat = use_gopass_cat
 
     def __repr__(self):
         return f'{self.deployment.name}/{self.name}'
@@ -359,12 +360,12 @@ class DockerRegistrySecret(Secret):
     email: str = None
 
     def __init__(self, deployment, server: str, username: str, password: str, email: str = None, name: str = None,
-                 use_pass: bool = True, custom_cmd: bool = False):
+                 use_pass: bool = True, use_gopass_cat: bool = True, custom_cmd: bool = False):
         self.server = server
         self.username = username
         self.password = password
         self.email = email
-        super().__init__(deployment, name, use_pass, custom_cmd)
+        super().__init__(deployment, name, use_pass, use_gopass_cat, custom_cmd)
 
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
         args = [f'--docker-server={self.server}',

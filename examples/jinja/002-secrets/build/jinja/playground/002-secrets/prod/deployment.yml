@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: 002-secrets-prod
+  namespace: playground
+  labels:
+    app.kubernetes.io/part-of: 002-secrets
+    app.kubernetes.io/instance: prod
+    app.kubernetes.io/component: nginx
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: 002-secrets
+      app.kubernetes.io/instance: prod
+      app.kubernetes.io/component: nginx
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: 002-secrets
+        app.kubernetes.io/instance: prod
+        app.kubernetes.io/component: nginx
+    spec:
+      terminationGracePeriodSeconds: 60
+      imagePullSecrets:
+      - name: secret-7e33ba97416ba4d45b6ce4c6c68b6aace36eacc5
+      containers:
+      - name: main
+        image: nginx:1.22
+        imagePullPolicy: Always
+          # --8<-- [start:example-ref]
+        env:
+        - name: MY_SECRET
+          valueFrom:
+            secretKeyRef: {'name': 'secret-e5e0c551a537d65bcea7c18eb47badaf9c09c349',
+              'key': 'my_secret'}
+          # --8<-- [end:example-ref]
+        ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 3
+          timeoutSeconds: 2
+          failureThreshold: 2
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 3
+          timeoutSeconds: 2
+          failureThreshold: 2

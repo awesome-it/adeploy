@@ -1,4 +1,4 @@
-from inspect import getmembers, isfunction, getfile
+from inspect import getmembers, isfunction, ismethod, getfile
 from logging import Logger
 from pathlib import Path
 from typing import List
@@ -9,7 +9,8 @@ import adeploy.common.jinja.globals as globals
 import adeploy.common.jinja.filters as filters
 
 
-def create(pathes: List[str or Path] = None, log: Logger = None, deployment=None, templates_dir=None) -> jinja2.Environment:
+def create(pathes: List[str or Path] = None, log: Logger = None, deployment=None,
+           templates_dir=None) -> jinja2.Environment:
     env = jinja2.Environment(
         # This is to load macros from template dir and the parent dir
         loader=jinja2.FileSystemLoader([str(p) for p in pathes]),
@@ -30,6 +31,20 @@ def create(pathes: List[str or Path] = None, log: Logger = None, deployment=None
 
 
 def register_globals(env: jinja2.Environment, deployment=None, log: Logger = None, templates_dir=None):
+    handler = globals.Handler(env, deployment, log, templates_dir)
+    for name, method in getmembers(handler, predicate=ismethod):
+
+        if name == '__init__':
+            continue
+
+        if log:
+            log.debug(f'Registering global function "{name}" ' +
+                      (f'for deployment "{str(deployment)}" ' if deployment else '') +
+                      f'from "{getfile(method)}"')
+
+        env.globals.update({name: method})
+
+    # TODO: Legacy support, remove this since this can't be documented.
     for name, func_creator in [f for f in getmembers(globals) if isfunction(f[1])]:
 
         if '__' not in name:

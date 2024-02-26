@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: 003-include-test-redis
+  namespace: playground
+  labels:
+    app.kubernetes.io/part-of: 003-include
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/component: redis
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: 003-include
+      app.kubernetes.io/instance: test
+      app.kubernetes.io/component: redis
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  # --8<-- [start:template] -->
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: 003-include
+        app.kubernetes.io/instance: test
+        app.kubernetes.io/component: redis
+      annotations:
+        checksum/config: |
+          03f8a593782c48c9746a99f2797d1ea8b8755a3957b85e55a640919c8beee1ce
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                - test
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - back
+              - key: app.kubernetes.io/part-of
+                operator: In
+                values:
+                - 003-include
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: main
+        image: redis:7
+        imagePullPolicy: Always
+
+        env:
+        - name: VAR1
+          value: "my_common_var"
+        - name: VAR2
+          value: "this_is_my_variable"
+        - name: VAR2
+          value: "Scripts or keys including newslines are supported by Jinja"
+        ports:
+        - name: redis
+          containerPort: 6379
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+  # --8<-- [end:template] -->

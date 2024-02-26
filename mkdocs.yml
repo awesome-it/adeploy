@@ -1,0 +1,86 @@
+site_name: adeploy
+extra:
+  homepage: https://awesome-it.de
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/awesome-it/adeploy
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  features:
+    - navigation.indexes
+    - navigation.footer
+
+markdown_extensions:
+  - admonition
+  - footnotes
+  - pymdownx.details
+  - toc:
+      permalink: true
+  - attr_list
+  - def_list
+  - md_in_html
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+hooks:
+  - docs/hooks/badges.py
+  - docs/hooks/asciinema.py
+
+extra_css:
+  - assets/css/footer.css
+  - assets/css/badges.css
+  - assets/css/asciinema-player.css
+  - assets/css/docstrings.css
+
+extra_javascript:
+  - assets/js/asciinema-init.js
+  - assets/js/asciinema-player.min.js
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            docstring_section_style: spacy
+            parameter_headings: true
+            show_symbol_type_heading: true
+            separate_signature: true
+            show_signature_annotations: true
+
+nav:
+  - About: 'index.md'
+  - Install: 'install.md'
+  - Usage: 'usage.md'
+  - Jinja Deployment:
+    - 'jinja/index.md'
+  - Helm Deployment:
+    - 'helm/index.md'
+    - Hooks: 'helm/hooks.md'
+  - Common:
+    - 'common/index.md'
+    - Secrets: 'common/secrets.md'
+    - Includes: 'common/includes.md'
+    - Labels: 'common/labels.md'
+    - Resource Limits: 'common/resource-limits.md'
+    - Probes: 'common/probes.md'
+    - Jinja Functions: 'common/functions.md'
+    - Jinja Filters: 'common/filters.md'
+    - Jinja Macros: 'common/macros.md'
+
+exclude_docs: |
+  _*.md

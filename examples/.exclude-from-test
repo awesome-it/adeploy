@@ -1,0 +1,2 @@
+# Exclude binary secret files that will differ
+secret-*

@@ -1,0 +1,18 @@
+affinity:
+  podAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchExpressions:
+        - key: app.kubernetes.io/instance
+          operator: In
+          values:
+          - {{ release }}
+        - key: app.kubernetes.io/component
+          operator: In
+          values:
+          - back
+        - key: app.kubernetes.io/part-of
+          operator: In
+          values:
+          - {{ name }}
+      topologyKey: "kubernetes.io/hostname"

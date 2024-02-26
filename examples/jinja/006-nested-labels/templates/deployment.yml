@@ -1,0 +1,45 @@
+# --8<-- [start:use_labels] -->
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ name }}-{{ release }}
+  namespace: {{ namespace }}
+  labels: {{ create_labels(name="nginx", labels=labels) }}
+spec:
+  selector:
+    matchLabels: {{ create_labels(name="nginx", labels=labels) }}
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels: {{ create_labels(name="nginx", labels=labels) }}
+# --8<-- [end:use_labels] -->
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: main
+          image: {{ nginx.image }}:{{ version('nginx') }}
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+            - name: https
+              containerPort: 443
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 2

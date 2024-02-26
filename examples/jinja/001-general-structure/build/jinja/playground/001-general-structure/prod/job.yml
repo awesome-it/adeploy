@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: 001-general-structure-prod-ping-f6f0c49a-3ad8-4a75-8577-0c5e735d6edd
+  namespace: playground
+  labels:
+    app.kubernetes.io/part-of: 001-general-structure
+    app.kubernetes.io/instance: prod
+    app.kubernetes.io/component: nginx
+spec:
+  template:
+    metadata:
+      name: 001-general-structure-prod-ping-9504c0a7-479a-4312-82a0-0cee86876c6e
+      labels:
+        app.kubernetes.io/part-of: 001-general-structure
+        app.kubernetes.io/instance: prod
+        app.kubernetes.io/component: nginx
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: ping
+        image: registry.awesome-it.de/upstream-docker/library/nginx:1.22
+        imagePullPolicy: Always
+        command: ["/bin/true"]
+        args: []
