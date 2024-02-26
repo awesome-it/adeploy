@@ -1,6 +1,8 @@
 import collections.abc
 import os
+import sys
 import pkgutil
+import importlib.util
 import subprocess
 import yaml
 
@@ -30,7 +32,10 @@ def get_providers() -> dict:
     found = {}
     for module_finder, name, ispkg in pkgutil.iter_modules([os.path.dirname(providers.__file__)]):
         if ispkg:
-            module = module_finder.find_module(name).load_module(name)
+            spec = module_finder.find_spec(name)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[name] = module
+            spec.loader.exec_module(module)
             found[name] = namedtuple('Provider', 'renderer tester deployer watcher')(
                     renderer=getattr(module, 'Renderer'),
                     tester=getattr(module, 'Tester'),
