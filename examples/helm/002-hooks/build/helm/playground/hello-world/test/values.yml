@@ -1,0 +1,18 @@
+_chart:
+  name: hello-world
+  repo_url: https://helm.github.io/examples
+  version: 0.1.0
+fullnameOverride: ''
+image:
+  pullPolicy: IfNotPresent
+  repository: nginx
+  tag: ''
+nameOverride: ''
+replicaCount: 1
+service:
+  port: 80
+  type: ClusterIP
+serviceAccount:
+  annotations: {}
+  create: true
+  name: ''
