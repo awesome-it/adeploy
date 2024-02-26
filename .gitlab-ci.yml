@@ -44,7 +44,7 @@ include:
   do
     pushd $dir
       mv build build.orig
-      python ../../../runner.py -p jinja render .
+      python ../../../runner.py -d -p jinja render .
       if [[ -e ".exclude-from-test" ]] ; then
         diff -ru --exclude-from=.exclude-from-test build build.orig
       else 
@@ -59,7 +59,7 @@ include:
   do
     pushd $dir
       mv build build.orig
-      python ../../../runner.py -d -p helm render .
+      python ../../../runner.py -d -p helm --skip-validate render .
       if [[ -e ".exclude-from-test" ]] ; then
         diff -ru --exclude-from=.exclude-from-test build build.orig
       else 

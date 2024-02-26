@@ -18,6 +18,7 @@ class Renderer(HelmProvider):
     chart_dir: Path = None
     repo_url: str = None
     hooks_dir: Path = None
+    skip_validate: bool = False
 
     @staticmethod
     def get_parser():
@@ -27,6 +28,10 @@ class Renderer(HelmProvider):
         parser.add_argument('-c', '--chart-dir', dest='chart_dir', default='chart',
                             help='Directory containing the Helm chart to deploy. If no chart is available'
                                  'you can specify a repo URL using "--repo" to download the chart')
+
+        parser.add_argument('--skip-validate', action='store_true',
+                            help='Skip validating the manifest against the current k8s cluster. This is also performed'
+                                 'during install, see "helm template --help".')
 
         parser.add_argument('--repo-url', dest='repo_url', help='Helm repo URL to download chart if chart dir is empty')
 
@@ -50,6 +55,8 @@ class Renderer(HelmProvider):
         self.hooks_dir = Path(args.get('hooks_dir'))
         if not self.hooks_dir.is_absolute():
             self.hooks_dir = self.src_dir.joinpath(self.hooks_dir)
+
+        self.skip_validate = args.get('skip_validate')
 
     def build_chart(self):
 
@@ -159,7 +166,8 @@ class Renderer(HelmProvider):
                 with open(values_path, 'w') as fd:
                     yaml.dump(deployment.config, fd)
 
-                output = helm_template(self.log, deployment, self.get_chart_dir(), values_path)
+                output = helm_template(self.log, deployment, self.get_chart_dir(), values_path,
+                                       skip_validate=self.skip_validate)
                 with open(f'{output_path}/manifest.yml', 'w') as fd:
                     fd.write(output.stdout)
 
