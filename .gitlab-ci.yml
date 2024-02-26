@@ -63,7 +63,7 @@ include:
       if [[ -e ".exclude-from-test" ]] ; then
         diff -ru --exclude-from=.exclude-from-test build build.orig
       else 
-        diff -ru --exclude-from=.exclude-from-test build build.orig
+        diff -ru build build.orig
       fi
     popd
   done
