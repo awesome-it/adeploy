@@ -25,7 +25,7 @@ authors = [
 ]
 description = "Universal deployment tool for Kubernetes that supports rendering and deployment of lightweight Jinja templated k8s manifests as well as complex Helm charts."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.8"
 classifiers = [
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: BSD License",
