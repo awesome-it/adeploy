@@ -40,5 +40,7 @@ dependencies = {file = ["requirements.txt"]}
 adeploy = "adeploy.main:main"
 
 [project.urls]
-Homepage = "https://github.com/awesome-it/adeploy"
+Homepage = "https://awesome-it.de"
+Source = "https://github.com/awesome-it/adeploy"
 Issues = "https://github.com/awesome-it/adeploy/issues"
+Documentation = "https://awesome-it.de/docs/adeploy/latest"

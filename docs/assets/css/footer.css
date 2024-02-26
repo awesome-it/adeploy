@@ -9,3 +9,7 @@
 .awesome-footer img {
     height: 45px;
 }
+
+.awesome-footer > a {
+    display: flex;
+}
