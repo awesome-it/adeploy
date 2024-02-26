@@ -1,9 +1,16 @@
 site_name: adeploy
+extra:
+  homepage: https://awesome-it.de
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/awesome-it/adeploy
 
 theme:
   name: material
+  custom_dir: docs/overrides
   features:
     - navigation.indexes
+    - navigation.footer
 
 markdown_extensions:
   - admonition
@@ -33,6 +40,7 @@ hooks:
   - docs/hooks/asciinema.py
 
 extra_css:
+  - assets/css/footer.css
   - assets/css/badges.css
   - assets/css/asciinema-player.css
   - assets/css/docstrings.css
