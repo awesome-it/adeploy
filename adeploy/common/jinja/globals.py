@@ -447,7 +447,7 @@ class Handler(object):
 
             ```{.yaml title="namespaces/playground/prod.yml"}
               my_secret: {{ create_secret(as_ref=True, my_secret='/my/path') }}
-              ```
+            ```
 
             Your can now use the returned YAML object in your templates as follows:
 
