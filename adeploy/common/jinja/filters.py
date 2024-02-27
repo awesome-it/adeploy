@@ -69,7 +69,7 @@ def quote(string: str):
 def base64_encode(string: str):
     """ Returns base64-encoded string
 
-    The given UTF-8 string is encoded to base64 using [basde64.b64encode](https://docs.python.org/3/library/base64.html).
+    The given UTF-8 string is encoded to base64 using [base64.b64encode](https://docs.python.org/3/library/base64.html).
 
     Args:
         string: UTF-8 string to be encoded.
