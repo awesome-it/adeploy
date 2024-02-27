@@ -14,7 +14,7 @@ adeploy = ["_version.py"]
 git_describe_command = "git describe --tags --abbrev=4"
 
 [project]
-name = "adeploy_awesomeit"
+name = "adeploy"
 dynamic = ["version", "dependencies"]
 authors = [
   { name="Daniel Morlock", email="daniel.morlock@awesome-it.de" },
