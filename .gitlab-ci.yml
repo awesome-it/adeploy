@@ -78,6 +78,8 @@ adeploy-test-python3.8:
     - *test_adeploy_jinja
     - *install_helm
     - *test_adeploy_helm
+  rules:
+    - if: ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'main' || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'master')
 
 adeploy-test-python3.12:
   stage: test
@@ -89,3 +91,5 @@ adeploy-test-python3.12:
     - *test_adeploy_jinja
     - *install_helm
     - *test_adeploy_helm
+  rules:
+    - if: ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'main' || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'master')
