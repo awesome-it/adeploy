@@ -6,6 +6,7 @@ from logging import Logger
 from pathlib import Path
 
 import jinja2
+import yaml
 
 from adeploy.common import colors
 from adeploy.common.errors import RenderError
@@ -87,8 +88,19 @@ class Renderer(Provider):
             if len(data.replace('---', '').replace('\n', '').strip()) > 0:
                 data = update(self.log, data, deployment)
                 output_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(output_path, 'w') as fd:
-                    fd.write(data)
+                api_objects = [a for a in list(yaml.load_all(data, yaml.SafeLoader)) if a is not None]
+                if len(api_objects) == 1:
+                    with open(output_path, 'w') as fd:
+                        fd.write(yaml.dump(api_objects[0]))
+                else:
+                    self.log.info(
+                        f'{prefix} Multiple API objects generated from "{colors.bold(template)}". Splitting output ...')
+                    for index, api_object in enumerate(api_objects):
+                        object_output_path = output_path.with_suffix(f'.{index}.yml')
+                        with open(object_output_path, 'w') as fd:
+                            self.log.info(
+                                f'{prefix} render API object {index} from "{colors.bold(template)}" in "{colors.bold(object_output_path)}" ...')
+                            fd.write(yaml.dump(api_object))
 
         except jinja2.exceptions.TemplateNotFound as e:
             self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
