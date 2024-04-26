@@ -91,7 +91,7 @@ class Renderer(Provider):
                 api_objects = [a for a in list(yaml.load_all(data, yaml.SafeLoader)) if a is not None]
                 if len(api_objects) == 1:
                     with open(output_path, 'w') as fd:
-                        fd.write(yaml.dump(api_objects[0]))
+                        fd.write(yaml.dump(api_objects[0], sort_keys=False))
                 else:
                     self.log.info(
                         f'{prefix} Multiple API objects generated from "{colors.bold(template)}". Splitting output ...')
@@ -100,7 +100,7 @@ class Renderer(Provider):
                         with open(object_output_path, 'w') as fd:
                             self.log.info(
                                 f'{prefix} render API object {index} from "{colors.bold(template)}" in "{colors.bold(object_output_path)}" ...')
-                            fd.write(yaml.dump(api_object))
+                            fd.write(yaml.dump(api_object, sort_keys=False))
 
         except jinja2.exceptions.TemplateNotFound as e:
             self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
