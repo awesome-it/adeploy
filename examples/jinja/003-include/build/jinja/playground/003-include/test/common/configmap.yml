@@ -47,7 +47,7 @@ data:
         "content": "This is a config file to include in configmap.yml"
     }
 
-  beta.json: |-
+  beta.json: |
     {
         "name": "Beta",
         "content": "This is a another config file to include in configmap.yml"
