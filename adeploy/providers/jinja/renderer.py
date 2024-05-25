@@ -113,7 +113,7 @@ class Renderer(Provider):
             self.log.info(f'{prefix} render "{colors.bold(template_path)}" in "{colors.bold(output_path)}" ...')
         else:
             self.log.info(
-                f'{prefix} Multiple API objects generated from "{colors.bold(template_path)}". Splitting output ...')
+                f'{prefix} found multiple API objects in "{colors.bold(template_path)}" ...')
         for index, doc in enumerate(documents):
             doc = update(self.log, doc, deployment)
             if len(documents) == 1:
