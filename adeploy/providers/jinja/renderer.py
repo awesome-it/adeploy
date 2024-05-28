@@ -7,6 +7,7 @@ from pathlib import Path
 
 import jinja2
 from ruamel.yaml import YAML
+from ruamel.yaml.error import MarkedYAMLError
 
 from adeploy.common import colors
 from adeploy.common.deployment import Deployment
@@ -103,28 +104,30 @@ class Renderer(Provider):
             self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
             raise RenderError(f'Jinja template error in "{colors.bold(template_path)}": {e}')
 
-        output_path = self.get_template_output_path(deployment, template_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        documents = self.yaml.load_all(rendered_template)
-        documents = [d for d in documents if d is not None]
-        if len(documents) == 0:
-            self.log.warning(f'{prefix} {colors.bold(template_path)} is empty ...')
-        elif len(documents) == 1:
-            self.log.info(f'{prefix} render "{colors.bold(template_path)}" in "{colors.bold(output_path)}" ...')
-        else:
-            self.log.info(
-                f'{prefix} found multiple API objects in "{colors.bold(template_path)}" ...')
-        for index, doc in enumerate(documents):
-            doc = update(self.log, doc, deployment)
-            if len(documents) == 1:
-                with open(output_path, 'w') as fd:
-                    self.yaml.dump(doc, fd)
-            else:
-                object_output_path = output_path.with_suffix(f'.{index}.yml')
+        try:
+            output_path = self.get_template_output_path(deployment, template_path)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            documents = self.yaml.load_all(rendered_template)
+
+            documents = [d for d in documents if d is not None]
+            if len(documents) == 0:
+                self.log.warning(f'{prefix} {colors.bold(template_path)} is empty ...')
+
+            for index, doc in enumerate(documents):
+                doc = update(self.log, doc, deployment)
+
+                object_kind = doc.get('kind', None)
+                object_name = doc.get('metadata', {}).get('name', None)
+                object_output_path = output_path.with_suffix(f'.{index}.yml') if len(documents) > 1 else output_path
+
                 with open(object_output_path, 'w') as fd:
-                    self.log.info(
-                        f'{prefix} render API object {index} from "{colors.bold(template_path)}" in "{colors.bold(object_output_path)}" ...')
+                    self.log.info(f'{prefix} render {colors.bold(object_kind)} "{colors.bold(object_name)}" '
+                                  f'from "{colors.bold(template_path)}" '
+                                  f'in "{colors.bold(object_output_path)}" ...')
                     self.yaml.dump(doc, fd)
+
+        except MarkedYAMLError as e:
+            raise RenderError(f'YAML error in "{colors.bold(template_path)}": {e}')
 
     def run(self):
         self.log.debug(f'Working on deployment "{self.name}" ...')
