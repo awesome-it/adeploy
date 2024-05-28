@@ -295,7 +295,7 @@ class Handler(object):
             --8<-- "docs/common/includes.md:example"
         """
         contents = {}
-        for item in pathlib.Path(pathlib.Path(self.templates_dir) / dir).iterdir():
+        for item in sorted(pathlib.Path(pathlib.Path(self.templates_dir) / dir).iterdir()):
             if item.is_file():
                 self.env.loader.searchpath.append(str(item.parent))
                 contents[item.name] = self.include_file(

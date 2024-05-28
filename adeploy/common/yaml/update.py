@@ -1,49 +1,14 @@
-from ruamel.yaml import YAML, StringIO
-from ruamel.yaml.constructor import DuplicateKeyError
-from ruamel.yaml.scanner import ScannerError
-from ruamel.yaml.parser import ParserError
+from logging import Logger
+
+from adeploy.common.deployment import Deployment
 from adeploy.common.yaml.labels import update_labels
 from adeploy.common.yaml.probes import update_probes
 from adeploy.common.yaml.resources import update_resources
+from ruamel.yaml.comments import CommentedMap
 
 
-def update(log, data, deployment):
-
-    processed_data = []
-
-    yaml = YAML()
-    yaml.default_flow_style = False
-    yaml.preserve_quotes = True
-
-    for doc in data.split("---\n"):
-        doc = doc.strip()
-        if len(doc) > 0:
-            try:
-                doc = yaml.load(doc)
-
-                update_probes(log, doc, deployment)
-                update_labels(log, doc, deployment)
-                update_resources(log, doc, deployment)
-
-                stream = StringIO()
-                yaml.dump(doc, stream)
-                doc = stream.getvalue()
-
-            except DuplicateKeyError as e:
-                log.error(f'...... Constructor error: {e}')
-                log.error(f'......              data: {doc}')
-                pass
-
-            except ScannerError as e:
-                log.error(f'...... Scanner error: {e}')
-                log.error(f'......         data: {doc}')
-                pass
-            
-            except ParserError as e:
-                log.error(f'...... Parser error: {e}')
-                log.error(f'......         data: {doc}')
-                pass
-            
-        processed_data.append(doc)
-
-    return "---\n".join(processed_data)
+def update(log: Logger, data: CommentedMap, deployment: Deployment):
+    update_probes(log, data, deployment)
+    update_labels(log, data, deployment)
+    update_resources(log, data, deployment)
+    return data

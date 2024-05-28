@@ -6,8 +6,11 @@ from logging import Logger
 from pathlib import Path
 
 import jinja2
+from ruamel.yaml import YAML
+from ruamel.yaml.error import MarkedYAMLError
 
 from adeploy.common import colors
+from adeploy.common.deployment import Deployment
 from adeploy.common.errors import RenderError
 from adeploy.common.jinja import env as jinja_env
 from adeploy.common.provider import Provider
@@ -39,9 +42,16 @@ class Renderer(Provider):
 
         if self.templates_dir[-1] == '/':
             self.templates_dir = self.templates_dir[:-1]
-        self.jinja_pathes = ['.', '..', self.templates_dir, str(Path(self.templates_dir).parent), str(Path(self.templates_dir).parent.parent)]
+        self.jinja_pathes = ['.', '..', self.templates_dir, str(Path(self.templates_dir).parent),
+                             str(Path(self.templates_dir).parent.parent)]
         self.log.debug(f'Using Jinja file system loader with pathes: {", ".join(self.jinja_pathes)}')
         self.env = jinja_env.create(self.jinja_pathes, log=self.log, templates_dir=self.templates_dir)
+
+        yaml = YAML(typ='rt')
+        yaml.default_flow_style = False
+        yaml.preserve_quotes = True
+        yaml.sort_keys = False
+        self.yaml = yaml
 
     def parse_args(self, args):
         self.templates_dir = args.get('templates_dir')
@@ -76,23 +86,14 @@ class Renderer(Provider):
             .joinpath(deployment.release) \
             .joinpath(template)
 
-    def render_template(self, deployment, template, prefix='...'):
+    def render_template(self, deployment: Deployment, template_path: str, prefix: str = '...'):
         jinja_env.register_globals(self.env, deployment, self.log, self.templates_dir)
         values = deployment.get_template_values()
-        output_path = self.get_template_output_path(deployment, template)
-        self.log.info(f'{prefix} render "{colors.bold(template)}" in "{colors.bold(output_path)}" ...')
-
         try:
-            data = self.env.get_template(template).render(**values)
-            if len(data.replace('---', '').replace('\n', '').strip()) > 0:
-                data = update(self.log, data, deployment)
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(output_path, 'w') as fd:
-                    fd.write(data)
-
+            rendered_template = self.env.get_template(template_path).render(**values)
         except jinja2.exceptions.TemplateNotFound as e:
             self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
-            raise RenderError(f'Jinja template error: Template "{e}" not found in "{template}"')
+            raise RenderError(f'Jinja template error: Template "{e}" not found in "{template_path}"')
 
         except jinja2.exceptions.TemplateSyntaxError as e:
             self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
@@ -101,7 +102,32 @@ class Renderer(Provider):
 
         except jinja2.exceptions.TemplateError as e:
             self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
-            raise RenderError(f'Jinja template error in "{colors.bold(template)}": {e}')
+            raise RenderError(f'Jinja template error in "{colors.bold(template_path)}": {e}')
+
+        try:
+            output_path = self.get_template_output_path(deployment, template_path)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            documents = self.yaml.load_all(rendered_template)
+
+            documents = [d for d in documents if d is not None]
+            if len(documents) == 0:
+                self.log.warning(f'{prefix} {colors.bold(template_path)} is empty ...')
+
+            for index, doc in enumerate(documents):
+                doc = update(self.log, doc, deployment)
+
+                object_kind = doc.get('kind', None)
+                object_name = doc.get('metadata', {}).get('name', None)
+                object_output_path = output_path.with_suffix(f'.{index}.yml') if len(documents) > 1 else output_path
+
+                with open(object_output_path, 'w') as fd:
+                    self.log.info(f'{prefix} render {colors.bold(object_kind)} "{colors.bold(object_name)}" '
+                                  f'from "{colors.bold(template_path)}" '
+                                  f'in "{colors.bold(object_output_path)}" ...')
+                    self.yaml.dump(doc, fd)
+
+        except MarkedYAMLError as e:
+            raise RenderError(f'YAML error in "{colors.bold(template_path)}": {e}')
 
     def run(self):
         self.log.debug(f'Working on deployment "{self.name}" ...')

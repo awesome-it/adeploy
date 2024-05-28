@@ -5,6 +5,8 @@ import os.path
 from pathlib import Path
 from subprocess import CalledProcessError
 
+import yaml
+
 from adeploy.common import colors
 from adeploy.common.kubectl import kubectl_apply, parse_kubectrl_apply
 from adeploy.common.errors import DeployError
@@ -12,6 +14,16 @@ from adeploy.common.provider import Provider
 
 
 class Deployer(Provider):
+
+    @staticmethod
+    def manifest_is_configmap(manifest_path) -> bool:
+        try:
+            with open(manifest_path, 'r') as f:
+                deployment_data = yaml.safe_load(f.read())
+                return deployment_data.get('kind', '') == 'ConfigMap'
+        except yaml.YAMLError as e:
+            raise DeployError(f'Error parsing manifest file "{manifest_path}": {e}')
+
 
     @staticmethod
     def get_parser():
@@ -49,7 +61,13 @@ class Deployer(Provider):
             for ext in ['yaml', 'yml']:
                 files.extend(glob.glob(f'{deployment.manifests_dir}/**/*.{ext}', recursive=True))
 
-            for manifest_path in files:
+            configmap_files = [file for file in files if self.manifest_is_configmap(file)]
+            non_configmap_files = [file for file in files if not self.manifest_is_configmap(file)]
+
+            for manifest_path in configmap_files:
+                self.deploy_manifest(manifest_path)
+
+            for manifest_path in non_configmap_files:
                 self.deploy_manifest(manifest_path)
 
             self.save_current_cluster_as_last_cluster(deployment)
