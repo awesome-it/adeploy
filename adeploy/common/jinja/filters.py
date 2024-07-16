@@ -36,7 +36,7 @@ def yaml(obj: Union[jinja_dict.JinjaDict, dict], flow_style: bool):
     """
     if isinstance(obj, jinja_dict.JinjaDict):
         obj = obj.get_dict()
-    return _yaml.safe_dump(obj, default_flow_style=flow_style)
+    return _yaml.safe_dump(obj, default_flow_style=flow_style, sort_keys=False)
 
 
 def quote(string: str):
