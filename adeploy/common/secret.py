@@ -118,7 +118,7 @@ class Secret(ABC):
             try:
                 result = result.stdout.decode("utf-8")
             except UnicodeDecodeError:
-                result =  result.stdout
+                result = result.stdout
             if not result:
                 raise EmptySecretError(f'Cannot create secret: Command "{colors.bold(data)}" returned empty result')
 
