@@ -27,6 +27,9 @@ class WrongClusterError(Error):
     """ Exception raised if wrong cluster is targeted."""
     pass
 
+class EmptySecretError(Error):
+    """ Exception raised if a secret is empty."""
+    pass
 
 if __name__ == '__main__':
     pass
