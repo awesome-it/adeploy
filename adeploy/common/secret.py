@@ -13,7 +13,7 @@ from pickle import dump, load
 from typing import Union
 
 from adeploy.common import colors
-from adeploy.common.errors import RenderError
+from adeploy.common.errors import EmptySecretError, RenderError
 from adeploy.common.gopass import gopass_get
 from adeploy.common.kubectl import parse_kubectrl_apply, kubectl_create_secret, kubectl_get_secret, \
     kubectl_delete_secret, kubectl
@@ -116,9 +116,13 @@ class Secret(ABC):
             result.check_returncode()
 
             try:
-                return result.stdout.decode("utf-8")
+                result = result.stdout.decode("utf-8")
             except UnicodeDecodeError:
-                return result.stdout
+                result = result.stdout
+            if not result:
+                raise EmptySecretError(f'Cannot create secret: Command "{colors.bold(data)}" returned empty result')
+
+            return result
 
         if self.use_pass:
             return gopass_get(data, log, use_cat=self.use_gopass_cat)
