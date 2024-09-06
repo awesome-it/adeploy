@@ -4,7 +4,9 @@ in the Jinja templates in your `templates` folder.
 """
 import os
 import pathlib
+import secrets
 import uuid
+from idlelib.configdialog import is_int
 from logging import Logger
 
 import shortuuid
@@ -17,11 +19,12 @@ import jinja2
 from typing import Union
 
 import adeploy.common.colors as colors
-import adeploy.common.secret as secret
+import adeploy.common.secrets as secret
 import adeploy.common.errors as errors
 
 
 class Handler(object):
+    named_passwords = {}
 
     def __init__(self, env: jinja2.Environment, deployment=None, log: Logger = None, templates_dir: str = None):
         self.env = env
@@ -477,6 +480,48 @@ class Handler(object):
                                         use_pass, use_gopass_cat, custom_cmd)
         if secret.Secret.register(s) and self.log:
             self.log.info(f'Registering docker registry secret "{colors.bold(s.name)}" '
-                     f'for deployment "{colors.blue(self.deployment)} ...')
+                          f'for deployment "{colors.blue(self.deployment)} ...')
 
         return s.name
+
+    def create_random_string(self, length: int = 32, name: str = None) -> str:
+
+        """ Creates a random string with a given length and ensured complexity.
+
+        The string can optionally be named. If a name is specified, the random string will be stored and returned
+        deterministically for the same name during a single run of adeploy.
+
+
+        Args:
+            length: The length of the random string. Must be an integer of at least 16 characters.
+                    If omitted, the default length is 32 characters.
+            name:   The name to store the random string. If specified, the same random string will return for the
+                    same name during a single run of adeploy.
+
+        Returns:
+            str: The generated random string.
+
+        !!!example
+            --8<-- "docs/common/secrets.md:example-docker"
+        """
+
+        if not is_int(length):
+            raise ValueError('create_random_string() requires an integer as length')
+        if length < 16:
+            raise ValueError('create_random_string() requires a length of at least 16 characters')
+
+        if name in self.named_passwords:
+            return self.named_passwords[name]
+
+        alphabet = string.ascii_letters + string.digits
+        while True:
+            password = ''.join(secrets.choice(alphabet) for i in range(length))
+            if (any(c.islower() for c in password)
+                    and any(c.isupper() for c in password)
+                    and sum(c.isdigit() for c in password) >= 3):
+                break
+
+        if not name is None:
+            self.named_passwords[name] = password
+
+        return password
