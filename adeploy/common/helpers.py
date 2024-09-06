@@ -54,7 +54,7 @@ def get_defaults(defaults_file, deployment=None, log=None, template_values=None)
 
 
 def run_command(log, cmd) -> subprocess.CompletedProcess:
-    # Convert possible Pathes to strings
+    # Convert possible Paths to strings
     cmd = [str(c) for c in cmd]
     log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
     result = subprocess.run(cmd, capture_output=True, text=True)
