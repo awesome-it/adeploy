@@ -35,7 +35,7 @@ class GopassSecretProvider(SecretsProvider):
     def get_value(self):
         result = self.gopass_try_repos()
         if result is None:
-            raise InputError(f'Cannot find gopass value, did you specify a gopass repo?')
+            raise InputError(f'Cannot find gopass value for {self.path} in repos {self.gopass_get_repos()}.')
 
         result.check_returncode()
 
