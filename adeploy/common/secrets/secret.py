@@ -1,10 +1,8 @@
 import glob
 import hashlib
 import json
-import os
 import shutil
 import subprocess
-import tempfile
 
 from abc import ABC, abstractmethod
 from logging import Logger
@@ -14,8 +12,8 @@ from typing import Union
 
 from adeploy.common import colors
 from adeploy.common.errors import EmptySecretError, RenderError
-from adeploy.common.gopass import gopass_get
-from adeploy.common.kubectl import parse_kubectrl_apply, kubectl_create_secret, kubectl_get_secret, \
+from adeploy.common.secrets_provider.gopass_provider import gopass_get
+from adeploy.common.kubectl import parse_kubectrl_apply, kubectl_get_secret, \
     kubectl_delete_secret, kubectl
 
 

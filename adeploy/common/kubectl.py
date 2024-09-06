@@ -123,12 +123,6 @@ def kubectl(log: Logger, args: list, namespace: str = None) -> subprocess.Comple
     result = subprocess.run(cmd, capture_output=True, text=True)
     result.check_returncode()
     return result
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        return result
-    except subprocess.CalledProcessError as e:
-        log.error(f'Error executing command {colors.bold(" ".join(cmd))}: {e.stderr}')
-        exit(1)
 
 
 def kubectl_init(args):
