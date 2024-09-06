@@ -12,9 +12,10 @@ from typing import Union
 
 from adeploy.common import colors
 from adeploy.common.errors import EmptySecretError, RenderError
-from adeploy.common.secrets_provider.gopass_provider import gopass_get
+from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider, gopass_get
 from adeploy.common.kubectl import parse_kubectrl_apply, kubectl_get_secret, \
     kubectl_delete_secret, kubectl
+from adeploy.common.secrets_provider.shell_command_provider import ShellCommandSecretProvider
 
 
 class Secret(ABC):
@@ -109,21 +110,10 @@ class Secret(ABC):
             return '*****'
 
         if self.custom_cmd:
-            log.debug(f'... executing command "{colors.bold(data)}"')
-            result = subprocess.run(data, shell=True, capture_output=True)
-            result.check_returncode()
-
-            try:
-                result = result.stdout.decode("utf-8")
-            except UnicodeDecodeError:
-                result = result.stdout
-            if not result:
-                raise EmptySecretError(f'Cannot create secret: Command "{colors.bold(data)}" returned empty result')
-
-            return result
+            return ShellCommandSecretProvider(command=data, logger=log).get_value()
 
         if self.use_pass:
-            return gopass_get(data, log, use_cat=self.use_gopass_cat)
+            return GopassSecretProvider(path=data, logger=log, use_cat=self.use_gopass_cat).get_value()
 
         return data
 
