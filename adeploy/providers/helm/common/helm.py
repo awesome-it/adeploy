@@ -22,9 +22,12 @@ def helm_repo_pull(log, repo, name, version, dest):
                 ['--untar', '--untardir', dest])
 
 
-def helm_template(log, deployment: Deployment, chart_path, values_path, skip_validate: bool = False):
-    args = ['template'] + (['--validate'] if not skip_validate else []) + [deployment.release, chart_path, '-n',
-                                                                           deployment.namespace, '-f', values_path]
+def helm_template(log, deployment: Deployment, chart_path, values_path, skip_validate: bool = False,
+                  skip_schema_validation: bool = False):
+    args = (['template'] +
+            (['--validate'] if not skip_validate else []) +
+            (['--skip-schema-validation'] if skip_schema_validation else []) +
+            [deployment.release, chart_path, '-n', deployment.namespace, '-f', values_path])
 
     chart_version, old_app_version = helm_prepare_chart(log, deployment, chart_path)
 
@@ -39,9 +42,11 @@ def helm_template(log, deployment: Deployment, chart_path, values_path, skip_val
     return result
 
 
-def helm_install(log, deployment: Deployment, chart_path, values_path, dry_run=True) -> subprocess.CompletedProcess:
-    args = ['upgrade', '--install', deployment.release, chart_path, '-n', deployment.namespace, '-f', values_path, '-o',
-            'json']
+def helm_install(log, deployment: Deployment, chart_path, values_path, dry_run=True,
+                 skip_schema_validation: bool = False) -> subprocess.CompletedProcess:
+    args = (['upgrade', '--install'] +
+            (['--skip-schema-validation'] if skip_schema_validation else []) +
+            [deployment.release, chart_path, '-n', deployment.namespace, '-f', values_path, '-o', 'json'])
 
     chart_version, old_app_version = helm_prepare_chart(log, deployment, chart_path)
 

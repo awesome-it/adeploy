@@ -19,6 +19,7 @@ class Renderer(HelmProvider):
     repo_url: str = None
     hooks_dir: Path = None
     skip_validate: bool = False
+    skip_schema_validation: bool = False
 
     @staticmethod
     def get_parser():
@@ -32,6 +33,12 @@ class Renderer(HelmProvider):
         parser.add_argument('--skip-validate', action='store_true',
                             help='Skip validating the manifest against the current k8s cluster. This is also performed'
                                  'during install, see "helm template --help".')
+
+        parser.add_argument('--skip-schema-validation', action='store_true',
+                            help='Skip JSON schema validation of input variables. This might sometimes be required if '
+                                 'you the Chart repo has a "values.schema.json" while you have specified additional '
+                                 'properties i.e. "_chart: {}" in your namespace configuration. '
+                                 'See "helm template --help".')
 
         parser.add_argument('--repo-url', dest='repo_url', help='Helm repo URL to download chart if chart dir is empty')
 
@@ -57,6 +64,7 @@ class Renderer(HelmProvider):
             self.hooks_dir = self.src_dir.joinpath(self.hooks_dir)
 
         self.skip_validate = args.get('skip_validate')
+        self.skip_schema_validation = args.get('skip_schema_validation')
 
     def build_chart(self):
 
@@ -167,7 +175,8 @@ class Renderer(HelmProvider):
                     yaml.dump(deployment.config, fd)
 
                 output = helm_template(self.log, deployment, self.get_chart_dir(), values_path,
-                                       skip_validate=self.skip_validate)
+                                       skip_validate=self.skip_validate,
+                                       skip_schema_validation=self.skip_schema_validation)
                 with open(f'{output_path}/manifest.yml', 'w') as fd:
                     fd.write(output.stdout)
 

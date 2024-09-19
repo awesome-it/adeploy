@@ -8,16 +8,24 @@ from adeploy.providers.helm.common import helm_install, HelmOutput, HelmProvider
 
 
 class Deployer(HelmProvider):
+    skip_schema_validation: bool
 
     @staticmethod
     def get_parser():
         parser = argparse.ArgumentParser(description='Helm v3 renderer for k8s manifests',
                                          usage=argparse.SUPPRESS)
+
+        parser.add_argument('--skip-schema-validation', action='store_true',
+                            help='Skip JSON schema validation of input variables. This might sometimes be required if '
+                                 'you the Chart repo has a "values.schema.json" while you have specified additional '
+                                 'properties i.e. "_chart: {}" in your namespace configuration. '
+                                 'See "helm template --help".')
         return parser
 
     def parse_args(self, args: dict):
         chart_defaults = get_defaults(self.get_defaults_file(), log=self.log).get('_chart', {})
         self.name = chart_defaults.get('name', self.name)
+        self.skip_schema_validation = args.get('skip_schema_validation')
 
     def run(self):
 
@@ -36,7 +44,8 @@ class Deployer(HelmProvider):
                     .joinpath(f'values.yml')
 
                 result = HelmOutput(
-                    helm_install(self.log, deployment, self.get_chart_dir(), str(values_path), dry_run=False).stdout)
+                    helm_install(self.log, deployment, self.get_chart_dir(), str(values_path), dry_run=False,
+                                 skip_schema_validation=self.skip_schema_validation).stdout)
 
                 is_update = result.first_deployed != result.last_deployed
                 last_update = f', last deployed {colors.bold(result.last_deployed)}' if is_update else ''
@@ -50,4 +59,3 @@ class Deployer(HelmProvider):
                 self.save_current_cluster_as_last_cluster(deployment)
             except CalledProcessError as e:
                 raise DeployError(f'Error while deploying chart "{self.name}": {e.stderr}')
-

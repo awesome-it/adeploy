@@ -16,6 +16,7 @@ from adeploy.providers.helm.common import helm_install, HelmOutput, HelmProvider
 
 class Tester(HelmProvider):
     skip_raw_test: bool
+    skip_schema_validation: bool
 
     @staticmethod
     def get_parser():
@@ -25,10 +26,17 @@ class Tester(HelmProvider):
         parser.add_argument('--skip-raw-test', dest='skip_raw_test', action='store_true',
                             help='Skip testing dry-run on raw manifests using kubectl.')
 
+        parser.add_argument('--skip-schema-validation', action='store_true',
+                            help='Skip JSON schema validation of input variables. This might sometimes be required if '
+                                 'you the Chart repo has a "values.schema.json" while you have specified additional '
+                                 'properties i.e. "_chart: {}" in your namespace configuration. '
+                                 'See "helm template --help".')
+
         return parser
 
     def parse_args(self, args: dict):
         self.skip_raw_test = args.get('skip_raw_test')
+        self.skip_schema_validation = args.get('skip_schema_validation')
 
         chart_defaults = get_defaults(self.get_defaults_file(), log=self.log).get('_chart', {})
         self.name = chart_defaults.get('name', self.name)
@@ -49,7 +57,8 @@ class Tester(HelmProvider):
                     .joinpath(f'values.yml')
 
                 result = HelmOutput(
-                    helm_install(self.log, deployment, self.get_chart_dir(), str(values_path), dry_run=True).stdout)
+                    helm_install(self.log, deployment, self.get_chart_dir(), str(values_path), dry_run=True,
+                                 skip_schema_validation=self.skip_schema_validation).stdout)
 
                 is_update = result.first_deployed != result.last_deployed
                 last_update = f', last deployed {colors.bold(result.last_deployed)}' if is_update else ''
