@@ -1,4 +1,6 @@
 import copy
+import os
+import shutil
 from logging import Logger
 from pathlib import Path
 
@@ -24,7 +26,16 @@ class Deployment:
         self.release = release
         self.namespace = namespace
         self.hooks = {}
+
+        self.build_dir = Path(build_dir)
+
         self.manifests_dir = Path(build_dir) \
+            .joinpath(self.namespace) \
+            .joinpath(self.name) \
+            .joinpath(self.release)
+
+        self.last_cluster_file = Path(build_dir) \
+            .joinpath('.last_cluster') \
             .joinpath(self.namespace) \
             .joinpath(self.name) \
             .joinpath(self.release)
@@ -97,3 +108,27 @@ class Deployment:
         })
 
         return jinja_dict.JinjaDict(values)
+
+    def get_last_cluster(self):
+        try:
+            return self.last_cluster_file.read_text().strip()
+        except FileNotFoundError:
+            return None
+
+    def set_last_cluster(self, cluster, force=False):
+        if force or not self.last_cluster_file.exists():
+            self.last_cluster_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.last_cluster_file, 'w') as f:
+                f.write(cluster)
+
+    def clean_build_dir(self):
+
+        dirs_to_remove = [
+            self.manifests_dir,  # Contains the rendered manifests
+            self.build_dir / self.name,  # Contains secrets
+        ]
+
+        for d in dirs_to_remove:
+            shutil.rmtree(d, ignore_errors=True)
+
+        return dirs_to_remove

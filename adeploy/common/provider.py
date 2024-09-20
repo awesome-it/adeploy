@@ -1,12 +1,11 @@
 import glob
 import os
-import shutil
 import sys
-
 from abc import ABC, abstractmethod
 from argparse import Namespace
 from logging import Logger
 from pathlib import Path
+
 from packaging.version import parse as parse_version
 
 from adeploy.common import colors
@@ -47,25 +46,6 @@ class Provider(ABC):
     @staticmethod
     def get_absolute(base_dir: Path, path: str) -> Path:
         return Path(path if os.path.isabs(path) else base_dir.joinpath(path))
-
-    def clean_build_dir(self):
-        if self.build_dir.exists():
-            self.log.debug(f'Cleaning build dir "{colors.bold(self.build_dir)}" ...')
-            cluster_pin_files = glob.glob(f'{self.build_dir}/**/.last_cluster_api_url', recursive=True)
-            if cluster_pin_files:
-                cluster_pin_dict = {}
-                for f in cluster_pin_files:
-                    with open(f, 'r') as cf:
-                        cluster_pin_dict[f.split('/.')[0]] = cf.read()
-                shutil.rmtree(self.build_dir)
-                self.build_dir.mkdir(parents=True)
-                for folder, content in cluster_pin_dict.items():
-                    os.makedirs(folder, exist_ok=True)
-                    with open(os.path.join(folder, '.last_cluster_api_url'), 'w') as cf:
-                        cf.write(content)
-            else:
-                shutil.rmtree(self.build_dir)
-                self.build_dir.mkdir(parents=True)
 
     def get_defaults_file(self) -> Path:
 
@@ -131,7 +111,8 @@ class Provider(ABC):
                                           f'current version is {version}')
 
                     # Check valid target cluster
-                    deployment_target_cluster = deployment.config.get('_adeploy', {}).get('target_cluster_apiserver_url', None)
+                    deployment_target_cluster = deployment.config.get('_adeploy', {}).get(
+                        'target_cluster_apiserver_url', None)
                     if deployment_target_cluster and deployment_target_cluster != self.current_cluster:
                         raise WrongClusterError(f'Deployment target cluster is "{deployment_target_cluster}", '
                                                 f'but current cluster is {self.current_cluster}')
@@ -145,25 +126,21 @@ class Provider(ABC):
         return deployments
 
     def verify_current_cluster_is_last_cluster(self, deployment) -> bool:
-        if os.path.exists(os.path.join(deployment.manifests_dir, '.last_cluster_api_url')):
-            with open(os.path.join(deployment.manifests_dir, '.last_cluster_api_url'), 'r') as f:
-                last_cluster = f.read().strip()
-                if last_cluster != self.current_cluster:
-                    if not self.args.force:
-                        self.log.error(f'Cluster changed, skipping deployment "{deployment}".\n'
-                                       f'Use the correct cluster, force deployment with --force or remove the file '
-                                       f'{os.path.join(deployment.manifests_dir, ".last_cluster_api_url")}\n'
-                                       f'Last deployed cluster: {last_cluster}\n'
-                                       f'Current cluster: {self.current_cluster}')
-                        return False
-                    else:
-                        self.log.warning(f'Cluster changed, but force deployment is enabled.\n'
-                                         f'Last deployed cluster: {last_cluster}\n'
-                                         f'Current cluster: {self.current_cluster}')
+        last_cluster = deployment.get_last_cluster()
+        if last_cluster and last_cluster != self.current_cluster:
+            if not self.args.force:
+                self.log.warning(f'Skip deployment "{colors.blue(deployment)}" since the target cluster has changed: ')
+                self.log.warning(f'... last cluster is "{colors.red_bold(last_cluster)}"')
+                self.log.warning(f'... current cluster is "{colors.red_bold(self.current_cluster)}"')
+                self.log.warning(f'Force deployment to current cluster with {colors.bold("--force")}.')
+                return False
+            else:
+                self.log.warning(f'Target cluster has changed but forcing deployment "{colors.blue(deployment)}": ')
+                self.log.warning(f'... last cluster is "{colors.bold(last_cluster)}"')
+                self.log.warning(f'... current cluster is "{colors.bold(self.current_cluster)}"')
         return True
 
     def save_current_cluster_as_last_cluster(self, deployment):
-        if self.current_cluster and not os.path.exists(os.path.join(deployment.manifests_dir, '.last_cluster_api_url')):
+        if self.current_cluster:
             self.log.info(f'Saving current cluster as last deployed cluster')
-            with open(os.path.join(deployment.manifests_dir, '.last_cluster_api_url'), 'w') as f:
-                f.write(self.current_cluster)
+            deployment.set_last_cluster(self.current_cluster, self.args.force)

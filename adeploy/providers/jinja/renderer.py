@@ -79,12 +79,9 @@ class Renderer(Provider):
 
         return self.templates_dir, sorted([f.replace(f'{self.templates_dir}/', '') for f in files])
 
-    def get_template_output_path(self, deployment, template):
-        return Path(self.build_dir) \
-            .joinpath(deployment.namespace) \
-            .joinpath(self.name) \
-            .joinpath(deployment.release) \
-            .joinpath(template)
+    @staticmethod
+    def get_template_output_path(deployment, template):
+        return deployment.manifests_dir.joinpath(template)
 
     def render_template(self, deployment: Deployment, template_path: str, prefix: str = '...'):
         jinja_env.register_globals(self.env, deployment, self.log, self.templates_dir)
@@ -131,9 +128,11 @@ class Renderer(Provider):
 
     def run(self):
         self.log.debug(f'Working on deployment "{self.name}" ...')
-        self.clean_build_dir()
         template_dir, templates = self.load_templates()
         for deployment in self.load_deployments():
+
+            self.log.debug(f'Clean build dirs: {", ".join([colors.bold(d) for d in deployment.clean_build_dir()])}')
+
             self.log.info(f'Rendering deployment "{colors.blue(deployment)}" ...')
             for template in templates:
                 self.render_template(deployment, template)

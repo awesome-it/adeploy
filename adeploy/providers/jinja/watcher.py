@@ -17,7 +17,7 @@ class Watcher(Provider):
     macros_dirs: str = None
     auto_test: bool = False
     auto_deploy: bool = False
-    deploy_on_start : bool = False
+    deploy_on_start: bool = False
     watchers: list = []
     restart_rendering = False
     renderer = None
@@ -81,9 +81,9 @@ class Watcher(Provider):
 
     def run(self):
         self.log.debug(f'Working on deployment "{self.name}" ...')
-        self.clean_build_dir()
         template_dir, templates = self.renderer.load_templates()
         for deployment in self.renderer.load_deployments():
+            self.log.debug(f'Clean build dirs: {[colors.bold(d) for d in deployment.clean_build_dir()]}')
             if not self.deploy_on_start:
                 self.log.info(f'Rendering deployment "{colors.blue(deployment)}" ...')
             else:
@@ -94,7 +94,8 @@ class Watcher(Provider):
             )
             for template in templates:
                 self.renderer.render_template(deployment, template, prefix='Initial rendering:')
-                if self.deploy_on_start and os.path.exists(self.renderer.get_template_output_path(deployment, template)):
+                if self.deploy_on_start and os.path.exists(
+                        self.renderer.get_template_output_path(deployment, template)):
                     self.tester.test_maifest(self.renderer.get_template_output_path(deployment, template),
                                              prefix="Initial testing:")
                     self.deployer.deploy_manifest(self.renderer.get_template_output_path(deployment, template),

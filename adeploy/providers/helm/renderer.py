@@ -1,7 +1,7 @@
+import argparse
 import glob
 import os
 import shutil
-import argparse
 import subprocess
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -150,34 +150,29 @@ class Renderer(HelmProvider):
     def run(self):
 
         self.log.debug(f'Working on deployment "{self.name}" ...')
-        self.clean_build_dir()
-
         self.build_chart()
         self.run_hooks()
 
         for deployment in self.load_deployments():
 
-            output_path = Path(self.build_dir) \
-                .joinpath(deployment.namespace) \
-                .joinpath(self.name) \
-                .joinpath(deployment.release)
+            self.log.debug(f'Clean build dirs: {", ".join([colors.bold(d) for d in deployment.clean_build_dir()])}')
 
             self.log.info(f'Rendering chart "{colors.bold(self.name)}" '
                           f'version {colors.bold(self.get_chart_version())} '
                           f'and values for deployment "{colors.blue(deployment)}" '
-                          f'in "{colors.bold(output_path)}" ...')
+                          f'in "{colors.bold(deployment.manifests_dir)}" ...')
 
             try:
 
-                output_path.mkdir(parents=True, exist_ok=True)
-                values_path = f'{output_path}/values.yml'
+                deployment.manifests_dir.mkdir(parents=True, exist_ok=True)
+                values_path = f'{deployment.manifests_dir}/values.yml'
                 with open(values_path, 'w') as fd:
                     yaml.dump(deployment.config, fd)
 
                 output = helm_template(self.log, deployment, self.get_chart_dir(), values_path,
                                        skip_validate=self.skip_validate,
                                        skip_schema_validation=self.skip_schema_validation)
-                with open(f'{output_path}/manifest.yml', 'w') as fd:
+                with open(f'{deployment.manifests_dir}/manifest.yml', 'w') as fd:
                     fd.write(output.stdout)
 
             except CalledProcessError as e:
