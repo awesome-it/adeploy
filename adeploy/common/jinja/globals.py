@@ -15,7 +15,7 @@ import urllib.request
 import jinja2
 
 from logging import Logger
-from typing import Literal, Union
+from typing import List, Literal, Union
 from ruamel.yaml import YAML
 
 import adeploy.common.colors as colors
@@ -177,7 +177,8 @@ class Handler(object):
                       component: str = None,
                       part_of: str = None,
                       managed_by: str = 'adeploy',
-                      labels: Union[dict, list] = None, **kwargs) -> str:
+                      labels: Union[dict, list] = None,
+                      **kwargs: dict) -> str:
         """ Creates a dict of custom and common labels
 
         This can be used to create (and update) label objects ready to use in k8s manifests.
@@ -246,8 +247,8 @@ class Handler(object):
 
         return json.dumps(labels)
 
-    def include_file(self, path: str, direct: bool = False, render: bool = True, indent: int = 4, skip=None,
-                     escape=None) -> str:
+    def include_file(self, path: str, direct: bool = False, render: bool = True, indent: int = 4, skip: List[str] = None,
+                     escape: List[str] = None) -> str:
         """ Include and optionally render arbitrary files into your manifest
 
         Reads the content of the specified file and returns the corresponding format to include the read content
@@ -351,7 +352,8 @@ class Handler(object):
 
         return f'{prefix}{textwrap.indent(data, indent * " ")}'
 
-    def list_dir(self, dir: str, direct: bool = False, render: bool = True, indent: int = 4, skip=None, escape=None) -> dict:
+    def list_dir(self, dir: str, direct: bool = False, render: bool = True, indent: int = 4, skip: List[str] = None,
+                 escape: List[str] = None) -> dict:
         """ Include files from a directory
 
         This will include and optionally render all files from the given directory. Expect the `dir` arg, you can
@@ -386,7 +388,7 @@ class Handler(object):
 
     def create_secret(self, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
                       custom_cmd: bool = False, as_ref: bool = False,
-                      data: dict = None, **kwargs):
+                      data: dict = None, **kwargs: dict) -> str:
 
         """ Creates k8s secrets
 
@@ -486,7 +488,7 @@ class Handler(object):
         return json.dumps({'name': s.name, 'key': list(keys)[0]})
 
     def create_tls_secret(self, cert: str, key: str, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
-                          custom_cmd: bool = False):
+                          custom_cmd: bool = False) -> str:
         """ Creates a secret from type `kubernetes.io/tls`
 
         Creates a TLS secret from type `kubernetes.io/tls` by using [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
@@ -522,7 +524,7 @@ class Handler(object):
         return s.name
 
     def create_docker_registry_secret(self, server: str, username: str, password: str, email: str = None, name: str = None,
-                                      use_pass: bool = True, use_gopass_cat: bool = True, custom_cmd: bool = False):
+                                      use_pass: bool = True, use_gopass_cat: bool = True, custom_cmd: bool = False) -> str:
         """ Creates a secret from type "kubernetes.io/dockerconfigjson"
 
         Creates a secret from type "kubernetes.io/dockerconfigjson" that can be used i.e. as an image pull secret. This
@@ -566,11 +568,9 @@ class Handler(object):
         from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
         return GopassSecretProvider(path, log=self.log, use_cat=use_cat)
 
-        Args:
-            length: The length of the random string. Must be an integer of at least 16 characters.
-                    If omitted, the default length is 32 characters.
-            name:   The name to store the random string. If specified, the same random string will return for the
-                    same name during a single run of adeploy.
+    def value_from_ansible_vault(self, secret: str):
+        from adeploy.common.secrets_provider.ansible_vault_provider import AnsibleVaultSecretProvider
+        return AnsibleVaultSecretProvider(secret=secret, log=self.log)
 
     def from_shell_command(self, cmd: str):
         from adeploy.common.secrets_provider.shell_command_provider import ShellCommandSecretProvider
