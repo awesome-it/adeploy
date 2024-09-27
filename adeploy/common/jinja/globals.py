@@ -568,10 +568,6 @@ class Handler(object):
         from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
         return GopassSecretProvider(path, log=self.log, use_cat=use_cat)
 
-    def value_from_ansible_vault(self, secret: str):
-        from adeploy.common.secrets_provider.ansible_vault_provider import AnsibleVaultSecretProvider
-        return AnsibleVaultSecretProvider(secret=secret, log=self.log)
-
     def from_shell_command(self, cmd: str):
         from adeploy.common.secrets_provider.shell_command_provider import ShellCommandSecretProvider
         return ShellCommandSecretProvider(cmd, log=self.log)
