@@ -1,25 +1,33 @@
 import subprocess
+import sys
 from logging import Logger
 
 from adeploy.common import colors
-from adeploy.common.errors import EmptySecretError
-from adeploy.common.logging import get_logger
-from adeploy.common.secrets_provider import SecretsProvider
+from adeploy.common.secrets_provider.provider import SecretsProvider
 
 
 class ShellCommandSecretProvider(SecretsProvider):
-    REQUIRED_GOPASS_VERSION = '1.10.0'
-    def __init__(self, command: str, logger: Logger):
+    """
+    A secret provider that provides a secret from a shell command.
+    The secret is retrieved from the command output. 
+    The command is executed upon first value access and the result is stored in memory.
+    A ShellCommandSecretProvider object will return the same value for subsequent calls to get_value().
+    """
+    def __init__(self, command: str, log: Logger, ltrim: bool = False, rtrim: bool = False):
+        super().__init__(log, ltrim, rtrim)
+        self.__value = None
         if not command:
             raise ValueError('Command cannot be empty')
         self.command = command
-        if not logger:
-            self.log = get_logger()
-        else:
-            self.log = logger
 
-    def get_value(self):
-        self.log.debug(f'... executing command "{colors.bold(self.command)}"')
+    def get_id(self):
+        return self.command
+
+    def _get_value(self, log: Logger) -> str:
+        if self.__value:
+            return self.__value
+        
+        log.debug(f'... executing command "{colors.bold(self.command)}"')
         result = subprocess.run(self.command, shell=True, capture_output=True)
         result.check_returncode()
 
@@ -28,6 +36,7 @@ class ShellCommandSecretProvider(SecretsProvider):
         except UnicodeDecodeError:
             result = result.stdout
         if not result:
-            raise EmptySecretError(f'Cannot create secret: Command "{colors.bold(self.command)}" returned empty result')
-
-        return result
+            log.error(f'Command "{colors.bold(self.command)}" returned empty result')
+            sys.exit(1)
+        self.__value = result
+        return self.__value

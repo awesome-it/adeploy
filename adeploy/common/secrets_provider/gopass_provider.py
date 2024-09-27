@@ -10,21 +10,30 @@ from packaging.version import parse as parse_version
 from adeploy.common import colors
 from adeploy.common.args import get_args
 from adeploy.common.errors import InputError
-from adeploy.common.logging import get_logger
-from adeploy.common.secrets_provider import SecretsProvider
+from adeploy.common.secrets_provider.provider import SecretsProvider
 
 
 
 class GopassSecretProvider(SecretsProvider):
+    """
+    A secret provider that provides a secret from gopass.
+    The secret is retrieved from gopass using the path.
+    The path is searched in the gopass repositories in the order they are defined
+    in the environment variable ADEPLOY_GOPASS_REPOS or the command line argument --gopass-repo.
+    """
     REQUIRED_GOPASS_VERSION = '1.10.0'
-    def __init__(self, path: str, logger: Logger, use_cat: bool = True):
+    def __init__(self, path: str, log: Logger, use_cat: bool = True):
+        """
+        Initialize the GopassSecretProvider.
+        :param path: The path to the secret in gopass.
+        :param log: The logger to use.
+        :param use_cat: Use the gopass cat command instead of show.
+        """
+        super().__init__(log)
         if not path:
             raise ValueError('Path cannot be empty')
         self.path = path
-        if not logger:
-            self.log = get_logger()
-        else:
-            self.log = logger
+        self.use_cat = use_cat
 
         # Check GoPass version
         gopass_version = self.gopass_get_version()
@@ -32,18 +41,21 @@ class GopassSecretProvider(SecretsProvider):
             raise InputError(
                 f'Found gopass version {gopass_version} but version {GopassSecretProvider.REQUIRED_GOPASS_VERSION}+ is required.')
 
-    def get_value(self):
-        result = self.gopass_try_repos()
+    def get_id(self):
+        return self.path
+
+    def _get_value(self, log: Logger = None) -> str:
+        if not log:
+            log = self.log
+        result = self.gopass_try_repos(log)
         if result is None:
             raise InputError(f'Cannot find gopass value for {self.path} in repos {self.gopass_get_repos()}.')
 
         result.check_returncode()
 
         if isinstance(result.stdout, (bytes, bytearray)):
-            return result.stdout.lstrip();
-
+            return result.stdout.lstrip()
         else:
-
             num_lines = len(result.stdout.strip().split("\n"))
 
             # Strip front/back for single line, strip front for multi-line
@@ -73,11 +85,11 @@ class GopassSecretProvider(SecretsProvider):
 
         return repos
 
-    def gopass_try_repos(self) -> subprocess.CompletedProcess:
+    def gopass_try_repos(self, log: Logger) -> subprocess.CompletedProcess:
         result = None
         for repo in [Path(r) for r in GopassSecretProvider.gopass_get_repos()]:
             secret_path = repo.joinpath(self.path)
-            result = self.gopass_try(secret_path)
+            result = self.gopass_try(repo_path=secret_path, use_cat=self.use_cat, log=log)
 
             # Stop on success
             if result and result.returncode == 0 and len(result.stdout.strip()) > 0:
@@ -88,6 +100,7 @@ class GopassSecretProvider(SecretsProvider):
 
     def gopass_try(self,
                    repo_path: Union[Path, str],
+                   log: Logger,
                    explicit_pass=False,
                    skip_parsing=True,
                    use_cat: bool = True) -> subprocess.CompletedProcess:
@@ -98,9 +111,9 @@ class GopassSecretProvider(SecretsProvider):
                + (['-n'] if not use_cat and skip_parsing else [])
                + (['--password'] if not use_cat and explicit_pass else [])
                + [str(repo_path)])
-        self.log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
+        log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
         result = subprocess.run(cmd, capture_output=True)
-        self.log.debug(f'... command returned {colors.bold(result.returncode)}')
+        log.debug(f'... command returned {colors.bold(result.returncode)}')
 
         # Stop on success
         if result.returncode == 0 and len(result.stdout.strip()) > 0:
@@ -109,18 +122,14 @@ class GopassSecretProvider(SecretsProvider):
                 # Properly handle meta data
                 result.stdout = result.stdout.decode('utf-8')
                 if result.stdout.startswith('GOPASS-SECRET-1.0'):
-                    return self.gopass_try(repo_path, explicit_pass=explicit_pass, use_cat=False, skip_parsing=False)
+                    return self.gopass_try(repo_path=repo_path, log=log, explicit_pass=explicit_pass,
+                                           use_cat=False, skip_parsing=False)
                 if result.stdout.startswith('Password: '):
-                    return self.gopass_try(repo_path, explicit_pass=True, use_cat=False, skip_parsing=skip_parsing)
+                    return self.gopass_try(repo_path=repo_path, log=log, explicit_pass=True,
+                                           use_cat=False, skip_parsing=skip_parsing)
 
             except UnicodeDecodeError:
-                self.log.debug('Decoding failed ... assuming binary data')
+                log.debug('Decoding failed ... assuming binary data')
                 pass
 
             return result
-
-
-def gopass_get(path: Union[Path, str], log: Logger = None, use_cat: bool = True) -> str:
-    log.warning('gopass_get is deprecated, use GopassSecretProvider instead')
-    provider = GopassSecretProvider(path, log, use_cat)
-    return provider.get_value()
