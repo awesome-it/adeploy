@@ -22,7 +22,6 @@ import adeploy.common.colors as colors
 import adeploy.common.secrets as secret
 import adeploy.common.errors as errors
 
-
 class Handler(object):
     named_passwords = {}
 
@@ -564,7 +563,31 @@ class Handler(object):
 
         return s.name
 
-    def from_gopass(self, path: str, use_cat: bool = True):
+    def from_gopass(self, path: str, use_cat: bool = True) -> "GopassSecretProvider":
+        """
+        Get a secret from gopass.
+
+        Args:
+            path:   The path to the secret in gopass.\
+                    The path is searched in the gopass repositories in the order they are defined
+            use_cat: Use `gopass cat` instead of `gopass show`.
+
+        Returns:
+            gopass_secret:  The secret provider object. The object can either be used in the create_secret() function \
+                            or rendered directly in the Jinja template for debugging purposes. \
+                            Don't render a secret in the Jinja template in production code - this will likely break \
+                            CI setups.
+
+
+        !!!Example
+            ```{.yaml title="defaults.yml"}
+            secrets:
+              # Regular use. Secret is decrypted if missing on the cluster or --recreate-secrets is set.
+              my_secret: {{ create_secret(my_secret=from_gopass('/secret/path')) }}
+              # Debug only: Render the secret in the Jinja template.
+              my_secret: {{ from_gopass('/secret/path') }}
+            ```
+        """
         from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
         return GopassSecretProvider(path, log=self.log, use_cat=use_cat)
 
