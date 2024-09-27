@@ -562,13 +562,9 @@ class Handler(object):
 
         return s.name
 
-    def create_random_string(self, length: int = 32, name: str = None) -> str:
-
-        """ Creates a random string with a given length and ensured complexity.
-
-        The string can optionally be named. If a name is specified, the random string will be stored and returned
-        deterministically for the same name during a single run of adeploy.
-
+    def from_gopass(self, path: str, use_cat: bool = True):
+        from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
+        return GopassSecretProvider(path, log=self.log, use_cat=use_cat)
 
         Args:
             length: The length of the random string. Must be an integer of at least 16 characters.
@@ -576,30 +572,11 @@ class Handler(object):
             name:   The name to store the random string. If specified, the same random string will return for the
                     same name during a single run of adeploy.
 
-        Returns:
-            str: The generated random string.
+    def from_shell_command(self, cmd: str):
+        from adeploy.common.secrets_provider.shell_command_provider import ShellCommandSecretProvider
+        return ShellCommandSecretProvider(cmd, log=self.log)
 
-        !!!example
-            --8<-- "docs/common/secrets.md:example-docker"
-        """
+    def random_string(self, name: str, length: int = 32):
+        from adeploy.common.secrets_provider.random_provider import RandomSecretProvider
+        return RandomSecretProvider(name, length, log=self.log)
 
-        if not is_int(length):
-            raise ValueError('create_random_string() requires an integer as length')
-        if length < 16:
-            raise ValueError('create_random_string() requires a length of at least 16 characters')
-
-        if name in self.named_passwords:
-            return self.named_passwords[name]
-
-        alphabet = string.ascii_letters + string.digits
-        while True:
-            password = ''.join(secrets.choice(alphabet) for i in range(length))
-            if (any(c.islower() for c in password)
-                    and any(c.isupper() for c in password)
-                    and sum(c.isdigit() for c in password) >= 3):
-                break
-
-        if not name is None:
-            self.named_passwords[name] = password
-
-        return password

@@ -1,8 +1,9 @@
 colorama>=0.4.3
-Jinja2
-PyYAML
+Jinja2~=3.1.4
+PyYAML~=6.0.1
 ruamel.yaml>=0.16.12
 ruamel.yaml.clib>=0.2.2
 packaging>=20.4
 shortuuid>=1.0.1
 watchdog>=3.0.0
+jq~=1.8.0

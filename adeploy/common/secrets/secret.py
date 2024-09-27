@@ -3,18 +3,20 @@ import hashlib
 import json
 import shutil
 import subprocess
+import warnings
 
 from abc import ABC, abstractmethod
 from logging import Logger
 from pathlib import Path
 from pickle import dump, load
-from typing import Union
+from typing import Union, overload
 
 from adeploy.common import colors
-from adeploy.common.errors import EmptySecretError, RenderError
-from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider, gopass_get
+from adeploy.common.errors import RenderError
+from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
 from adeploy.common.kubectl import parse_kubectrl_apply, kubectl_get_secret, \
     kubectl_delete_secret, kubectl
+from adeploy.common.secrets_provider.provider import SecretsProvider
 from adeploy.common.secrets_provider.shell_command_provider import ShellCommandSecretProvider
 
 
@@ -22,9 +24,9 @@ class Secret(ABC):
     type: str = None
     name: str = None
     deployment = None
-    use_pass: bool = True
-    use_gopass_cat: bool = True
-    custom_cmd: bool = False
+    use_pass: bool = True           # Deprecated
+    use_gopass_cat: bool = True     # Deprecated
+    custom_cmd: bool = False        # Deprecated
 
     _name_prefix = 'secret-'
     _secrets = {}
@@ -104,33 +106,73 @@ class Secret(ABC):
                 else:
                     log.info(f'No orphaned secrets found.')
 
-    def get_value(self, data: Union[Path, str], log: Logger = None, dry_run: Union[bool, str] = False) -> str:
+    def __deprecated_get_value(self, data: Union[Path, str], log: Logger = None, dry_run: Union[bool, str] = False) -> str:
 
         if dry_run:
+            warnings.warn('Using deprecated value retrieval', FutureWarning)
             return '*****'
 
         if self.custom_cmd:
-            return ShellCommandSecretProvider(command=data, logger=log).get_value()
+            warnings.warn('The use of custom commands in create_secret is deprecated.'
+                          'Please use value_from_shell_command() instead.',
+                          FutureWarning)
+            return ShellCommandSecretProvider(command=data, log=log).get_value()
 
         if self.use_pass:
-            return GopassSecretProvider(path=data, logger=log, use_cat=self.use_gopass_cat).get_value()
-
+            warnings.warn('The use of gopass in create_secret() is deprecated.'
+                          'Please use value_from_shell_command() instead.',
+                          FutureWarning)
+            return GopassSecretProvider(path=data, log=log, use_cat=self.use_gopass_cat).get_value()
+        # A plaintext secret
+        warnings.warn('The use of plaintext in create_secret() is deprecated.'
+                      'Please use value_from_shell_command() instead.',
+                      FutureWarning)
         return data
+
+    def get_value(self, data: Union[Path, str, SecretsProvider], log: Logger = None, dry_run: Union[bool, str] = False) -> str:
+        if not isinstance(data, SecretsProvider):
+            return self.__deprecated_get_value(data, log, dry_run)
+        if dry_run:
+            return '*****'
+        return data.get_value(log=log)
 
     def __init__(self, deployment, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
                  custom_cmd: bool = False):
-
-        self.name = name if name else self.gen_name()
+        self.name = name if name else self._gen_name()
         self.deployment = deployment
+
+        # Remove this in the future
         self.use_pass = use_pass
         self.custom_cmd = custom_cmd
         self.use_gopass_cat = use_gopass_cat
+        if use_pass:
+            warnings.warn('The use of gopass in create_secret() is deprecated.'
+                          'Please use value_from_shell_command() instead.',
+                          FutureWarning)
+        if custom_cmd:
+            warnings.warn('The use of custom commands in create_secret is deprecated.'
+                          'Please use value_from_shell_command() instead.',
+                          FutureWarning)
+
 
     def __repr__(self):
         return f'{self.deployment.name}/{self.name}'
 
-    def gen_name(self):
-        return f'{Secret._name_prefix}{hashlib.sha1(json.dumps(self.__dict__).encode()).hexdigest()}'
+    def _gen_name(self):
+        obj_dict = {}
+        for key, val in self.__dict__.items():
+            if isinstance(val, str):
+                obj_dict[key] = val
+            elif isinstance(val, dict):
+                obj_dict[key] = {}
+                for sub_key, sub_val in val.items():
+                    if isinstance(sub_val, SecretsProvider):
+                        obj_dict[key].update({sub_key: sub_val.get_id()})
+                    else:
+                        obj_dict[key].update({sub_key: sub_val})  # Keep it as is
+            else:
+                obj_dict[key] = val
+        return f'{Secret._name_prefix}{hashlib.sha1(json.dumps(obj_dict).encode()).hexdigest()}'
 
     def get_path(self, build_dir):
         return Secret.get_secret_dir(build_dir, self.deployment.name).joinpath(self.deployment.namespace).joinpath(
