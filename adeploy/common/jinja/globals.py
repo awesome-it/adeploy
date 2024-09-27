@@ -4,19 +4,19 @@ in the Jinja templates in your `templates` folder.
 """
 import os
 import pathlib
-import secrets
+import sys
 import uuid
-from idlelib.configdialog import is_int
-from logging import Logger
-
 import shortuuid
+import jq
 import string
 import json
 import textwrap
 import urllib.request
 import jinja2
 
-from typing import Union
+from logging import Logger
+from typing import Literal, Union
+from ruamel.yaml import YAML
 
 import adeploy.common.colors as colors
 import adeploy.common.secrets as secret
@@ -31,6 +31,84 @@ class Handler(object):
         self.deployment = deployment
         self.log = log
         self.templates_dir = templates_dir
+
+
+    def from_json_or_yaml(self, path: str, jq_query: str = None, force_type: Literal['json','yaml'] = None) -> Union[dict, str, list]:
+        """ Returns data from an external JSON or YAML file. Optionally, a jq-like query can be applied.
+        Useful if a var is not in the `defaults.yml` or in the namespace/release configuration but
+        e.g. in an ansible repository.
+
+        Using the environment variable `ADEPLOY_EXTERNAL_INCLUDE_BASEDIR`, you can specify a base directory which
+        is used as prefix for the path to the file to import.
+
+        Args:
+            path: The path to the file to import. Variables are expanded.
+            jq_query: An optional jq-like query to apply to the imported structured data.
+            force_type: Force the file type to be either `json` or `yaml`. If not specified, the file type is determined
+
+        Returns:
+            data:   The content of the file or loaded by json.loads() or yaml.load().
+                    If a jq_query is given it is applied.
+
+        !!!Example
+            ```{.jinja hl_lines="4"}
+            db_host: {{ var_from_json_or_yaml(path='$PATH_TO_ANSIBLE_REPO/host_vars/db.yml', jq_query='.host') }}
+            ```
+
+        """
+        path = os.path.expandvars(path)
+        # Check if ADEPLOY_EXTERNAL_INCLUDE_BASEDIR is set and build the alternate path
+        external_base_dir = os.getenv('ADEPLOY_EXTERNAL_INCLUDE_BASEDIR')
+        if external_base_dir:
+            external_base_dir = os.path.expandvars(external_base_dir)
+
+        if external_base_dir and os.path.exists(os.path.join(external_base_dir, path)):
+            path = os.path.join(external_base_dir, path)
+        else:
+            path = os.path.expandvars(path)
+
+        if not os.path.exists(path):
+            self.log.error(f'Cannot import from {path}: File not found')
+            sys.exit(1)
+
+        self.log.debug(f'Importing from: {path}' + f' with query: {jq_query} ' if jq_query else 'without query')
+
+        if force_type:
+            file_extension = force_type
+        else:
+            file_extension = os.path.splitext(path)[-1].lower()
+        if not file_extension in ['.json', '.yaml', '.yml']:
+            self.log.error(f"Unsupported file extension: {file_extension}. Supported extensions are: .json, .yaml, .yml")
+            sys.exit(1)
+
+        # Load the file based on its extension
+        with open(path, 'r') as f:
+            if file_extension in ['.json']:
+                data = json.load(f)
+            elif file_extension in ['.yaml', '.yml']:
+                yaml = YAML(typ='safe', pure=True)
+                # Add a custom constructor for !vault tags (ansible-vault)
+                yaml.constructor.add_constructor('!vault', lambda loader, node: loader.construct_scalar(node))
+                data = yaml.load(f)
+
+        # If no query is provided, return the entire content of the file
+        if not jq_query:
+            return data
+
+        # Apply jq-like query to the data
+        try:
+            results = jq.all(jq_query, data)  # Get all matches
+        except Exception as e:
+            self.log.error(f"Error applying query: {jq_query}. Error: {e}")
+            sys.exit(1)
+
+        # Return the results or log an error if no matches were found
+        if len(results) == 0:
+            self.log.error(f"No matches found for query: {jq_query} in {data}")
+            sys.exit(1)
+        elif len(results) > 1:
+            return results
+        return results[0]
 
     def uuid(self, short: bool = False, length: int = 8) -> str:
         """ Generates a UUIDv4 or a short UUID
@@ -118,7 +196,7 @@ class Handler(object):
             part_of: Creates standard label `app.kubernetes.io/part-of`, the name of a higher level application
                 this one is part of (e.g. "wordpress").
             managed_by: Creates standard label `app.kubernetes.io/managed-by`, the tool being used to manage the
-                operation of an application (e.g. "adpeloy")
+                operation of an application (e.g. "adeploy")
             labels: An optional dict or list with custom labels to use.
             **kwargs: Optionally, more labels can be specified as args.
 
@@ -186,7 +264,7 @@ class Handler(object):
             indent: Indents the content block for the specified amount.
             skip: A list of characters to remove from the read file content.
                 See [Skip & Escape](includes.md#skip-escape).
-            escape: A list of characters to esdacpe from the read file content.
+            escape: A list of characters to escape from the read file content.
                 See [Skip & Escape](includes.md#skip-escape).
 
         Returns:
@@ -331,7 +409,7 @@ class Handler(object):
                 in `valueFrom.secretKeyRef`.
             data: A dict containing secret key as key and the secret value which is either a direct value, a custom
                 command or a Gopass path.
-            **kwargs: Alernatively to the dict in `data`, the secret key and value can be specified in kwargs.
+            **kwargs: Alternatively to the dict in `data`, the secret key and value can be specified in kwargs.
 
         Returns:
             str: Either a YAML dict including `name` and `key` to use in `valueFrom.secretKeyRef` or the generated or
@@ -415,7 +493,7 @@ class Handler(object):
         In doing so, you can specify a Gopass path (default), a custom command (`custom_cmd=True`) or direct data
         (`use_pass=False`) for the `cert` and `key` values.
 
-        See [Create TLS Secrets](secrets.md#create-tls-secrets-for-ingress) for details and exmaples.
+        See [Create TLS Secrets](secrets.md#create-tls-secrets-for-ingress) for details and examples.
 
         Args:
             cert: Gopass path to a TLS certificate, a custom command or direct certificate data.
