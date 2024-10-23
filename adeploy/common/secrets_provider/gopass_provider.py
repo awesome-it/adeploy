@@ -113,7 +113,7 @@ class GopassSecretProvider(SecretsProvider):
                + [str(repo_path)])
         log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
         result = subprocess.run(cmd, capture_output=True)
-        log.debug(f'... command returned {colors.bold(result.returncode)}')
+        log.debug(f'... command exited with return code {colors.bold(result.returncode)}')
 
         # Stop on success
         if result.returncode == 0 and len(result.stdout.strip()) > 0:
