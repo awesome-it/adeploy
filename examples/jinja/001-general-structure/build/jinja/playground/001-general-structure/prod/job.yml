@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: 001-general-structure-prod-ping-f6f0c49a-3ad8-4a75-8577-0c5e735d6edd
+  name: 001-general-structure-prod-ping-ee5831ae-9b5a-4c3e-9b4c-df15e7c724d7
   namespace: playground
   labels:
     app.kubernetes.io/part-of: 001-general-structure
@@ -10,7 +10,7 @@ metadata:
 spec:
   template:
     metadata:
-      name: 001-general-structure-prod-ping-9504c0a7-479a-4312-82a0-0cee86876c6e
+      name: 001-general-structure-prod-ping-7b66dbc3-5c6d-4a58-a0ef-4f908a75ced2
       labels:
         app.kubernetes.io/part-of: 001-general-structure
         app.kubernetes.io/instance: prod
