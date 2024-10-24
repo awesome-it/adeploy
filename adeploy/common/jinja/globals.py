@@ -387,11 +387,10 @@ class Handler(object):
 
     def create_secret(self, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
                       custom_cmd: bool = False, as_ref: bool = False,
-                      data: dict = None, **kwargs: dict) -> str:
-
+                      data: dict = None, **kwargs: Dict[str, "SecretsProvider"]) -> str:
         """ Creates k8s secrets
 
-        Creates a k9s secret if it does not exist and returns the secret name. It won't overwrite any existing secret.
+        Creates a k8s secret if it does not exist and returns the secret name. It won't overwrite any existing secret.
         If `adeploy --recreate-secrets` was specified, the secret will be re-created. This can be used to update the
         secret or auto-rotate random hashes.
 
@@ -400,17 +399,25 @@ class Handler(object):
         Args:
             name: An optional secret name. If not specified, a unique secret name will be created that is deterministic
                 to the given secret data.
-            use_pass: Set `False` to use [direct method](secrets.md#direct-method) and set the secret value in your
-                configuration. Note that this is highly discouraged.
-            use_gopass_cat: `adeploy` is using `gopass cat` to retrieve passwords in order to support
-                [binary values](https://github.com/gopasspw/gopass/blob/master/docs/features.md#support-for-binary-content)
-                in Gopass. Set `False` to use `gopass show` instead.
-            custom_cmd: Use a custom bash command to retrieve a password and skip using Gopass.
             as_ref: Format the return value as a YAML object including `name` and `key` so that it can be used i.e.
                 in `valueFrom.secretKeyRef`.
-            data: A dict containing secret key as key and the secret value which is either a direct value, a custom
-                command or a Gopass path.
-            **kwargs: Alternatively to the dict in `data`, the secret key and value can be specified in kwargs.
+            **kwargs:   The secret data to use. The key is the secret key and the value is the secret data.
+                        The secret data must be passed as SecretProvider object
+            use_pass:  __Deprecated!__ Don't use and replace by kwarg using the Gopass SecretProvider.
+            use_gopass_cat:  __Deprecated!__ Don't use and replace by kwarg using the Gopass SecretProvider.
+            custom_cmd:  __Deprecated!__ Don't use and replace by kwarg using the Shell SecretProvider.
+            data: __Deprecated!__ Don't use and replace by kwargs using SecretProviders
+
+        Warning:
+            `use_pass`:  is deprecated and will be removed in a future version. Use `from_gopass()` instead.
+
+            `use_gopass_cat`: is deprecated and will be removed in a future version. Use `from_gopass()` instead.
+
+            `custom_cmd`: is deprecated and will be removed in a future version. Use `from_shell_command()` instead.
+
+            `data` is deprecated and will be removed without replacement in a future version.
+            Pass all secret data as kwargs instead.
+
 
         Returns:
             str: Either a YAML dict including `name` and `key` to use in `valueFrom.secretKeyRef` or the generated or

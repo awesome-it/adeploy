@@ -57,7 +57,7 @@ In order to create the docs, you need to install `mkdocs-material` and dependenc
 pipx install mkdocs
 pipx inject mkdocs mkdocs-material
 pipx inject mkdocs beautifulsoup4 # Required for hooks/asciinema.py
-pipx inject mkdocs `"mkdocstrings[python]"` # Required to read docstrings from python files i.e. filters.py
+pipx inject mkdocs "mkdocstrings[python]" # Required to read docstrings from python files i.e. filters.py
 ```
 
 Now you run the `mkdocs` live preview at http://127.0.0.1:8000/ as follows:

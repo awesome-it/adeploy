@@ -3,12 +3,11 @@
 <!-- --8<-- [start:summary] -->
 `adeploy` can create secrets for you in various ways:
 
-* Retrieve secrets from the [Gopass password manager](https://www.gopass.pw/) or any other command line based password manager
+* Retrieve secrets from the [supported secret Sources](#retrieving-sensitive-data) like gopass or shell commands
 * Retrieve or auto-generate (rotate) arbitrary secrets using bash commands
-* Use [ansible-vault](https://docs.ansible.com/ansible/latest/vault_guide/index.html).
 
 Since `adeploy` will create non-existing secrets but won't touch existing secrets[^1], a very simple but effective concept
-of secret management can be established and `adeploy` can be used to automate everything while exluding secret handling 
+of secret management can be established and `adeploy` can be used to automate everything while excluding secret handling 
 in CI/CD pipelines.
 
 [^1]: 
@@ -26,10 +25,10 @@ The idea behind handling secret in `adeploy` is to separate the process of deplo
 
 ### Deployment with creating or updating secrets
 
-Since the first part requires to retrieve sensitive data i.e. passwords, tokens or certificates, this should be executed
-by a trusted person and should never be executed by an automation. In most cases, this part will be executed on the local
-machine by the author of the `adeploy` deployment template. We assume that this person also has access to a local password
-store (i.e. [Gopass](https://www.gopass.pw/)) or other compatible password managers that provide a command line interface.
+Since the first part requires to retrieve sensitive data i.e. passwords, tokens or certificates, this must be executed
+by a trusted person and should never be executed by an automation. In most cases, this part will be executed on the
+local machine by the author of the `adeploy` deployment template. This person also needs access to a local password
+store (i.e. [Gopass](https://www.gopass.pw/)) or other compatible password source that provide a command line interface.
 
 !!!warning "Deployment with creating or updating secrets"
     If secrets are missing on the destination cluster, `adeploy` tries to create them and thus assumes a 
@@ -37,9 +36,9 @@ store (i.e. [Gopass](https://www.gopass.pw/)) or other compatible password manag
 
 ### Deployment without handling secrets
 
-The deployment part that is not touching the secrets must not be executed by a person having access to sensitive data 
-and thus is particularly suitable for automation. This includes changing all resources excluding secrets which is the
-most common case when changing k8s deployments.
+The deployment part that is not touching the secrets does not need to be executed by a person having access to sensitive
+data and thus is particularly suitable for automation. This includes changing all resources excluding secrets which is 
+the most common case when changing k8s deployments.
 
 !!!success "Deployment without handling secrets"
     If no secrets are missing on the destination cluster, `adeploy` assumes a 
@@ -74,19 +73,32 @@ the Helm chart configuration as follows:
 
 ## Retrieving Sensitive Data
 
-`adeploy` support different ways to retrieve (or generate) the sensitive data to create the secrets:
+`adeploy` supports different ways to retrieve (or generate) the sensitive data to create the secrets.
+All supported sources of secret data are accessed by a corresponding jinja function which returns a `SecretsProvider` 
+object. These objects are passed to a secret creation function - e.g. `create_secret()`. 
+`SecretsProvider` objects can be rendered in order to test the secret retrieval - this implies a 
+[Deployment with creating or updating secrets](#deployment-with-creating-or-updating-secrets) and must therefore not 
+be used in a CI/CD pipeline. Best practice is to use the retrieval function as an argument to `create_secret()`
 
 ### Gopass
 
-By default, the secret value is taken from [Gopass password store](https://www.gopass.pw/) that is properly installed
-and setup on the local machine that will run the [trusted deployment](#deployment-with-creating-or-updating-secrets). 
+Secrets can be taken from [Gopass password store](https://www.gopass.pw/) that is properly installed
+and setup on the local machine that will run the [trusted deployment](#deployment-with-creating-or-updating-secrets).
 
-The path to the password of the Gopass repo must be specified in the `create_secret()` functions:
+Gopass secrets are accessed using the [`from_gopass(paht="...")`](/common/functions/#adeploy.common.jinja.globals.Handler.from_gopass) function.
+
+
+The path to the password of the Gopass repo must be specified in the `from_gopass()` function:
 <!-- --8<-- [start:example-gopass] -->
 ```{.jinja}
+
+{# Debug, print the secret value #}
+{{ from_gopass(path="/my/path") }}
+
+{# Create a secret with the secret value and use it in a deployment #}
 my_deployment:
   config:
-    secretName: {{ create_secret(my_secret="/my/path") }}
+    secretName: {{ create_secret(my_secret=from_gopass(path="/my/path")) }}
     secretKey: my_secret
 ```
 
@@ -98,7 +110,7 @@ variable `ADEPLOY_GOPASS_REPOS`.
 
 !!!note "Example"
 
-    If `ADEPLOY_GOPASS_REPOS=a,b` is set and `create_secret(key='/my/path')` is used, the following 
+    If `ADEPLOY_GOPASS_REPOS=a,b` is set and `from>_gopass(path='/my/path')` is used, the following 
     Gopass commands are tried to retrieve the secret value:
     
     - `gopass cat /my/path`
@@ -114,27 +126,50 @@ variable `ADEPLOY_GOPASS_REPOS`.
     See [Support for Binary Content](https://github.com/gopasspw/gopass/blob/master/docs/features.md#support-for-binary-content)
     for details.
 
-### Custom Password Command
+### Random password
+adeploy supports the generation of random passwords using the [`random_string()`](/common/functions/#adeploy.common.jinja.globals.Handler.random_string) function. This function takes a optional length
 
-If you don't use [Gopass password store](https://www.gopass.pw/), you can use custom commands i.e. bash scripts or 
-other password managers that provide a compatible command line interface by passing `custom_cmd=True` as follows:
+This function requires a name and will create a random password. During a run of adeploy the password won't change,
+subsequent runs will update the password. Calls to `random_string()` using the same ame name will return the same
+password.
 
+<!-- --8<-- [start:example-random-password] -->
 ```{.jinja}
+
+{# Debug, print the secret value #}
+{{ random_string(name="example", length=64) }}
+
+{# Create a secret with the secret value and use it in a deployment #}
 my_deployment:
   config:
-    secretName: {{ create_secret(
-                    custom_cmd=True, 
-                    my_key='my-custom-tool --arg1=$SOME_ENV_VARS my_password') }}
-    secretKey: my_key
+    secretName: {{ create_secret(my_secret=random_string(name="example")) }}
+    secretKey: my_secret
+```
+
+### Custom Password Command
+
+You can use custom commands i.e. bash scripts or other password managers that provide a compatible command line
+interface using the [`from_shell_command()`](/common/functions/#adeploy.common.jinja.globals.Handler.from_shell_command)
+function as follows:
+
+```{.jinja}
+
+{# Debug, print the secret value #}
+{{ from_shell_command(cmd="cat /all_my_passwords | head -n 1") }}
+
+{# Create a secret with the secret value and use it in a deployment #}
+my_deployment:
+  config:
+    secretName: {{ create_secret(my_secret=from_shell_command(cmd="cat /all_my_passwords | head -n 1")) }}
+    secretKey: my_secret
 ```
 
 This will create a secret with a key `my_key` and the stdout of the custom command as value. 
 
 !!!note
 
-    Note that the command string is used to create a unique secret name. So if you are using the same command to create 
-    multiple secrets i.e. using a random-password script for auto-rotation, you should make sure to add a unique expression
-    to the command.
+    Note that the command string is used to create a unique secret name. Don't use this function to call a 
+    random-password script for auto-rotation - use the `random_string()` function instead.
 
 !!!note
 
