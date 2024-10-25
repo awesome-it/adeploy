@@ -1,3 +1,4 @@
+import sys
 from abc import ABC, abstractmethod
 from typing import final
 
@@ -12,13 +13,23 @@ class SecretsProvider(ABC):
     It provides the ability to reference a secret without the need of actually decrypting it.
     """
 
-    def __init__(self, log, ltrim: bool = False, rtrim: bool = False):
+    __created_secrets = {}
+
+    def __init__(self, name, log, ltrim: bool = False, rtrim: bool = False):
         if not log:
             self.log = get_logger()
         else:
             self.log = log
         self.ltrim = ltrim
         self.rtrim = rtrim
+        if not name:
+            name = self.get_id()
+        if not name in self.__created_secrets:
+            self.__created_secrets[name] = self
+        else:
+            self.log.error(f'Secret "{colors.bold(name)}" of tye {self.__class__} already exists')
+            self.log.error(f'Reference the existing secret instead of creating a new one')
+            sys.exit(1)
 
     def __str__(self):
         """

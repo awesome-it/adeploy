@@ -15,7 +15,7 @@ import urllib.request
 import jinja2
 
 from logging import Logger
-from typing import List, Literal, Union
+from typing import Dict, List, Literal, Union
 from ruamel.yaml import YAML
 
 import adeploy.common.colors as colors
@@ -599,10 +599,18 @@ class Handler(object):
         return GopassSecretProvider(path, log=self.log, use_cat=use_cat)
 
     def from_shell_command(self, cmd: str):
+        """
+
+        Args:
+            cmd (): The command to execute. It will be passed to `subprocess.run(cmd, shell=True)
+
+        Returns:
+
+        """
         from adeploy.common.secrets_provider.shell_command_provider import ShellCommandSecretProvider
         return ShellCommandSecretProvider(cmd, log=self.log)
 
-    def random_string(self, name: str, length: int = 32):
+    def random_string(self, length: int = 32):
         from adeploy.common.secrets_provider.random_provider import RandomSecretProvider
-        return RandomSecretProvider(name, length, log=self.log)
+        return RandomSecretProvider(length, log=self.log)
 

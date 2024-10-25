@@ -1,5 +1,6 @@
 import secrets
 import string
+import hashlib
 
 from adeploy.common.secrets_provider.provider import SecretsProvider
 
@@ -8,24 +9,19 @@ class RandomSecretProvider(SecretsProvider):
     """
     A secret provider that provides a random secret.
     The secret is generated once and stored in memory.
-    During a run of adeploy, the same secret will be returned for the same name.
     """
 
-    __named_passwords = {}
 
-    def __init__(self, name: str, length: int = 32, log=None):
-        super().__init__(log)
-        if not name:
-            raise ValueError('Name cannot be empty')
-        self.name = name
-        if not self.name in RandomSecretProvider.__named_passwords:
-            self.__named_passwords[self.name] = RandomSecretProvider.get_random_string(length)
+    def __init__(self, length: int = 32, log=None):
+        random_string = RandomSecretProvider.get_random_string(length)
+        super().__init__(name=random_string, log=log)
+        self.value = random_string
 
     def _get_value(self, log) -> str:
-        return RandomSecretProvider.__named_passwords[self.name]
+        return self.value
 
     def get_id(self):
-        return self.name
+        return hashlib.sha256(self.value.encode()).hexdigest()
 
     @classmethod
     def get_random_string(cls, length: int):

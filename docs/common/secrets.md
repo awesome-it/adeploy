@@ -176,7 +176,18 @@ This will create a secret with a key `my_key` and the stdout of the custom comma
     Note that you can use environment variables (i.e. `$SOME_ENV_VARS`) in your command which are taken from the executing
     shells environment.
 
-### Direct Method
+!!!warning
+
+    Custom commands are a very powerful feature. Be aware that the command is executed on the local machine and this
+    can be a security risk. Always use this feature with caution and only with trusted commands. If you're using this
+    to regularly access a currently unsupported secret source, consider to implement a new secret provider.
+
+### Plaintext Secrets
+
+!!!danger
+
+    You will have sensitive data in your `defaults.yml` or in your namespace/release configuration which might be
+    uploaded to a Git repo or similar. This is strongly discouraged!
 
 To specify a secret value directly in your configuration, you can prevent retrieving the data by passing `use_pass=False` 
 as follows:
@@ -188,10 +199,7 @@ myjinjatemplate:
     secretKey: my_key
 ```
 
-!!!danger
 
-    You will have sensitive data in your `defaults.yml` or in your namespace/release configuration which might be uploaded
-    to a Git repo or similar. This is strongly discouraged!
 
 ## Examples
 

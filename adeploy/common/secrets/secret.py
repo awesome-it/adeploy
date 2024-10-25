@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from logging import Logger
 from pathlib import Path
 from pickle import dump, load
-from typing import Union, overload
+from typing import Union
 
 from adeploy.common import colors
 from adeploy.common.errors import RenderError
@@ -151,6 +151,10 @@ class Secret(ABC):
                           FutureWarning)
         if custom_cmd:
             warnings.warn('The use of custom commands in create_secret is deprecated.'
+                          'Please use value_from_shell_command() instead.',
+                          FutureWarning)
+        if not use_pass and not custom_cmd:
+            warnings.warn('The use of plaintext in create_secret() is deprecated.'
                           'Please use value_from_shell_command() instead.',
                           FutureWarning)
 
