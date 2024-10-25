@@ -606,14 +606,14 @@ class Handler(object):
 
         return s.name
 
-    def from_gopass(self, path: str, use_cat: bool = True) -> "GopassSecretProvider":
+    def from_gopass(self, path: str, use_show: bool = False) -> "GopassSecretProvider":
         """
         Get a secret from gopass.
 
         Args:
             path:   The path to the secret in gopass.\
                     The path is searched in the gopass repositories in the order they are defined
-            use_cat: Use `gopass cat` instead of `gopass show`.
+            use_show: Use `gopass show` instead of `gopass cat`.
 
         Returns:
             gopass_secret:  The secret provider object. The object can either be used in the create_secret() function \
@@ -632,7 +632,7 @@ class Handler(object):
             ```
         """
         from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
-        return GopassSecretProvider(path, log=self.log, use_cat=use_cat)
+        return GopassSecretProvider(path, log=self.log, use_show=use_show)
 
     def from_shell_command(self, cmd: str) -> "ShellCommandSecretProvider":
         """
