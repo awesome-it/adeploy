@@ -10,7 +10,7 @@ secrets:
                 'cat namespaces/playground/secrets/my_secret_test'
                 )) }}
 
-  my_secret: {{ create_secret(as_ref=True, my_secret=from_shell_command('cat namespaces/playground/secrets/my_secret_test')) }}
+  my_secret: {{ create_secret(as_ref=True, my_secret=from_shell_command('cat namespaces/playground/secrets/my_secret_test | head -n 1')) }}
 
 
 ingress:
