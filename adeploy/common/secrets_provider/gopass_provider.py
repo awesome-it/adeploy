@@ -22,6 +22,7 @@ class GopassSecretProvider(SecretsProvider):
     in the environment variable ADEPLOY_GOPASS_REPOS or the command line argument --gopass-repo.
     """
     REQUIRED_GOPASS_VERSION = '1.10.0'
+    __found_version = None
     def __init__(self, path: str, log: Logger, use_cat: bool = True):
         """
         Initialize the GopassSecretProvider.
@@ -29,17 +30,20 @@ class GopassSecretProvider(SecretsProvider):
         :param log: The logger to use.
         :param use_cat: Use the gopass cat command instead of show.
         """
-        super().__init__(log)
+        if not GopassSecretProvider.__found_version:
+            GopassSecretProvider.__found_version = GopassSecretProvider.gopass_get_version()
+            # Check GoPass version
+            if parse_version(GopassSecretProvider.__found_version) < parse_version(
+                    GopassSecretProvider.REQUIRED_GOPASS_VERSION):
+                raise InputError(
+                    f'Found gopass version {GopassSecretProvider.__found_version} but version {GopassSecretProvider.REQUIRED_GOPASS_VERSION}+ is required.')
+        super().__init__(name=path, log=log)
         if not path:
             raise ValueError('Path cannot be empty')
         self.path = path
         self.use_cat = use_cat
 
-        # Check GoPass version
-        gopass_version = self.gopass_get_version()
-        if parse_version(gopass_version) < parse_version(GopassSecretProvider.REQUIRED_GOPASS_VERSION):
-            raise InputError(
-                f'Found gopass version {gopass_version} but version {GopassSecretProvider.REQUIRED_GOPASS_VERSION}+ is required.')
+
 
     def get_id(self):
         return self.path

@@ -14,11 +14,11 @@ class ShellCommandSecretProvider(SecretsProvider):
     A ShellCommandSecretProvider object will return the same value for subsequent calls to get_value().
     """
     def __init__(self, command: str, log: Logger, ltrim: bool = False, rtrim: bool = False):
-        super().__init__(log, ltrim, rtrim)
         self.__value = None
         if not command:
             raise ValueError('Command cannot be empty')
         self.command = command
+        super().__init__(name=command, log=log, ltrim=ltrim, rtrim=rtrim)
 
     def get_id(self):
         return self.command
