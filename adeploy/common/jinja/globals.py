@@ -60,6 +60,11 @@ class Handler(object):
                             jq_query='.host'
                         ) }}
             ```
+        !!!Info "jq / yq queries"
+
+            The external data is first transformed into python data objects, then the jq query is applied.
+            Therefore, jq is well suited to also filter you yaml data. Have a look at the
+            [jq manual](https://jqlang.github.io/jq/manual/) for details.
 
         """
         path = os.path.expandvars(path)
