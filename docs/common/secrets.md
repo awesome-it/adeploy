@@ -188,13 +188,12 @@ This will create a secret with a key `my_key` and the stdout of the custom comma
     You will have sensitive data in your `defaults.yml` or in your namespace/release configuration which might be
     uploaded to a Git repo or similar. This is strongly discouraged!
 
-To specify a secret value directly in your configuration, you can prevent retrieving the data by passing `use_pass=False` 
-as follows:
+To specify a secret value directly in your configuration, use the from_plaintext() function.:
 
 ```{.jinja}
 myjinjatemplate:
   config:
-    secretName: {{ create_secret(secret_name, use_pass=False, my_key=my_secret_value) }}
+    secretName: {{ create_secret(secret_name, my_key=from_plaintext("my_secret_value")) }}
     secretKey: my_key
 ```
 
@@ -208,10 +207,12 @@ myjinjatemplate:
 ```{.jinja title="namespaces/playground/prod.yml"}
 secrets:
   registry: {{ create_docker_registry_secret(
-               server='registry.awesome-it.de',
-               username='sa_registry_ro',
-               custom_cmd=True,
-               password='cat namespaces/playground/secrets/my_secret_prod') }}
+                   server='registry.awesome-it.de',
+                   username='sa_registry_ro',
+                   password=from_shell_command(
+                        'cat namespaces/playground/secrets/my_secret_prod'
+                   )
+               ) }}
 ```
 
 ```{.jinja title="templates/deployment.yml" hl_lines="9-10"}
@@ -240,8 +241,13 @@ ingress:
         - mydomain.com
       secretName: {{ create_tls_secret(
                       custom_cmd=True,
-                      cert='cat namespaces/playground/secrets/domain_prod/mydomain.com.crt',
-                      key='cat namespaces/playground/secrets/domain_prod/mydomain.com.key') }}
+                      cert=from_shell_command(
+                        'cat namespaces/playground/secrets/domain_prod/mydomain.com.crt'
+                      ),
+                      key=from_shell_command(
+                        'cat namespaces/playground/secrets/domain_prod/mydomain.com.key'
+                      )
+                    ) }}
 ```
 
 ```{.jinja title="templates/ingress.yml" hl_lines="8-9"}
