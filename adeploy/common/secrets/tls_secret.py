@@ -2,9 +2,11 @@ import os
 import subprocess
 import tempfile
 from logging import Logger
+from typing import Union
 
 from adeploy.common.kubectl import kubectl_create_secret
 from adeploy.common.secrets.secret import Secret
+from adeploy.common.secrets_provider.provider import SecretsProvider
 
 _DUMMY_DATA_CRT = """
 -----BEGIN CERTIFICATE-----
@@ -69,7 +71,7 @@ class TlsSecret(Secret):
     cert: str = None
     key: str = None
 
-    def __init__(self, deployment, cert: str, key: str, name: str = None, use_pass: bool = True,
+    def __init__(self, deployment, cert: Union[SecretsProvider, str], key: Union[SecretsProvider, str], name: str = None, use_pass: bool = True,
                  use_gopass_cat: bool = True, custom_cmd: bool = False):
         self.cert = cert
         self.key = key

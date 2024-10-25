@@ -493,7 +493,12 @@ class Handler(object):
 
         return json.dumps({'name': s.name, 'key': list(keys)[0]})
 
-    def create_tls_secret(self, cert: str, key: str, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
+    def create_tls_secret(self,
+                          cert: Union[str, "SecretsProvider"],
+                          key: Union[str, "SecretsProvider"],
+                          name: str = None,
+                          use_pass: bool = True,
+                          use_gopass_cat: bool = True,
                           custom_cmd: bool = False) -> str:
         """ Creates a secret from type `kubernetes.io/tls`
 
@@ -504,12 +509,26 @@ class Handler(object):
         See [Create TLS Secrets](secrets.md#create-tls-secrets-for-ingress) for details and examples.
 
         Args:
-            cert: Gopass path to a TLS certificate, a custom command or direct certificate data.
-            key: Gopass path to the TLS certificate key, a custom command or direct key data.
+            cert:   A SecretsProvider object which provides the server certificate.
+                    __Deprecated__: If a string is passed instead of a SecretsProvider object, the certificate is
+                    retrieved using the deprecated options below.
+
+            key: A SecretsProvider object which provides the certificate key data.
+                __Deprecated!__ If a string is passed instead of a SecretsProvider object, the certificate key is
+                retrieved using the deprecated options below.
             name: An optional name for the secret, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
-            use_pass: Skip using Gopass in order to directly specify the TLS certificate and key, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
-            use_gopass_cat: Skip using `gopass cat` in favor of `gopass show`, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
-            custom_cmd: Use a custom command to retrieve the data. See [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+            use_pass:  __Deprecated!__ Don't use and replace by kwarg using the Gopass SecretProvider.
+            use_gopass_cat:  __Deprecated!__ Don't use and replace by kwarg using the Gopass SecretProvider.
+            custom_cmd:  __Deprecated!__ Don't use and replace by kwarg using the Shell SecretProvider.
+
+        Warning:
+            `cert`:  After the deprecation period, a passed string will be treated as certificate data.
+
+            `use_pass`:  is deprecated and will be removed in a future version. Use `from_gopass()` instead.
+
+            `use_gopass_cat`: is deprecated and will be removed in a future version. Use `from_gopass()` instead.
+
+            `custom_cmd`: is deprecated and will be removed in a future version. Use `from_shell_command()` instead.
 
         Returns:
             str: The generated or specified secret name, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
@@ -529,29 +548,39 @@ class Handler(object):
                           f'for deployment "{colors.blue(self.deployment)} ...')
         return s.name
 
-    def create_docker_registry_secret(self, server: str, username: str, password: str, email: str = None, name: str = None,
-                                      use_pass: bool = True, use_gopass_cat: bool = True, custom_cmd: bool = False) -> str:
+    def create_docker_registry_secret(self,
+                                      server: str,
+                                      username: str,
+                                      password: Union["SecretsProvider", str],
+                                      email: str = None,
+                                      name: str = None,
+                                      use_pass: bool = True,
+                                      use_gopass_cat: bool = True,
+                                      custom_cmd: bool = False) -> str:
         """ Creates a secret from type "kubernetes.io/dockerconfigjson"
 
-        Creates a secret from type "kubernetes.io/dockerconfigjson" that can be used i.e. as an image pull secret. This
-        function is using [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create), hence you can either
-        retrieve the secret from Gopass (default), use a custom command (`custom_cmd=True`) or specify the data in place.
+        Creates a secret from type "kubernetes.io/dockerconfigjson" that can be used i.e. as an image pull secret.
 
         See [Create Image Pull Secret](secrets.md#create-image-pull-secret) for details and examples.
 
         Args:
             server: The server name for the Docker registry. Must be specified directly.
             username: The username for the Docker registry. Must be specified directly.
-            password: The password for the Docker registry. You can either pass a Gopass path (default), a custom command
-                or specify the password in place.
+            password:   A SecretsProvider object which provides the password for the Docker registry.
+                        __Deprecated!__ If a string is passed instead of a SecretsProvider object, the password is
+                        retrieved using the deprecated options below.
             email: An optional email address (specified directly) that is added to the secret if specified.
             name: An optional name for the secret. Auto-generated deterministically if not specified.
-            use_pass: Skip using Gopass in order to directly specify the Docker registry credentials,
-                see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
-            use_gopass_cat: Skip using `gopass cat` in favor of `gopass show`,
-                see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
-            custom_cmd: Use a custom command to retrieve the data.
-                See [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+            use_pass:  __Deprecated!__ Don't use and replace by kwarg using the Gopass SecretProvider.
+            use_gopass_cat:  __Deprecated!__ Don't use and replace by kwarg using the Gopass SecretProvider.
+            custom_cmd:  __Deprecated!__ Don't use and replace by kwarg using the Shell SecretProvider.
+
+        Warning:
+            `use_pass`:  is deprecated and will be removed in a future version. Use `from_gopass()` instead.
+
+            `use_gopass_cat`: is deprecated and will be removed in a future version. Use `from_gopass()` instead.
+
+            `custom_cmd`: is deprecated and will be removed in a future version. Use `from_shell_command()` instead.
 
         Returns:
             str: The generated or specified secret name, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
@@ -614,3 +643,6 @@ class Handler(object):
         from adeploy.common.secrets_provider.random_provider import RandomSecretProvider
         return RandomSecretProvider(length, log=self.log)
 
+    def value_from_ansible_vault(self, secret: str):
+        from adeploy.common.secrets_provider.ansible_vault_provider import AnsibleVaultSecretProvider
+        return AnsibleVaultSecretProvider(secret=secret, log=self.log)

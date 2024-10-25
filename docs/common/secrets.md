@@ -127,22 +127,21 @@ variable `ADEPLOY_GOPASS_REPOS`.
     for details.
 
 ### Random password
-adeploy supports the generation of random passwords using the [`random_string()`](/common/functions/#adeploy.common.jinja.globals.Handler.random_string) function. This function takes a optional length
+`adeploy` supports the generation of random passwords using the [`random_string()`](/common/functions/#adeploy.common.jinja.globals.Handler.random_string) function. This function takes a optional length
 
-This function requires a name and will create a random password. During a run of adeploy the password won't change,
-subsequent runs will update the password. Calls to `random_string()` using the same ame name will return the same
-password.
+This function creates a random password. During a run of adeploy the password won't change,
+subsequent runs will update the password.
 
 <!-- --8<-- [start:example-random-password] -->
 ```{.jinja}
 
 {# Debug, print the secret value #}
-{{ random_string(name="example", length=64) }}
+{{ random_string(length=64) }}
 
 {# Create a secret with the secret value and use it in a deployment #}
 my_deployment:
   config:
-    secretName: {{ create_secret(my_secret=random_string(name="example")) }}
+    secretName: {{ create_secret(my_secret=random_string()) }}
     secretKey: my_secret
 ```
 
