@@ -23,12 +23,12 @@ class GopassSecretProvider(SecretsProvider):
     """
     REQUIRED_GOPASS_VERSION = '1.10.0'
     __found_version = None
-    def __init__(self, path: str, log: Logger, use_cat: bool = True):
+    def __init__(self, path: str, log: Logger, use_show: bool = False):
         """
         Initialize the GopassSecretProvider.
         :param path: The path to the secret in gopass.
         :param log: The logger to use.
-        :param use_cat: Use the gopass cat command instead of show.
+        :param use_show: Use the gopass show command instead of cat.
         """
         if not GopassSecretProvider.__found_version:
             GopassSecretProvider.__found_version = GopassSecretProvider.gopass_get_version()
@@ -41,7 +41,7 @@ class GopassSecretProvider(SecretsProvider):
         if not path:
             raise ValueError('Path cannot be empty')
         self.path = path
-        self.use_cat = use_cat
+        self.use_show = use_show
 
 
 
@@ -93,7 +93,7 @@ class GopassSecretProvider(SecretsProvider):
         result = None
         for repo in [Path(r) for r in GopassSecretProvider.gopass_get_repos()]:
             secret_path = repo.joinpath(self.path)
-            result = self.gopass_try(repo_path=secret_path, use_cat=self.use_cat, log=log)
+            result = self.gopass_try(repo_path=secret_path, use_show=self.use_show, log=log)
 
             # Stop on success
             if result and result.returncode == 0 and len(result.stdout.strip()) > 0:
@@ -107,13 +107,13 @@ class GopassSecretProvider(SecretsProvider):
                    log: Logger,
                    explicit_pass=False,
                    skip_parsing=True,
-                   use_cat: bool = True) -> subprocess.CompletedProcess:
+                   use_show: bool = False) -> subprocess.CompletedProcess:
         cmd = ([
                   'gopass',
-                  'cat' if use_cat else 'show'
+                  'show' if use_show else 'cat'
               ]
-               + (['-n'] if not use_cat and skip_parsing else [])
-               + (['--password'] if not use_cat and explicit_pass else [])
+               + (['-n'] if use_show and skip_parsing else [])
+               + (['--password'] if use_show and explicit_pass else [])
                + [str(repo_path)])
         log.debug(f'Executing command {colors.bold(" ".join(cmd))}')
         result = subprocess.run(cmd, capture_output=True)
@@ -127,10 +127,10 @@ class GopassSecretProvider(SecretsProvider):
                 result.stdout = result.stdout.decode('utf-8')
                 if result.stdout.startswith('GOPASS-SECRET-1.0'):
                     return self.gopass_try(repo_path=repo_path, log=log, explicit_pass=explicit_pass,
-                                           use_cat=False, skip_parsing=False)
+                                           use_show=True, skip_parsing=False)
                 if result.stdout.startswith('Password: '):
                     return self.gopass_try(repo_path=repo_path, log=log, explicit_pass=True,
-                                           use_cat=False, skip_parsing=skip_parsing)
+                                           use_show=True, skip_parsing=skip_parsing)
 
             except UnicodeDecodeError:
                 log.debug('Decoding failed ... assuming binary data')
