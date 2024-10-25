@@ -56,7 +56,7 @@ metadata:
 
 <!-- --8<-- [end:nested_labels] -->
 
-See [`create_labels()`](functions.md#adpeloy.common.jinja.globals.Handler.create_labels) for usage and parameters.
+See [`create_labels()`](functions.md/#adpeloy.common.jinja.globals.Handler.create_labels) for usage and parameters.
 
 ## Global Label Configuration <!-- md:provider Jinja -->
 
