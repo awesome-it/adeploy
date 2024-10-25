@@ -147,7 +147,7 @@ class Secret(ABC):
         self.use_gopass_cat = use_gopass_cat
         if use_pass:
             warnings.warn('The use of gopass in create_secret() is deprecated.'
-                          'Please use value_from_shell_command() instead.',
+                          'Please use from_gopass() instead.',
                           FutureWarning)
         if custom_cmd:
             warnings.warn('The use of custom commands in create_secret is deprecated.'
@@ -155,7 +155,7 @@ class Secret(ABC):
                           FutureWarning)
         if not use_pass and not custom_cmd:
             warnings.warn('The use of plaintext in create_secret() is deprecated.'
-                          'Please use value_from_shell_command() instead.',
+                          'Please use from_plaintext() instead.',
                           FutureWarning)
 
 
@@ -163,6 +163,10 @@ class Secret(ABC):
         return f'{self.deployment.name}/{self.name}'
 
     def _gen_name(self):
+        # This is a little hard to understand...
+        # Secret generation gets updated, but the secret names should not change between versions of adeploy
+        # This is why we use a hash of the object's dictionary to generate the secret name
+        # But.... SecretsProvider objects are not hashable, so we need to convert them to their id
         obj_dict = {}
         for key, val in self.__dict__.items():
             if isinstance(val, str):
@@ -175,7 +179,10 @@ class Secret(ABC):
                     else:
                         obj_dict[key].update({sub_key: sub_val})  # Keep it as is
             else:
-                obj_dict[key] = val
+                if isinstance(val, SecretsProvider):
+                    obj_dict[key] = val.get_id()
+                else:
+                    obj_dict[key] = val
         return f'{Secret._name_prefix}{hashlib.sha1(json.dumps(obj_dict).encode()).hexdigest()}'
 
     def get_path(self, build_dir):
