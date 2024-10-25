@@ -32,18 +32,22 @@ class Handler(object):
         self.templates_dir = templates_dir
 
 
-    def from_json_or_yaml(self, path: str, jq_query: str = None, force_type: Literal['json','yaml'] = None) -> Union[dict, str, list]:
-        """ Returns data from an external JSON or YAML file. Optionally, a jq-like query can be applied.
-        Useful if a var is not in the `defaults.yml` or in the namespace/release configuration but
-        e.g. in an ansible repository.
+    def from_json_or_yaml(self,
+                          path: str,
+                          jq_query: str = None,
+                          force_type: Literal['json','yaml'] = None) -> Union[dict, str, list]:
+        """ Include data from an external JSON or YAML file in your defaults.yml or namespace / release configuration.
+        Optionally apply a jq query. Useful if a var is not in the `defaults.yml` or in the namespace / release
+        configuration but in an external file - for example an ansible hostvars file.
 
         Using the environment variable `ADEPLOY_EXTERNAL_INCLUDE_BASEDIR`, you can specify a base directory which
         is used as prefix for the path to the file to import.
 
         Args:
             path: The path to the file to import. Variables are expanded.
-            jq_query: An optional jq-like query to apply to the imported structured data.
+            jq_query: An optional jq query to apply to the imported structured data. See [here](https://jqlang.github.io/jq/manual/) for details.
             force_type: Force the file type to be either `json` or `yaml`. If not specified, the file type is determined
+                        using the file extension.
 
         Returns:
             data:   The content of the file or loaded by json.loads() or yaml.load().
@@ -51,7 +55,10 @@ class Handler(object):
 
         !!!Example
             ```{.jinja hl_lines="4"}
-            db_host: {{ var_from_json_or_yaml(path='$PATH_TO_ANSIBLE_REPO/host_vars/db.yml', jq_query='.host') }}
+            db_host: {{ var_from_json_or_yaml(
+                            path='$PATH_TO_ANSIBLE_REPO/host_vars/db.yml',
+                            jq_query='.host'
+                        ) }}
             ```
 
         """
@@ -627,7 +634,7 @@ class Handler(object):
         from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
         return GopassSecretProvider(path, log=self.log, use_cat=use_cat)
 
-    def from_shell_command(self, cmd: str):
+    def from_shell_command(self, cmd: str) -> "ShellCommandSecretProvider":
         """
 
         Args:
@@ -639,10 +646,37 @@ class Handler(object):
         from adeploy.common.secrets_provider.shell_command_provider import ShellCommandSecretProvider
         return ShellCommandSecretProvider(cmd, log=self.log)
 
-    def random_string(self, length: int = 32):
+    def random_string(self, length: int = 32) -> "RandomSecretProvider":
+        """
+        Creates a secure random string secret provider for use in the create_secret method.
+
+        Args:
+            length (): An optional length. Default is 32. The length must be at least 16.
+
+        Returns:
+            random_secret: The secret provider object. The object can either be used in the create_secret() function
+                            or rendered directly in the Jinja template for debugging purposes.
+
+        """
         from adeploy.common.secrets_provider.random_provider import RandomSecretProvider
         return RandomSecretProvider(length, log=self.log)
 
-    def value_from_ansible_vault(self, secret: str):
-        from adeploy.common.secrets_provider.ansible_vault_provider import AnsibleVaultSecretProvider
-        return AnsibleVaultSecretProvider(secret=secret, log=self.log)
+    def from_plaintext(self, plaintext_secret) -> "PlaintextSecretProvider":
+        """
+        Creates a plaintext secret provider for use in the create_secret method.
+
+        Args:
+            plaintext_secret (): The "secret" in plaintext. Don't use this for production.
+
+        Returns:
+            plaintext_secret: The secret provider object. The object can either be used in the create_secret() function
+                            or rendered directly in the Jinja template for debugging purposes.
+
+        """
+        from adeploy.common.secrets_provider.plaintext_provider import PlaintextSecretProvider
+        return PlaintextSecretProvider(plaintext_secret, log=self.log)
+
+    # Not ready to be merged
+    #def value_from_ansible_vault(self, secret: str) -> "AnsibleVaultSecretProvider":
+    #    from adeploy.common.secrets_provider.ansible_vault_provider import AnsibleVaultSecretProvider
+    #    return AnsibleVaultSecretProvider(secret=secret, log=self.log)
