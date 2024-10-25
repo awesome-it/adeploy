@@ -36,7 +36,7 @@ spec:
         env:
         - name: MY_SECRET
           valueFrom:
-            secretKeyRef: {'name': 'secret-e5e0c551a537d65bcea7c18eb47badaf9c09c349',
+            secretKeyRef: {'name': 'secret-39754e74b9a3c6d8b90f78aafcf7ccce30bd7292',
               'key': 'my_secret'}
         ports:
         - name: http
