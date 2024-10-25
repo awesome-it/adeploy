@@ -51,9 +51,9 @@ the most common case when changing k8s deployments.
 To make `adpeloy` create secrets if they do not exist but leave them untouched if they do exist, you must use one of the
 following Jinja functions:
 
-* [`create_secret()`](functions.md#create_secret)
-* [`create_docker_registry_secret()`](functions.md#create_docker_registry_secret)
-* [`create_tls_secret()`](functions.md#create_tls_secret)
+* [`create_secret()`](functions.md/#adeploy.common.jinja.globals.Handler.create_secret)
+* [`create_docker_registry_secret()`](functions.md/#adeploy.common.jinja.globals.Handler.create_docker_registry_secret)
+* [`create_tls_secret()`](functions.md/#adeploy.common.jinja.globals.Handler.create_tls_secret)
 
 This function can be used in the `defaults.yml` or in the namespace/release configuration and will generate and return a 
 unique[^1] secret name or secret reference (if passing `as_ref=True`):
@@ -85,7 +85,7 @@ be used in a CI/CD pipeline. Best practice is to use the retrieval function as a
 Secrets can be taken from [Gopass password store](https://www.gopass.pw/) that is properly installed
 and setup on the local machine that will run the [trusted deployment](#deployment-with-creating-or-updating-secrets).
 
-Gopass secrets are accessed using the [`from_gopass(paht="...")`](/common/functions/#adeploy.common.jinja.globals.Handler.from_gopass) function.
+Gopass secrets are accessed using the [`from_gopass(paht="...")`](functions.md/#adeploy.common.jinja.globals.Handler.from_gopass) function.
 
 
 The path to the password of the Gopass repo must be specified in the `from_gopass()` function:
@@ -127,7 +127,7 @@ variable `ADEPLOY_GOPASS_REPOS`.
     for details.
 
 ### Random password
-`adeploy` supports the generation of random passwords using the [`random_string()`](/common/functions/#adeploy.common.jinja.globals.Handler.random_string) function. This function takes a optional length
+`adeploy` supports the generation of random passwords using the [`random_string()`](functions.md/#adeploy.common.jinja.globals.Handler.random_string) function. This function takes a optional length
 
 This function creates a random password. During a run of adeploy the password won't change,
 subsequent runs will update the password.
@@ -148,7 +148,7 @@ my_deployment:
 ### Custom Password Command
 
 You can use custom commands i.e. bash scripts or other password managers that provide a compatible command line
-interface using the [`from_shell_command()`](/common/functions/#adeploy.common.jinja.globals.Handler.from_shell_command)
+interface using the [`from_shell_command()`](functions.md/#adeploy.common.jinja.globals.Handler.from_shell_command)
 function as follows:
 
 ```{.jinja}
@@ -269,4 +269,4 @@ spec:
 ---
 
 Find more examples in the [examples folder](https://github.com/awesome-it/adeploy/tree/master/examples) or see
-the [`create_secret()`](functions.md#adeploy.common.jinja.globals.Handler.create_secret) for details.
+the [`create_secret()`](functions.md/#adeploy.common.jinja.globals.Handler.create_secret) for details.
