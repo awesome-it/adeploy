@@ -50,9 +50,14 @@ class Deploy:
                     for secret in Secret.get_stored(build_dir, name):
 
                         deployment = secret.deployment
+
                         if deployment.skipped(self.args):
                             self.log.info(f'... Secret "{colors.blue(secret.name)}" for '
                                           f'deployment "{colors.blue(deployment)}" skipped by user filter.')
+                            continue
+
+                        # Skip cluster
+                        if not deployer.verify_current_cluster_is_last_cluster(deployment):
                             continue
 
                         secrets.append(secret)
