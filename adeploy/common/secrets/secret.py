@@ -64,7 +64,7 @@ class Secret(ABC):
         secrets_dir = Secret.get_secret_dir(build_dir, deployment_name)
         secrets = []
         for secret in glob.glob(f'{secrets_dir}/*/*/*'):
-            secrets.append(Secret.load(secret))
+            secrets.append(Secret.load(Path(secret)))
         return secrets
 
     @staticmethod
@@ -120,12 +120,12 @@ class Secret(ABC):
 
         if self.use_pass:
             warnings.warn('The use of gopass in create_secret() is deprecated.'
-                          'Please use value_from_shell_command() instead.',
+                          'Please use from_gopass() instead.',
                           FutureWarning)
-            return GopassSecretProvider(path=data, log=log, use_cat=self.use_gopass_cat).get_value()
+            return GopassSecretProvider(path=data, log=log, use_show=not self.use_gopass_cat).get_value()
         # A plaintext secret
         warnings.warn('The use of plaintext in create_secret() is deprecated.'
-                      'Please use value_from_shell_command() instead.',
+                      'Please use from_plaintext() instead.',
                       FutureWarning)
         return data
 
