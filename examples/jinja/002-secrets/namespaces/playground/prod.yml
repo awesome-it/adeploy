@@ -5,9 +5,8 @@ secrets:
   registry: {{ create_docker_registry_secret(
                server='registry.awesome-it.de',
                username='sa_registry_ro',
-               custom_cmd=True,
-               password='cat namespaces/playground/secrets/my_secret_prod') }}
+               password=from_shell_command('cat namespaces/playground/secrets/my_secret_prod')) }}
 
   # --8<-- [start:example-ref]
-  my_secret: {{ create_secret(as_ref=True, custom_cmd=True, my_secret='cat namespaces/playground/secrets/my_secret_prod') }}
+  my_secret: {{ create_secret(as_ref=True, my_secret=from_shell_command('cat namespaces/playground/secrets/my_secret_prod | head -n 1')) }}
   # --8<-- [end:example-ref]

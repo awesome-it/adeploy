@@ -7,7 +7,7 @@ import yaml as _yaml
 import adeploy.common.jinja.dict as jinja_dict
 
 
-def yaml(obj: Union[jinja_dict.JinjaDict, dict], flow_style: bool):
+def yaml(obj: Union[jinja_dict.JinjaDict, dict], flow_style: bool) -> str:
     """ Converts given object into YAML formatted string
 
     This filter is using [PyYAML](https://pyyaml.org/wiki/PyYAMLDocumentation) to convert the given object into a
@@ -39,7 +39,7 @@ def yaml(obj: Union[jinja_dict.JinjaDict, dict], flow_style: bool):
     return _yaml.safe_dump(obj, default_flow_style=flow_style, sort_keys=False)
 
 
-def quote(string: str):
+def quote(string: str) -> str:
     """ Quotes the given string
 
     This filter add quotations `"..."` around the given string and escapes any quotations inside the string.
@@ -66,7 +66,7 @@ def quote(string: str):
     return '"' + str(string).replace('"', '\\"') + '"'
 
 
-def base64_encode(string: str):
+def base64_encode(string: str) -> str:
     """ Returns base64-encoded string
 
     The given UTF-8 string is encoded to base64 using [base64.b64encode](https://docs.python.org/3/library/base64.html).
@@ -81,7 +81,7 @@ def base64_encode(string: str):
     return str(base64.b64encode(string.encode('utf-8')), 'utf-8')
 
 
-def sha256sum(string: str):
+def sha256sum(string: str) -> str:
     """ Creates a SHA256 hash
 
     Creates a SHA256 hash from the given string using [hashlib.sha256](https://docs.python.org/3/library/hashlib.html#hashlib.sha256).
@@ -102,7 +102,7 @@ def sha256sum(string: str):
     return hash.hexdigest()
 
 
-def basename(path: str):
+def basename(path: str) -> str:
     """ Returns the basename of the given path using [pathlib.Path](https://docs.python.org/3/library/pathlib.html#basic-use).
 
     Args:

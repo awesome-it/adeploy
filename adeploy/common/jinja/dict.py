@@ -10,7 +10,7 @@ class JinjaDict(dict):
         if delimiter:
             self.delimiter = re.compile(delimiter)
         else:
-            self.delimiter = re.compile('\.|:')
+            self.delimiter = re.compile('[.:]')
 
     def get(self, key, default=None):
         data = super().get(key)

@@ -84,3 +84,6 @@ nav:
 
 exclude_docs: |
   _*.md
+
+watch:
+  - adeploy

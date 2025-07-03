@@ -83,9 +83,9 @@ adeploy-test-python3.8:
     - when: manual
       allow_failure: true
 
-adeploy-test-python3.12:
+adeploy-test-python3.13:
   stage: test
-  image: registry.awesome-it.de/upstream-dockerhub/python:3.12
+  image: registry.awesome-it.de/upstream-dockerhub/python:3.13
   script:
     - *install_common
     - *install_kubectl

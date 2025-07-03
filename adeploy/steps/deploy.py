@@ -4,7 +4,7 @@ from pathlib import Path
 
 from adeploy.common import colors
 from adeploy.common.errors import DeployError
-from adeploy.common.secret import Secret
+from adeploy.common.secrets import Secret
 
 
 class Deploy:

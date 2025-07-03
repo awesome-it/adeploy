@@ -6,10 +6,11 @@ secrets:
   registry: {{ create_docker_registry_secret(
                server='registry.awesome-it.de',
                username='sa_registry_ro',
-               custom_cmd=True,
-               password='cat namespaces/playground/secrets/my_secret_test') }}
+               password=from_shell_command(
+                'cat namespaces/playground/secrets/my_secret_test'
+                )) }}
 
-  my_secret: {{ create_secret(as_ref=True, custom_cmd=True, my_secret='cat namespaces/playground/secrets/my_secret_test') }}
+  my_secret: {{ create_secret(as_ref=True, my_secret=from_shell_command('cat namespaces/playground/secrets/my_secret_test | head -n 1')) }}
 
 
 ingress:
@@ -25,5 +26,5 @@ ingress:
         - mydomain.com
       secretName: {{ create_tls_secret(
                       custom_cmd=True,
-                      cert='cat namespaces/playground/secrets/domain_test/mydomain.com.crt',
-                      key='cat namespaces/playground/secrets/domain_test/mydomain.com.key') }}
+                      cert=from_shell_command('cat namespaces/playground/secrets/domain_test/mydomain.com.crt'),
+                      key=from_shell_command('cat namespaces/playground/secrets/domain_test/mydomain.com.key')) }}

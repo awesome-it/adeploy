@@ -4,30 +4,122 @@ in the Jinja templates in your `templates` folder.
 """
 import os
 import pathlib
+import sys
 import uuid
-from logging import Logger
-
 import shortuuid
+import jq
 import string
 import json
 import textwrap
 import urllib.request
 import jinja2
 
-from typing import Union
+from logging import Logger
+from typing import Dict, List, Literal, Union
+from ruamel.yaml import YAML
 
 import adeploy.common.colors as colors
-import adeploy.common.secret as secret
+import adeploy.common.secrets as secret
 import adeploy.common.errors as errors
 
-
 class Handler(object):
+    named_passwords = {}
 
     def __init__(self, env: jinja2.Environment, deployment=None, log: Logger = None, templates_dir: str = None):
         self.env = env
         self.deployment = deployment
         self.log = log
         self.templates_dir = templates_dir
+
+
+    def from_json_or_yaml(self,
+                          path: str,
+                          jq_query: str = None,
+                          force_type: Literal['json','yaml'] = None) -> Union[dict, str, list]:
+        """ Include data from an external JSON or YAML file in your defaults.yml or namespace / release configuration.
+        Optionally apply a jq query. Useful if a var is not in the `defaults.yml` or in the namespace / release
+        configuration but in an external file - for example an ansible hostvars file.
+
+        Using the environment variable `ADEPLOY_EXTERNAL_INCLUDE_BASEDIR`, you can specify a base directory which
+        is used as prefix for the path to the file to import.
+
+        Args:
+            path: The path to the file to import. Variables are expanded.
+            jq_query: An optional jq query to apply to the imported structured data. See [here](https://jqlang.github.io/jq/manual/) for details.
+            force_type: Force the file type to be either `json` or `yaml`. If not specified, the file type is determined
+                        using the file extension.
+
+        Returns:
+            data:   The content of the file or loaded by json.loads() or yaml.load().
+                    If a jq_query is given it is applied.
+
+        !!!Example
+            ```{.jinja hl_lines="4"}
+            db_host: {{ var_from_json_or_yaml(
+                            path='$PATH_TO_ANSIBLE_REPO/host_vars/db.yml',
+                            jq_query='.host'
+                        ) }}
+            ```
+        !!!Info "jq / yq queries"
+
+            The external data is first transformed into python data objects, then the jq query is applied.
+            Therefore, jq is well suited to also filter you yaml data. Have a look at the
+            [jq manual](https://jqlang.github.io/jq/manual/) for details.
+
+        """
+        path = os.path.expandvars(path)
+        # Check if ADEPLOY_EXTERNAL_INCLUDE_BASEDIR is set and build the alternate path
+        external_base_dir = os.getenv('ADEPLOY_EXTERNAL_INCLUDE_BASEDIR')
+        if external_base_dir:
+            external_base_dir = os.path.expandvars(external_base_dir)
+
+        if external_base_dir and os.path.exists(os.path.join(external_base_dir, path)):
+            path = os.path.join(external_base_dir, path)
+        else:
+            path = os.path.expandvars(path)
+
+        if not os.path.exists(path):
+            self.log.error(f'Cannot import from {path}: File not found')
+            sys.exit(1)
+
+        self.log.debug(f'Importing from: {path}' + f' with query: {jq_query} ' if jq_query else 'without query')
+
+        if force_type:
+            file_extension = force_type
+        else:
+            file_extension = os.path.splitext(path)[-1].lower()
+        if not file_extension in ['.json', '.yaml', '.yml']:
+            self.log.error(f"Unsupported file extension: {file_extension}. Supported extensions are: .json, .yaml, .yml")
+            sys.exit(1)
+
+        # Load the file based on its extension
+        with open(path, 'r') as f:
+            if file_extension in ['.json']:
+                data = json.load(f)
+            elif file_extension in ['.yaml', '.yml']:
+                yaml = YAML(typ='safe', pure=True)
+                # Add a custom constructor for !vault tags (ansible-vault)
+                yaml.constructor.add_constructor('!vault', lambda loader, node: loader.construct_scalar(node))
+                data = yaml.load(f)
+
+        # If no query is provided, return the entire content of the file
+        if not jq_query:
+            return data
+
+        # Apply jq-like query to the data
+        try:
+            results = jq.all(jq_query, data)  # Get all matches
+        except Exception as e:
+            self.log.error(f"Error applying query: {jq_query}. Error: {e}")
+            sys.exit(1)
+
+        # Return the results or log an error if no matches were found
+        if len(results) == 0:
+            self.log.error(f"No matches found for query: {jq_query} in {data}")
+            sys.exit(1)
+        elif len(results) > 1:
+            return results
+        return results[0]
 
     def uuid(self, short: bool = False, length: int = 8) -> str:
         """ Generates a UUIDv4 or a short UUID
@@ -96,7 +188,8 @@ class Handler(object):
                       component: str = None,
                       part_of: str = None,
                       managed_by: str = 'adeploy',
-                      labels: Union[dict, list] = None, **kwargs) -> str:
+                      labels: Union[dict, list] = None,
+                      **kwargs: dict) -> str:
         """ Creates a dict of custom and common labels
 
         This can be used to create (and update) label objects ready to use in k8s manifests.
@@ -115,7 +208,7 @@ class Handler(object):
             part_of: Creates standard label `app.kubernetes.io/part-of`, the name of a higher level application
                 this one is part of (e.g. "wordpress").
             managed_by: Creates standard label `app.kubernetes.io/managed-by`, the tool being used to manage the
-                operation of an application (e.g. "adpeloy")
+                operation of an application (e.g. "adeploy")
             labels: An optional dict or list with custom labels to use.
             **kwargs: Optionally, more labels can be specified as args.
 
@@ -165,8 +258,8 @@ class Handler(object):
 
         return json.dumps(labels)
 
-    def include_file(self, path: str, direct: bool = False, render: bool = True, indent: int = 4, skip=None,
-                     escape=None) -> str:
+    def include_file(self, path: str, direct: bool = False, render: bool = True, indent: int = 4, skip: List[str] = None,
+                     escape: List[str] = None) -> str:
         """ Include and optionally render arbitrary files into your manifest
 
         Reads the content of the specified file and returns the corresponding format to include the read content
@@ -183,7 +276,7 @@ class Handler(object):
             indent: Indents the content block for the specified amount.
             skip: A list of characters to remove from the read file content.
                 See [Skip & Escape](includes.md#skip-escape).
-            escape: A list of characters to esdacpe from the read file content.
+            escape: A list of characters to escape from the read file content.
                 See [Skip & Escape](includes.md#skip-escape).
 
         Returns:
@@ -270,7 +363,8 @@ class Handler(object):
 
         return f'{prefix}{textwrap.indent(data, indent * " ")}'
 
-    def list_dir(self, dir: str, direct: bool = False, render: bool = True, indent: int = 4, skip=None, escape=None) -> dict:
+    def list_dir(self, dir: str, direct: bool = False, render: bool = True, indent: int = 4, skip: List[str] = None,
+                 escape: List[str] = None) -> dict:
         """ Include files from a directory
 
         This will include and optionally render all files from the given directory. Expect the `dir` arg, you can
@@ -305,11 +399,10 @@ class Handler(object):
 
     def create_secret(self, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
                       custom_cmd: bool = False, as_ref: bool = False,
-                      data: dict = None, **kwargs):
-
+                      data: dict = None, **kwargs: Dict[str, "SecretsProvider"]) -> str:
         """ Creates k8s secrets
 
-        Creates a k9s secret if it does not exist and returns the secret name. It won't overwrite any existing secret.
+        Creates a k8s secret if it does not exist and returns the secret name. It won't overwrite any existing secret.
         If `adeploy --recreate-secrets` was specified, the secret will be re-created. This can be used to update the
         secret or auto-rotate random hashes.
 
@@ -318,17 +411,25 @@ class Handler(object):
         Args:
             name: An optional secret name. If not specified, a unique secret name will be created that is deterministic
                 to the given secret data.
-            use_pass: Set `False` to use [direct method](secrets.md#direct-method) and set the secret value in your
-                configuration. Note that this is highly discouraged.
-            use_gopass_cat: `adeploy` is using `gopass cat` to retrieve passwords in order to support
-                [binary values](https://github.com/gopasspw/gopass/blob/master/docs/features.md#support-for-binary-content)
-                in Gopass. Set `False` to use `gopass show` instead.
-            custom_cmd: Use a custom bash command to retrieve a password and skip using Gopass.
             as_ref: Format the return value as a YAML object including `name` and `key` so that it can be used i.e.
                 in `valueFrom.secretKeyRef`.
-            data: A dict containing secret key as key and the secret value which is either a direct value, a custom
-                command or a Gopass path.
-            **kwargs: Alernatively to the dict in `data`, the secret key and value can be specified in kwargs.
+            **kwargs:   The secret data to use. The key is the secret key and the value is the secret data.
+                        The secret data must be passed as SecretProvider object
+            use_pass:  __Deprecated!__ Don't use and replace by kwarg using the Gopass SecretProvider.
+            use_gopass_cat:  __Deprecated!__ Don't use and replace by kwarg using the Gopass SecretProvider.
+            custom_cmd:  __Deprecated!__ Don't use and replace by kwarg using the Shell SecretProvider.
+            data: __Deprecated!__ Don't use and replace by kwargs using SecretProviders
+
+        Warning:
+            `use_pass`:  is deprecated and will be removed in a future version. Use `from_gopass()` instead.
+
+            `use_gopass_cat`: is deprecated and will be removed in a future version. Use `from_gopass()` instead.
+
+            `custom_cmd`: is deprecated and will be removed in a future version. Use `from_shell_command()` instead.
+
+            `data` is deprecated and will be removed without replacement in a future version.
+            Pass all secret data as kwargs instead.
+
 
         Returns:
             str: Either a YAML dict including `name` and `key` to use in `valueFrom.secretKeyRef` or the generated or
@@ -385,7 +486,8 @@ class Handler(object):
             `adeploy --recreate-secrets` otherwise the random password will not change since `adeploy` will not overwrite
             existing secrets.
         """
-
+        if not data and not kwargs:
+            raise errors.RenderError('create_secret() requires at least one secret key to be specified')
         if not self.deployment:
             raise errors.RenderError('create_secret() cannot be used here')
 
@@ -404,23 +506,42 @@ class Handler(object):
 
         return json.dumps({'name': s.name, 'key': list(keys)[0]})
 
-    def create_tls_secret(self, cert: str, key: str, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
-                          custom_cmd: bool = False):
+    def create_tls_secret(self,
+                          cert: Union[str, "SecretsProvider"],
+                          key: Union[str, "SecretsProvider"],
+                          name: str = None,
+                          use_pass: bool = True,
+                          use_gopass_cat: bool = True,
+                          custom_cmd: bool = False) -> str:
         """ Creates a secret from type `kubernetes.io/tls`
 
         Creates a TLS secret from type `kubernetes.io/tls` by using [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
         In doing so, you can specify a Gopass path (default), a custom command (`custom_cmd=True`) or direct data
         (`use_pass=False`) for the `cert` and `key` values.
 
-        See [Create TLS Secrets](secrets.md#create-tls-secrets-for-ingress) for details and exmaples.
+        See [Create TLS Secrets](secrets.md#create-tls-secrets-for-ingress) for details and examples.
 
         Args:
-            cert: Gopass path to a TLS certificate, a custom command or direct certificate data.
-            key: Gopass path to the TLS certificate key, a custom command or direct key data.
+            cert:   A SecretsProvider object which provides the server certificate.
+                    __Deprecated__: If a string is passed instead of a SecretsProvider object, the certificate is
+                    retrieved using the deprecated options below.
+
+            key: A SecretsProvider object which provides the certificate key data.
+                __Deprecated!__ If a string is passed instead of a SecretsProvider object, the certificate key is
+                retrieved using the deprecated options below.
             name: An optional name for the secret, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
-            use_pass: Skip using Gopass in order to directly specify the TLS certificate and key, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
-            use_gopass_cat: Skip using `gopass cat` in favor of `gopass show`, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
-            custom_cmd: Use a custom command to retrieve the data. See [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+            use_pass:  __Deprecated!__ Don't use and replace by kwarg using the Gopass SecretProvider.
+            use_gopass_cat:  __Deprecated!__ Don't use and replace by kwarg using the Gopass SecretProvider.
+            custom_cmd:  __Deprecated!__ Don't use and replace by kwarg using the Shell SecretProvider.
+
+        Warning:
+            `cert`:  After the deprecation period, a passed string will be treated as certificate data.
+
+            `use_pass`:  is deprecated and will be removed in a future version. Use `from_gopass()` instead.
+
+            `use_gopass_cat`: is deprecated and will be removed in a future version. Use `from_gopass()` instead.
+
+            `custom_cmd`: is deprecated and will be removed in a future version. Use `from_shell_command()` instead.
 
         Returns:
             str: The generated or specified secret name, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
@@ -440,29 +561,39 @@ class Handler(object):
                           f'for deployment "{colors.blue(self.deployment)} ...')
         return s.name
 
-    def create_docker_registry_secret(self, server: str, username: str, password: str, email: str = None, name: str = None,
-                                      use_pass: bool = True, use_gopass_cat: bool = True, custom_cmd: bool = False):
+    def create_docker_registry_secret(self,
+                                      server: str,
+                                      username: str,
+                                      password: Union["SecretsProvider", str],
+                                      email: str = None,
+                                      name: str = None,
+                                      use_pass: bool = True,
+                                      use_gopass_cat: bool = True,
+                                      custom_cmd: bool = False) -> str:
         """ Creates a secret from type "kubernetes.io/dockerconfigjson"
 
-        Creates a secret from type "kubernetes.io/dockerconfigjson" that can be used i.e. as an image pull secret. This
-        function is using [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create), hence you can either
-        retrieve the secret from Gopass (default), use a custom command (`custom_cmd=True`) or specify the data in place.
+        Creates a secret from type "kubernetes.io/dockerconfigjson" that can be used i.e. as an image pull secret.
 
         See [Create Image Pull Secret](secrets.md#create-image-pull-secret) for details and examples.
 
         Args:
             server: The server name for the Docker registry. Must be specified directly.
             username: The username for the Docker registry. Must be specified directly.
-            password: The password for the Docker registry. You can either pass a Gopass path (default), a custom command
-                or specify the password in place.
+            password:   A SecretsProvider object which provides the password for the Docker registry.
+                        __Deprecated!__ If a string is passed instead of a SecretsProvider object, the password is
+                        retrieved using the deprecated options below.
             email: An optional email address (specified directly) that is added to the secret if specified.
             name: An optional name for the secret. Auto-generated deterministically if not specified.
-            use_pass: Skip using Gopass in order to directly specify the Docker registry credentials,
-                see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
-            use_gopass_cat: Skip using `gopass cat` in favor of `gopass show`,
-                see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
-            custom_cmd: Use a custom command to retrieve the data.
-                See [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
+            use_pass:  __Deprecated!__ Don't use and replace by kwarg using the Gopass SecretProvider.
+            use_gopass_cat:  __Deprecated!__ Don't use and replace by kwarg using the Gopass SecretProvider.
+            custom_cmd:  __Deprecated!__ Don't use and replace by kwarg using the Shell SecretProvider.
+
+        Warning:
+            `use_pass`:  is deprecated and will be removed in a future version. Use `from_gopass()` instead.
+
+            `use_gopass_cat`: is deprecated and will be removed in a future version. Use `from_gopass()` instead.
+
+            `custom_cmd`: is deprecated and will be removed in a future version. Use `from_shell_command()` instead.
 
         Returns:
             str: The generated or specified secret name, see [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
@@ -477,6 +608,81 @@ class Handler(object):
                                         use_pass, use_gopass_cat, custom_cmd)
         if secret.Secret.register(s) and self.log:
             self.log.info(f'Registering docker registry secret "{colors.bold(s.name)}" '
-                     f'for deployment "{colors.blue(self.deployment)} ...')
+                          f'for deployment "{colors.blue(self.deployment)} ...')
 
         return s.name
+
+    def from_gopass(self, path: str, use_show: bool = False) -> "GopassSecretProvider":
+        """
+        Get a secret from gopass.
+
+        Args:
+            path:   The path to the secret in gopass.\
+                    The path is searched in the gopass repositories in the order they are defined
+            use_show: Use `gopass show` instead of `gopass cat`.
+
+        Returns:
+            gopass_secret:  The secret provider object. The object can either be used in the create_secret() function \
+                            or rendered directly in the Jinja template for debugging purposes. \
+                            Don't render a secret in the Jinja template in production code - this will likely break \
+                            CI setups.
+
+
+        !!!Example
+            ```{.yaml title="defaults.yml"}
+            secrets:
+              # Regular use. Secret is decrypted if missing on the cluster or --recreate-secrets is set.
+              my_secret: {{ create_secret(my_secret=from_gopass('/secret/path')) }}
+              # Debug only: Render the secret in the Jinja template.
+              my_secret: {{ from_gopass('/secret/path') }}
+            ```
+        """
+        from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
+        return GopassSecretProvider(path, log=self.log, use_show=use_show)
+
+    def from_shell_command(self, cmd: str) -> "ShellCommandSecretProvider":
+        """
+
+        Args:
+            cmd (): The command to execute. It will be passed to `subprocess.run(cmd, shell=True)
+
+        Returns:
+
+        """
+        from adeploy.common.secrets_provider.shell_command_provider import ShellCommandSecretProvider
+        return ShellCommandSecretProvider(cmd, log=self.log)
+
+    def random_string(self, length: int = 32) -> "RandomSecretProvider":
+        """
+        Creates a secure random string secret provider for use in the create_secret method.
+
+        Args:
+            length (): An optional length. Default is 32. The length must be at least 16.
+
+        Returns:
+            random_secret: The secret provider object. The object can either be used in the create_secret() function
+                            or rendered directly in the Jinja template for debugging purposes.
+
+        """
+        from adeploy.common.secrets_provider.random_provider import RandomSecretProvider
+        return RandomSecretProvider(length, log=self.log)
+
+    def from_plaintext(self, plaintext_secret) -> "PlaintextSecretProvider":
+        """
+        Creates a plaintext secret provider for use in the create_secret method.
+
+        Args:
+            plaintext_secret (): The "secret" in plaintext. Don't use this for production.
+
+        Returns:
+            plaintext_secret: The secret provider object. The object can either be used in the create_secret() function
+                            or rendered directly in the Jinja template for debugging purposes.
+
+        """
+        from adeploy.common.secrets_provider.plaintext_provider import PlaintextSecretProvider
+        return PlaintextSecretProvider(plaintext_secret, log=self.log)
+
+    # Not ready to be merged
+    #def value_from_ansible_vault(self, secret: str) -> "AnsibleVaultSecretProvider":
+    #    from adeploy.common.secrets_provider.ansible_vault_provider import AnsibleVaultSecretProvider
+    #    return AnsibleVaultSecretProvider(secret=secret, log=self.log)
