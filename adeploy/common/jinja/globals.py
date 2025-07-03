@@ -486,7 +486,8 @@ class Handler(object):
             `adeploy --recreate-secrets` otherwise the random password will not change since `adeploy` will not overwrite
             existing secrets.
         """
-
+        if not data and not kwargs:
+            raise errors.RenderError('create_secret() requires at least one secret key to be specified')
         if not self.deployment:
             raise errors.RenderError('create_secret() cannot be used here')
 
