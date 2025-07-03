@@ -4,7 +4,7 @@ import re
 
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Union
+from typing import List, Union
 from logging import Logger
 from packaging.version import parse as parse_version
 
@@ -78,7 +78,7 @@ class GopassSecretProvider(SecretsProvider):
         return version_match.group(1)
 
     @staticmethod
-    def gopass_get_repos() -> list[str]:
+    def gopass_get_repos() -> List[str]:
         repos = [""]
 
         gopass_repos = get_args().gopass_repo
