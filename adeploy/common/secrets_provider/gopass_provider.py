@@ -3,6 +3,7 @@ import subprocess
 import re
 
 from pathlib import Path
+from subprocess import CompletedProcess
 from typing import Union
 from logging import Logger
 from packaging.version import parse as parse_version
@@ -58,7 +59,7 @@ class GopassSecretProvider(SecretsProvider):
         result.check_returncode()
 
         if isinstance(result.stdout, (bytes, bytearray)):
-            return result.stdout.lstrip()
+            return str(result.stdout.lstrip())
         else:
             num_lines = len(result.stdout.strip().split("\n"))
 
@@ -77,7 +78,7 @@ class GopassSecretProvider(SecretsProvider):
         return version_match.group(1)
 
     @staticmethod
-    def gopass_get_repos() -> [str]:
+    def gopass_get_repos() -> list[str]:
         repos = [""]
 
         gopass_repos = get_args().gopass_repo
@@ -107,7 +108,7 @@ class GopassSecretProvider(SecretsProvider):
                    log: Logger,
                    explicit_pass=False,
                    skip_parsing=True,
-                   use_show: bool = False) -> subprocess.CompletedProcess:
+                   use_show: bool = False) -> CompletedProcess:
         cmd = ([
                   'gopass',
                   'show' if use_show else 'cat'
@@ -121,7 +122,6 @@ class GopassSecretProvider(SecretsProvider):
 
         # Stop on success
         if result.returncode == 0 and len(result.stdout.strip()) > 0:
-
             try:
                 # Properly handle meta data
                 result.stdout = result.stdout.decode('utf-8')
@@ -136,4 +136,8 @@ class GopassSecretProvider(SecretsProvider):
                 log.debug('Decoding failed ... assuming binary data')
                 pass
 
+            return result
+        else:
+            if result.stderr:
+                log.error(f'Command stderr: {result.stderr.decode("utf-8")}')
             return result

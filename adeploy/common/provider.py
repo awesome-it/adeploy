@@ -47,7 +47,7 @@ class Provider(ABC):
     def get_absolute(base_dir: Path, path: str) -> Path:
         return Path(path if os.path.isabs(path) else base_dir.joinpath(path))
 
-    def get_defaults_file(self) -> Path:
+    def get_defaults_file(self) -> Path | None:
 
         if self.defaults_path.exists():
 
@@ -69,6 +69,7 @@ class Provider(ABC):
                 return defaults_file
 
         self.log.warning(f'Could not find a default file from path "{colors.bold(self.defaults_path)}", continue ...')
+        return None
 
     def load_deployments(self):
 
