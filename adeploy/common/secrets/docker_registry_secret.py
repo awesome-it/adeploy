@@ -22,6 +22,9 @@ class DockerRegistrySecret(Secret):
         self.email = email
         super().__init__(deployment, name, use_pass, use_gopass_cat, custom_cmd)
 
+    def _is_legacy_secret(self) -> bool:
+        return not isinstance(self.password, SecretsProvider)
+
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
         args = [f'--docker-server={self.server}',
                 f'--docker-username={self.username}']

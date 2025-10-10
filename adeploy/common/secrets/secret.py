@@ -136,6 +136,10 @@ class Secret(ABC):
             return '*****'
         return data.get_value(log=log)
 
+    @abstractmethod
+    def _is_legacy_secret(self) -> bool:
+        pass
+
     def __init__(self, deployment, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
                  custom_cmd: bool = False):
         self.name = name if name else self._gen_name()
@@ -145,18 +149,19 @@ class Secret(ABC):
         self.use_pass = use_pass
         self.custom_cmd = custom_cmd
         self.use_gopass_cat = use_gopass_cat
-        if use_pass:
-            warnings.warn('The use of gopass in create_secret() is deprecated.'
-                          'Please use from_gopass() instead.',
-                          FutureWarning)
-        if custom_cmd:
-            warnings.warn('The use of custom commands in create_secret is deprecated.'
-                          'Please use value_from_shell_command() instead.',
-                          FutureWarning)
-        if not use_pass and not custom_cmd:
-            warnings.warn('The use of plaintext in create_secret() is deprecated.'
-                          'Please use from_plaintext() instead.',
-                          FutureWarning)
+        if self._is_legacy_secret():
+            if use_pass:
+                warnings.warn('The use of gopass in create_secret() is deprecated.'
+                              'Please use from_gopass() instead.',
+                              FutureWarning)
+            if custom_cmd:
+                warnings.warn('The use of custom commands in create_secret is deprecated.'
+                              'Please use value_from_shell_command() instead.',
+                              FutureWarning)
+            if not use_pass and not custom_cmd:
+                warnings.warn('The use of plaintext in create_secret() is deprecated.'
+                              'Please use from_plaintext() instead.',
+                              FutureWarning)
 
 
     def __repr__(self):
