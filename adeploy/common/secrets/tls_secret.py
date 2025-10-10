@@ -71,6 +71,9 @@ class TlsSecret(Secret):
     cert: str = None
     key: str = None
 
+    def _is_legacy_secret(self) -> bool:
+        return not (isinstance(self.cert, SecretsProvider) and isinstance(self.key, SecretsProvider))
+
     def __init__(self, deployment, cert: Union[SecretsProvider, str], key: Union[SecretsProvider, str], name: str = None, use_pass: bool = True,
                  use_gopass_cat: bool = True, custom_cmd: bool = False):
         self.cert = cert

@@ -5,6 +5,7 @@ from logging import Logger
 
 from adeploy.common.kubectl import kubectl_create_secret
 from adeploy.common.secrets.secret import Secret
+from adeploy.common.secrets_provider.provider import SecretsProvider
 
 
 class GenericSecret(Secret):
@@ -15,6 +16,9 @@ class GenericSecret(Secret):
                  custom_cmd: bool = False):
         self.data = data
         super().__init__(deployment, name, use_pass, use_gopass_cat, custom_cmd)
+
+    def _is_legacy_secret(self) -> bool:
+        return not all([isinstance(d, SecretsProvider) for d in self.data.values()])
 
     def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
 

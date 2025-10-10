@@ -21,6 +21,8 @@ from ruamel.yaml import YAML
 import adeploy.common.colors as colors
 import adeploy.common.secrets as secret
 import adeploy.common.errors as errors
+from adeploy.common.secrets_provider.provider import SecretsProvider
+
 
 class Handler(object):
     named_passwords = {}
