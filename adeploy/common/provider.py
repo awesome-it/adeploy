@@ -110,10 +110,7 @@ class Provider(ABC):
                         # If version cannot be determined then we're likely running from source
                         version = get_git_version()
                     deployment_version = deployment.config.get('_adeploy', {}).get('version', '0.0.0')
-                    if parse_version(str(deployment_version)) > parse_version(version.split('-')[0]):
-                        raise RenderError(f'Deployment requires at least '
-                                          f'adeploy version {deployment_version}, '
-                                          f'current version is {version}')
+
 
                     # Check valid target cluster
                     deployment_target_cluster = deployment.config.get('_adeploy', {}).get(
