@@ -142,7 +142,6 @@ class Secret(ABC):
 
     def __init__(self, deployment, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
                  custom_cmd: bool = False):
-        self.is_legacy = self._is_legacy_secret()
         self.name = name if name else self._gen_name()
         self.deployment = deployment
 
@@ -150,7 +149,7 @@ class Secret(ABC):
         self.use_pass = use_pass
         self.custom_cmd = custom_cmd
         self.use_gopass_cat = use_gopass_cat
-        if self.is_legacy:
+        if self._is_legacy_secret():
             if use_pass:
                 warnings.warn('The use of gopass in create_secret() is deprecated.'
                               'Please use from_gopass() instead.',
