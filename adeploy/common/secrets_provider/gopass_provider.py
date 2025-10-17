@@ -1,6 +1,7 @@
 import os
 import subprocess
 import re
+import warnings
 
 from pathlib import Path
 from subprocess import CompletedProcess
@@ -24,6 +25,7 @@ class GopassSecretProvider(SecretsProvider):
     """
     REQUIRED_GOPASS_VERSION = '1.10.0'
     __found_version = None
+    __warned = False
     def __init__(self, path: str, log: Logger, use_show: bool = False):
         """
         Initialize the GopassSecretProvider.
@@ -33,23 +35,34 @@ class GopassSecretProvider(SecretsProvider):
         """
         if not GopassSecretProvider.__found_version:
             GopassSecretProvider.__found_version = GopassSecretProvider.gopass_get_version()
-            # Check GoPass version
-            if parse_version(GopassSecretProvider.__found_version) < parse_version(
-                    GopassSecretProvider.REQUIRED_GOPASS_VERSION):
-                raise InputError(
-                    f'Found gopass version {GopassSecretProvider.__found_version} but version {GopassSecretProvider.REQUIRED_GOPASS_VERSION}+ is required.')
+            if not GopassSecretProvider.__found_version:
+                if not GopassSecretProvider.__warned:
+                    GopassSecretProvider.__warned = True
+                    warnings.warn(
+                        "Gopass not found. You will be able to render and test this deployment, but you will not be able to deploy it.",
+                        category=UserWarning, stacklevel=1)
+            else:
+                # Check GoPass version
+                if parse_version(GopassSecretProvider.__found_version) < parse_version(
+                        GopassSecretProvider.REQUIRED_GOPASS_VERSION):
+                    warnings.warn(
+                        f"Found gopass version {GopassSecretProvider.__found_version} but version {GopassSecretProvider.REQUIRED_GOPASS_VERSION}+ is required. You will be able to render and test this deployment, but you will not be able to deploy it.",
+                        category=UserWarning, stacklevel=1)
         super().__init__(name=path, log=log)
         if not path:
             raise ValueError('Path cannot be empty')
         self.path = path
         self.use_show = use_show
 
-
-
     def get_id(self):
         return self.path
 
     def _get_value(self, log: Logger = None) -> str:
+        if not GopassSecretProvider.__found_version:
+            raise InputError('Gopass is not installed. Please install Gopass first.')
+        if parse_version(GopassSecretProvider.__found_version) < parse_version(
+                        GopassSecretProvider.REQUIRED_GOPASS_VERSION):
+            raise InputError(f"Found gopass version {GopassSecretProvider.__found_version} but version {GopassSecretProvider.REQUIRED_GOPASS_VERSION}+ is required.")
         if not log:
             log = self.log
         result = self.gopass_try_repos(log)
@@ -68,14 +81,16 @@ class GopassSecretProvider(SecretsProvider):
 
     @staticmethod
     def gopass_get_version():
-        result = subprocess.run(['gopass', 'version'], capture_output=True, text=True)
-        result.check_returncode()
-        version_match = re.match(r"gopass ([^ ]*)", result.stdout.strip())
+        try:
+            result = subprocess.run(['gopass2', 'version'], capture_output=True, text=True, check=True)
+            version_match = re.match(r"gopass ([^ ]*)", result.stdout.strip())
 
-        if not version_match:
-            raise InputError('Could not determine gopass version')
+            if not version_match:
+                raise InputError('Could not determine gopass version')
 
-        return version_match.group(1)
+            return version_match.group(1)
+        except FileNotFoundError:
+            return None
 
     @staticmethod
     def gopass_get_repos() -> List[str]:
