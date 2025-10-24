@@ -82,7 +82,7 @@ class GopassSecretProvider(SecretsProvider):
     @staticmethod
     def gopass_get_version():
         try:
-            result = subprocess.run(['gopass2', 'version'], capture_output=True, text=True, check=True)
+            result = subprocess.run(['gopass', 'version'], capture_output=True, text=True, check=True)
             version_match = re.match(r"gopass ([^ ]*)", result.stdout.strip())
 
             if not version_match:
