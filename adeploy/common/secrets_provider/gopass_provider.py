@@ -15,7 +15,6 @@ from adeploy.common.errors import InputError
 from adeploy.common.secrets_provider.provider import SecretsProvider
 
 
-
 class GopassSecretProvider(SecretsProvider):
     """
     A secret provider that provides a secret from gopass.
@@ -26,6 +25,7 @@ class GopassSecretProvider(SecretsProvider):
     REQUIRED_GOPASS_VERSION = '1.10.0'
     __found_version = None
     __warned = False
+
     def __init__(self, path: str, log: Logger, use_show: bool = False):
         """
         Initialize the GopassSecretProvider.
@@ -33,22 +33,8 @@ class GopassSecretProvider(SecretsProvider):
         :param log: The logger to use.
         :param use_show: Use the gopass show command instead of cat.
         """
-        if not GopassSecretProvider.__found_version:
-            GopassSecretProvider.__found_version = GopassSecretProvider.gopass_get_version()
-            if not GopassSecretProvider.__found_version:
-                if not GopassSecretProvider.__warned:
-                    GopassSecretProvider.__warned = True
-                    warnings.warn(
-                        "Gopass not found. You will be able to render and test this deployment, but you will not be able to deploy it.",
-                        category=UserWarning, stacklevel=1)
-            else:
-                # Check GoPass version
-                if parse_version(GopassSecretProvider.__found_version) < parse_version(
-                        GopassSecretProvider.REQUIRED_GOPASS_VERSION):
-                    warnings.warn(
-                        f"Found gopass version {GopassSecretProvider.__found_version} but version {GopassSecretProvider.REQUIRED_GOPASS_VERSION}+ is required. You will be able to render and test this deployment, but you will not be able to deploy it.",
-                        category=UserWarning, stacklevel=1)
         super().__init__(name=path, log=log)
+        self.__check_for_usable_gopass()
         if not path:
             raise ValueError('Path cannot be empty')
         self.path = path
@@ -57,12 +43,30 @@ class GopassSecretProvider(SecretsProvider):
     def get_id(self):
         return self.path
 
-    def _get_value(self, log: Logger = None) -> str:
+    @classmethod
+    def __check_for_usable_gopass(cls) -> bool:
         if not GopassSecretProvider.__found_version:
-            raise InputError('Gopass is not installed. Please install Gopass first.')
-        if parse_version(GopassSecretProvider.__found_version) < parse_version(
+            GopassSecretProvider.__found_version = GopassSecretProvider.gopass_get_version()
+            if not GopassSecretProvider.__found_version:
+                if not GopassSecretProvider.__warned:
+                    GopassSecretProvider.__warned = True
+                    warnings.warn(
+                        "Gopass not found. You will be able to render and test this deployment, but you will not be able to deploy it.",
+                        category=UserWarning, stacklevel=1)
+                    return False
+            else:
+                # Check GoPass version
+                if parse_version(GopassSecretProvider.__found_version) < parse_version(
                         GopassSecretProvider.REQUIRED_GOPASS_VERSION):
-            raise InputError(f"Found gopass version {GopassSecretProvider.__found_version} but version {GopassSecretProvider.REQUIRED_GOPASS_VERSION}+ is required.")
+                    warnings.warn(
+                        f"Found gopass version {GopassSecretProvider.__found_version} but version {GopassSecretProvider.REQUIRED_GOPASS_VERSION}+ is required. You will be able to render and test this deployment, but you will not be able to deploy it.",
+                        category=UserWarning, stacklevel=1)
+                    return False
+        return True
+
+    def _get_value(self, log: Logger = None) -> str:
+        if not self.__check_for_usable_gopass():
+            raise InputError('Gopass is not installed. Please install Gopass first.')
         if not log:
             log = self.log
         result = self.gopass_try_repos(log)
@@ -125,9 +129,9 @@ class GopassSecretProvider(SecretsProvider):
                    skip_parsing=True,
                    use_show: bool = False) -> CompletedProcess:
         cmd = ([
-                  'gopass',
-                  'show' if use_show else 'cat'
-              ]
+                   'gopass',
+                   'show' if use_show else 'cat'
+               ]
                + (['-n'] if use_show and skip_parsing else [])
                + (['--password'] if use_show and explicit_pass else [])
                + [str(repo_path)])
@@ -154,5 +158,9 @@ class GopassSecretProvider(SecretsProvider):
             return result
         else:
             if result.stderr:
-                log.error(f'Command stderr: {result.stderr.decode("utf-8")}')
+                error_message = result.stderr.decode('utf-8')
+                if "entry is not in the password store" in error_message:
+                    log.debug(f'Password not found at {repo_path}')
+                else:
+                    log.error(f'Command stderr: {error_message}')
             return result
