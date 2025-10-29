@@ -6,4 +6,4 @@ ruamel.yaml.clib>=0.2.2
 packaging>=20.4
 shortuuid>=1.0.1
 watchdog>=3.0.0
-jq~=1.8.0
+jq==1.10.0
