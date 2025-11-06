@@ -1,3 +1,6 @@
+variables:
+  DEPENDENCY_TRACK_PROJECT_ID: 2dcf4027-40d0-4f63-abad-ddc392dd6c5c
+
 include:
   - project: awesome/cicd
     file: common.yml
@@ -7,6 +10,9 @@ include:
     ref: v1.0
   - project: awesome/cicd
     file: python.yml
+    ref: v1.0
+  - project: awesome/cicd
+    file: dependency-track/python.yml
     ref: v1.0
 
 .install_common: &install_common |
