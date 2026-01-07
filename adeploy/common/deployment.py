@@ -12,6 +12,7 @@ from adeploy.common.errors import Error
 from adeploy.common.helpers import dict_update_recursive, get_defaults
 from adeploy.common.jinja import env as jinja_env, dict as jinja_dict
 from adeploy.common import colors
+from adeploy.common.secrets_provider.provider import SecretsProvider
 
 
 class Deployment:
@@ -54,6 +55,9 @@ class Deployment:
         return False
 
     def load_config(self, config_path: Path, defaults_file: Path = None, log: Logger = None):
+        # We're not yet rendering.
+        # Reset list of known secrets in order to allow multiple deployments to use the same defaults file
+        SecretsProvider.reset_created_secrets_list()
 
         if log:
             if not defaults_file:
