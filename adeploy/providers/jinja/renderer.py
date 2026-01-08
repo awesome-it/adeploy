@@ -14,6 +14,7 @@ from adeploy.common.deployment import Deployment
 from adeploy.common.errors import RenderError
 from adeploy.common.jinja import env as jinja_env
 from adeploy.common.provider import Provider
+from adeploy.common.secrets_provider.provider import SecretsProvider
 from adeploy.common.yaml import update
 
 
@@ -130,6 +131,8 @@ class Renderer(Provider):
         self.log.debug(f'Working on deployment "{self.name}" ...')
         template_dir, templates = self.load_templates()
         for deployment in self.load_deployments():
+            # List of known secrets is a per deployment list. Reset for each new deployment
+            SecretsProvider.reset_created_secrets_list()
 
             self.log.debug(f'Clean build dirs: {", ".join([colors.bold(d) for d in deployment.clean_build_dir()])}')
 
