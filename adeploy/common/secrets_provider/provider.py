@@ -85,5 +85,4 @@ class SecretsProvider(ABC):
         Call this method before rendering the next deployment.
         """
         logger = get_logger()
-        logger.error(f'Resetting created secrets list')
         SecretsProvider.__created_secrets = {}
