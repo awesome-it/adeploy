@@ -50,7 +50,7 @@ class Renderer(HelmProvider):
 
     def parse_args(self, args: dict):
 
-        chart_defaults = get_defaults(self.get_defaults_file(), log=self.log).get('_chart', {})
+        chart_defaults = get_defaults(self.defaults_paths, log=self.log).get('_chart', {})
 
         self.name = chart_defaults.get('name', self.name)
         self.repo_url = chart_defaults.get('repo_url', args.get('repo_url', None))

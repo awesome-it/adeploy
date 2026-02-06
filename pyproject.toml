@@ -25,12 +25,13 @@ authors = [
 ]
 description = "Universal deployment tool for Kubernetes that supports rendering and deployment of lightweight Jinja templated k8s manifests as well as complex Helm charts."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: BSD License",
   "Operating System :: OS Independent"
 ]
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 
 # Read dependencies from requirementx.txt: https://stackoverflow.com/a/73600610
 [ tool.setuptools.dynamic ]

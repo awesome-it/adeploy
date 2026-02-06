@@ -1,5 +1,4 @@
 import copy
-import os
 import shutil
 from logging import Logger
 from pathlib import Path
@@ -54,20 +53,23 @@ class Deployment:
 
         return False
 
-    def load_config(self, config_path: Path, defaults_file: Path = None, log: Logger = None):
+    def load_config(self, config_path: Path, defaults_files: list = None, log: Logger = None):
         # We're not yet rendering.
         # Reset list of known secrets in order to allow multiple deployments to use the same defaults file
         SecretsProvider.reset_created_secrets_list()
 
         if log:
-            if not defaults_file:
+            if not defaults_files:
                 log.warning(f'Not using defaults, continue ...')
             else:
-                log.info(f'Using defaults from "{colors.bold(defaults_file)}" ...')
+                log.info(f'Using defaults from {colors.bold(", ".join([str(f) for f in defaults_files]))} ...')
 
         self.config = {}
 
-        if defaults_file:
+        if not defaults_files:
+            return self.config
+
+        for defaults_file in defaults_files:
 
             try:
 

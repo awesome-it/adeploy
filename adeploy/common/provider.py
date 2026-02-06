@@ -8,10 +8,12 @@ from pathlib import Path
 from typing import Optional
 
 from packaging.version import parse as parse_version
+from ruamel import yaml
 
 from adeploy.common import colors
 from adeploy.common.deployment import Deployment
 from adeploy.common.errors import RenderError, WrongClusterError
+from adeploy.common.helpers import get_defaults
 from adeploy.common.kubectl import kubectl_get_current_api_server_url
 from adeploy.common.version import get_git_version, get_package_version
 
@@ -28,15 +30,15 @@ class Provider(ABC):
     extensions: list = ['yml', 'yaml']
 
     def __init__(self, name: str, src_dir: str or Path, build_dir: str or Path, namespaces_dir: str or Path,
-                 args: Namespace, log: Logger, defaults_path: str or Path = None, **kwargs):
+                 args: Namespace, log: Logger, defaults_paths: list[str], **kwargs):
 
         self.name = name
         self.src_dir = Path(src_dir)
         self.build_dir = Path(build_dir)
-        self.namespaces_dir = Provider.get_absolute(self.src_dir, namespaces_dir)
+        self.namespaces_dir = Provider.__get_absolute(self.src_dir, namespaces_dir)
         self.log = log
         self.args = args
-        self.defaults_path = Provider.get_absolute(self.src_dir, defaults_path)
+        self.defaults_paths = self.__resolve_default_paths(defaults_paths)
         self.parse_args(kwargs)
         self.current_cluster = kubectl_get_current_api_server_url(log=log)
 
@@ -45,8 +47,23 @@ class Provider(ABC):
         pass
 
     @staticmethod
-    def get_absolute(base_dir: Path, path: str) -> Path:
+    def __get_absolute(base_dir: Path, path: str) -> Path:
         return Path(path if os.path.isabs(path) else base_dir.joinpath(path))
+
+    def __resolve_default_paths(self, defaults_paths: list[str]) -> list[str]:
+        paths = []
+        for default_path in defaults_paths:
+            path = Provider.__get_absolute(self.src_dir, default_path)
+            if not os.path.exists(path):
+                raise FileNotFoundError(f'"{colors.bold(default_path)}" does not exist')
+            if os.path.isdir(path):
+                for defaults_file in [path.joinpath(self.name).with_suffix(f'.{ext}') for ext in
+                                      self.extensions]:
+                    if defaults_file.is_file():
+                        paths.append(defaults_file)
+            else:
+                paths.append(path)
+        return paths
 
     def get_defaults_file(self) -> Optional[Path]:
 
@@ -101,7 +118,7 @@ class Provider(ABC):
 
                     self.log.debug(f'Found deployment "{colors.blue(deployment)}", namespace "{colors.bold(ns)}" ...')
 
-                    deployment.load_config(deployment_release_config, self.get_defaults_file(), self.log)
+                    deployment.load_config(deployment_release_config, self.defaults_paths, self.log)
                     self.log.debug(f'Using config from "{colors.bold(deployment_release_config)}" ...')
 
                     # Check valid deployment versions

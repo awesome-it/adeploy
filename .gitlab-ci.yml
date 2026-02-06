@@ -74,9 +74,9 @@ include:
     popd
   done
 
-adeploy-test-python3.8:
+adeploy-test-python3.10:
   stage: test
-  image: registry.awesome-it.de/upstream-dockerhub/python:3.8
+  image: registry.awesome-it.de/upstream-dockerhub/python:3.10
   script:
     - *install_common
     - *install_kubectl
@@ -89,9 +89,9 @@ adeploy-test-python3.8:
     - when: manual
       allow_failure: true
 
-adeploy-test-python3.13:
+adeploy-test-python3.14:
   stage: test
-  image: registry.awesome-it.de/upstream-dockerhub/python:3.13
+  image: registry.awesome-it.de/upstream-dockerhub/python:3.14
   script:
     - *install_common
     - *install_kubectl

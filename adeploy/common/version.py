@@ -1,3 +1,4 @@
+import logging
 from importlib.metadata import version, PackageNotFoundError
 from subprocess import Popen, PIPE
 
@@ -31,7 +32,7 @@ def get_git_version(abbrev=4):
     # Try to get the current version using “git describe”.
     git_version = call_git_describe(abbrev)
     if git_version is None:
-        print("Cannot find the version number!")
+        logging.warning("Cannot find the version number!")
         return None
 
     # Remove potential git appendix
