@@ -64,9 +64,9 @@ def setup_parser():
     parser.add_argument('--build-dir', dest='build_dir',
                         help='Build directory for output', default='./build', metavar='build_dir')
 
-    parser.add_argument('--defaults', dest='defaults_path', default='defaults.yml',
-                        help='YML file or directory containing <deployment_name>.yml with default variables. '
-                             'Relative to source dirs.')
+    parser.add_argument('--defaults', action='append', default=['defaults.yml'],
+                        help='YML files or directories containing <deployment_name>.yml with default variables. '
+                             'Relative to source dirs. Processed in order. Later files update previous ones')
 
     parser.add_argument('--namespaces', dest='namespaces_dir', default='namespaces',
                         help='Directory containing namespaces and variables for deployments')

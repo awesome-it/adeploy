@@ -25,6 +25,9 @@ def main():
 
     parser = setup_parser()
     args, unknown_args = parse(parser)
+    if len(args.defaults) > 1:
+        # Drop the default value. Argparse only appends...
+        args.defaults = args.defaults[1:]
     setup_logging(args)
     kubectl_init(args)
     module = None

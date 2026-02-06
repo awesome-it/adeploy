@@ -31,6 +31,7 @@ classifiers = [
   "License :: OSI Approved :: BSD License",
   "Operating System :: OS Independent"
 ]
+license = "BSD-3-Clause"
 
 # Read dependencies from requirementx.txt: https://stackoverflow.com/a/73600610
 [ tool.setuptools.dynamic ]

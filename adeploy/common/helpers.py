@@ -1,9 +1,10 @@
 import collections.abc
+import logging
 import os
-import sys
 import pkgutil
-import importlib.util
 import subprocess
+from pathlib import PosixPath
+
 import yaml
 
 from collections import namedtuple
@@ -43,14 +44,23 @@ def get_providers() -> dict:
     return found
 
 
-def get_defaults(defaults_file, deployment=None, log=None, template_values=None):
-    env = jinja_env.create([defaults_file.parent], deployment=deployment, log=log)
-    # Make best to load defaults
-    template_values_default = {
-        'name': deployment.name if deployment else 'undefined',
-        'namespace': deployment.namespace if deployment else 'undefined',
-    }
-    return yaml.load(env.get_template(defaults_file.name).render(template_values if template_values else template_values_default), Loader=yaml.FullLoader)
+def get_defaults(defaults_files: PosixPath | list[PosixPath], deployment=None, log=None, template_values=None):
+    if type(defaults_files) is PosixPath:
+        files = [defaults_files]
+    else:
+        files = defaults_files
+    defaults = {}
+    for file in files:
+        logging.debug(f'Loading defaults from {file}')
+        env = jinja_env.create([file.parent], deployment=deployment, log=log)
+        # Make best to load defaults
+        template_values_default = {
+            'name': deployment.name if deployment else 'undefined',
+            'namespace': deployment.namespace if deployment else 'undefined',
+        }
+        values = yaml.load(env.get_template(file.name).render(template_values if template_values else template_values_default), Loader=yaml.FullLoader)
+        defaults.update(values)
+    return defaults
 
 
 def run_command(log, cmd) -> subprocess.CompletedProcess:
