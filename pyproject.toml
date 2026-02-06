@@ -28,10 +28,10 @@ readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: BSD License",
   "Operating System :: OS Independent"
 ]
 license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 
 # Read dependencies from requirementx.txt: https://stackoverflow.com/a/73600610
 [ tool.setuptools.dynamic ]
