@@ -9,5 +9,5 @@ class HelmProvider(Provider, ABC):
         return self.build_dir.joinpath('charts').joinpath(self.name)
 
     def get_chart_version(self):
-        defaults = get_defaults(self.get_defaults_file(), log=self.log)
+        defaults = get_defaults(self.defaults_paths, log=self.log)
         return defaults.get('_chart', {}).get('version', None) if defaults else None

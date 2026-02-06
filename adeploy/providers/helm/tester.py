@@ -38,7 +38,7 @@ class Tester(HelmProvider):
         self.skip_raw_test = args.get('skip_raw_test')
         self.skip_schema_validation = args.get('skip_schema_validation')
 
-        chart_defaults = get_defaults(self.get_defaults_file(), log=self.log).get('_chart', {})
+        chart_defaults = get_defaults(self.defaults_paths, log=self.log).get('_chart', {})
         self.name = chart_defaults.get('name', self.name)
 
     def run(self):
