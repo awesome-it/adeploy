@@ -33,7 +33,7 @@ class Config:
                         src_dir=src_dir,
                         build_dir=build_dir,
                         namespaces_dir=self.args.namespaces_dir,
-                        defaults_path=self.args.defaults_path,
+                        defaults_paths=self.args.defaults_path,
                         args=self.args,
                         log=self.log,
                         **vars(provider.renderer.get_parser().parse_args(config_args)))
