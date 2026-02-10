@@ -59,7 +59,7 @@ class Watcher(Provider):
             src_dir=src_dir,
             build_dir=build_dir,
             namespaces_dir=self.args.namespaces_dir,
-            defaults_path=str(self.args.defaults_path),
+            defaults_paths=str(self.args.defaults_path),
             args=self.args,
             log=self.log)
         self.tester = provider.tester(
@@ -67,7 +67,7 @@ class Watcher(Provider):
             src_dir=src_dir,
             build_dir=build_dir,
             namespaces_dir=self.args.namespaces_dir,
-            defaults_path=self.args.defaults_path,
+            defaults_paths=self.args.defaults_path,
             args=self.args,
             log=self.log)
         self.deployer = provider.deployer(
@@ -75,7 +75,7 @@ class Watcher(Provider):
             src_dir=src_dir,
             build_dir=build_dir,
             namespaces_dir=self.args.namespaces_dir,
-            defaults_path=self.args.defaults_path,
+            defaults_paths=self.args.defaults_path,
             args=self.args,
             log=self.log)
 

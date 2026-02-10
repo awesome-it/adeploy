@@ -34,7 +34,7 @@ class Test:
                         src_dir=src_dir,
                         build_dir=build_dir,
                         namespaces_dir=self.args.namespaces_dir,
-                        defaults_path=self.args.defaults_path,
+                        defaults_paths=self.args.defaults,
                         args=self.args,
                         log=self.log,
                         **vars(provider.tester.get_parser().parse_args(test_args)))
