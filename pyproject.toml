@@ -16,14 +16,14 @@ name = "adeploy"
 dynamic = ["version"]
 dependencies = [
   "colorama>=0.4.3",
-  "Jinja2~=3.1.6",
-  "PyYAML~=6.0.1",
-  "ruamel.yaml>=0.16.12",
-  "ruamel.yaml.clib>=0.2.2",
-  "packaging>=20.4",
-  "shortuuid>=1.0.1",
-  "watchdog>=3.0.0",
-  "jq==1.11.0"
+  "Jinja2>=3.1,<4",
+  "PyYAML>=6,<7",
+  "ruamel.yaml>=0.16",
+  "ruamel.yaml.clib>=0.2",
+  "packaging>=20",
+  "shortuuid>=1",
+  "watchdog>=3,<5",
+  "jq>=1.11,<2"
 ]
 authors = [
   { name="Daniel Morlock", email="daniel.morlock@awesome-it.de" },
