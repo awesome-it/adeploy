@@ -20,6 +20,7 @@ include:
   apt-get update
   apt-get install -y apt-transport-https ca-certificates curl gpg jq pipx
   pipx install uv
+  pipx ensurepath && source ~/.bashrc
 
 .install_helm: &install_helm |
   test -z "$SLEEP" || debug_sleep
