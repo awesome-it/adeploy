@@ -1,8 +1,6 @@
 [build-system]
-# Consider all git-tracked files as data-files
-# https://stackoverflow.com/a/73062301
 requires = [
-  "setuptools>=60",
+  "setuptools>=68",
   "setuptools-scm>=8.0"
 ]
 build-backend = "setuptools.build_meta"
