@@ -47,3 +47,12 @@ Homepage = "https://awesome-it.de"
 Source = "https://github.com/awesome-it/adeploy"
 Issues = "https://github.com/awesome-it/adeploy/issues"
 Documentation = "https://awesome-it.de/docs/adeploy/latest"
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.15",
+  "mkdocs",
+  "mkdocs-material",
+  "beautifulsoup4",
+  "mkdocstrings[python]"
+]
