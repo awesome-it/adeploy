@@ -3,11 +3,9 @@
 # https://stackoverflow.com/a/73062301
 requires = [
   "setuptools>=60",
-  "setuptools-scm>=8.0"]
-
-# Add _version.py to package data
-[tool.setuptools.package-data]
-adeploy = ["_version.py"]
+  "setuptools-scm>=8.0"
+]
+build-backend = "setuptools.build_meta"
 
 # See https://setuptools-scm.readthedocs.io/en/latest/usage/
 [tool.setuptools_scm]
@@ -15,11 +13,21 @@ git_describe_command = "git describe --tags --abbrev=4"
 
 [project]
 name = "adeploy"
-dynamic = ["version", "dependencies"]
+dynamic = ["version"]
+dependencies = [
+  "colorama>=0.4.3",
+  "Jinja2~=3.1.6",
+  "PyYAML~=6.0.1",
+  "ruamel.yaml>=0.16.12",
+  "ruamel.yaml.clib>=0.2.2",
+  "packaging>=20.4",
+  "shortuuid>=1.0.1",
+  "watchdog>=3.0.0",
+  "jq==1.11.0"
+]
 authors = [
   { name="Daniel Morlock", email="daniel.morlock@awesome-it.de" },
   { name="Daniel Bross", email="daniel.bross@awesome-it.de" },
-  { name="Robin Lutz", email="robin.lutz@awesome-it.de" },
   { name="Adrian Vielsack", email="adrian.vielsack@awesome-it.de" },
   { name="Philip Flohr", email="philip.flohr@awesome-it.de" }
 ]
@@ -32,10 +40,6 @@ classifiers = [
 ]
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
-
-# Read dependencies from requirementx.txt: https://stackoverflow.com/a/73600610
-[ tool.setuptools.dynamic ]
-dependencies = {file = ["requirements.txt"]}
 
 [project.scripts]
 adeploy = "adeploy.main:main"
