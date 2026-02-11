@@ -15,7 +15,7 @@ from adeploy.common.deployment import Deployment
 from adeploy.common.errors import RenderError, WrongClusterError
 from adeploy.common.helpers import get_defaults
 from adeploy.common.kubectl import kubectl_get_current_api_server_url
-from adeploy.common.version import get_git_version, get_package_version
+from adeploy.common.version import get_package_version
 
 
 class Provider(ABC):
@@ -125,7 +125,7 @@ class Provider(ABC):
                     version = get_package_version()
                     if not version:
                         # If version cannot be determined then we're likely running from source
-                        version = get_git_version()
+                        version = "0.0.0"
                     deployment_version = deployment.config.get('_adeploy', {}).get('version', '0.0.0')
                     if parse_version(str(deployment_version)) > parse_version(version.split('-')[0]):
                         raise RenderError(f'Deployment requires at least '
