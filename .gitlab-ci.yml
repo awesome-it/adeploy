@@ -18,7 +18,9 @@ include:
 .install_common: &install_common |
   test -z "$SLEEP" || debug_sleep
   apt-get update
-  apt-get install -y apt-transport-https ca-certificates curl gpg jq
+  apt-get install -y apt-transport-https ca-certificates curl gpg jq pipx
+  pipx install uv
+  pipx ensurepath && source ~/.bashrc
 
 .install_helm: &install_helm |
   test -z "$SLEEP" || debug_sleep
@@ -39,9 +41,7 @@ include:
 
 .install_adeploy: &install_adeploy |
   test -z "$SLEEP" || debug_sleep
-  python -m venv adeploy
-  source adeploy/bin/activate
-  pip install -e .
+  uv sync --frozen
   echo "Installed adeploy $(python runner.py --version)"
 
 .test_adeploy_jinja: &test_adeploy_jinja |
@@ -50,7 +50,7 @@ include:
   do
     pushd $dir
       mv build build.orig
-      python ../../../runner.py -d -p jinja render .
+      uv run adeploy -d -p jinja render .
       if [[ -e ".exclude-from-test" ]] ; then
         diff -ru --exclude-from=../../.exclude-from-test --exclude-from=.exclude-from-test build build.orig
       else 
@@ -65,7 +65,7 @@ include:
   do
     pushd $dir
       mv build build.orig
-      python ../../../runner.py -d -p helm --skip-validate render .
+      uv run adeploy -d -p helm --skip-validate render .
       if [[ -e ".exclude-from-test" ]] ; then
         diff -ru --exclude-from=../../.exclude-from-test --exclude-from=.exclude-from-test build build.orig
       else 

@@ -86,4 +86,4 @@ exclude_docs: |
   _*.md
 
 watch:
-  - adeploy
+  - src/adeploy

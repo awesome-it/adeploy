@@ -39,13 +39,7 @@ You'll find some examples in the [example](https://github.com/awesome-it/adeploy
 <!-- --8<-- [start:install] -->
 
 You can find `adeploy` on [GitHub](https://github.com/awesome-it/adeploy). But it is recommended to install 
-or upgrade [adeploy](https://pipy.org/project/adeploy) using `pip`:
-
-```shell
-$ pip install adeploy
-```
-
-Or use [pipx](https://github.com/pypa/pipx) to install, upgrade and run `adeploy` in an isolated environment:
+or upgrade [adeploy](https://pipy.org/project/adeploy) using [pipx](https://github.com/pypa/pipx) :
 
 ```shell
 $ pipx install adeploy
