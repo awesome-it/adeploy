@@ -104,7 +104,7 @@ class Renderer(Provider):
         if len(files) == 0:
             raise RenderError(f'No template files found in "{self.templates_dir}"')
 
-        self.log.debug(f"Found templates: ")
+        self.log.debug("Found templates: ")
         [self.log.debug(f"- {f}") for f in files]
 
         return self.templates_dir, sorted(

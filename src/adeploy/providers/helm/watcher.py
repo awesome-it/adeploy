@@ -16,5 +16,5 @@ class Watcher(HelmProvider):
         pass
 
     def run(self):
-        self.log.error(f"Watch mode is not supported by the helm provider...")
+        self.log.error("Watch mode is not supported by the helm provider...")
         sys.exit(1)

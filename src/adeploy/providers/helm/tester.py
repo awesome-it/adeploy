@@ -68,7 +68,7 @@ class Tester(HelmProvider):
                     .joinpath(deployment.namespace)
                     .joinpath(self.name)
                     .joinpath(deployment.release)
-                    .joinpath(f"values.yml")
+                    .joinpath("values.yml")
                 )
 
                 result = HelmOutput(
@@ -102,7 +102,7 @@ class Tester(HelmProvider):
                 )
 
                 if self.skip_raw_test:
-                    self.log.info(f"Skip testing of raw manifests.")
+                    self.log.info("Skip testing of raw manifests.")
                     continue
 
                 manifest_path = (
@@ -110,7 +110,7 @@ class Tester(HelmProvider):
                     .joinpath(deployment.namespace)
                     .joinpath(self.name)
                     .joinpath(deployment.release)
-                    .joinpath(f"manifest.yml")
+                    .joinpath("manifest.yml")
                 )
 
                 # Test to apply via kubectl and server-dry-run
@@ -207,7 +207,7 @@ class Tester(HelmProvider):
                     )
 
                     self.log.warning(
-                        f"Helm install might work anyways, so ignore and continue."
+                        "Helm install might work anyways, so ignore and continue."
                     )
                     pass
 

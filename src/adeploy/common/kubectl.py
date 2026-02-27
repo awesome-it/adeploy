@@ -5,7 +5,6 @@ import subprocess
 import tempfile
 import random
 from logging import Logger
-from pathlib import Path
 from typing import Optional
 
 import yaml

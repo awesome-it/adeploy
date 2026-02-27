@@ -51,7 +51,7 @@ def main():
         if provider is None:
             log.error(
                 colors.red(f'Cannot find supported provider type "{args.provider}". ')
-                + f'Type "--providers" to get a list of supported providers.'
+                + 'Type "--providers" to get a list of supported providers.'
             )
             sys.exit(1)
 

@@ -1,19 +1,15 @@
 import argparse
 import glob
 import json
-import string
 
 from pathlib import Path
-from random import random
 from subprocess import CalledProcessError
 
 from adeploy.common import colors
 from adeploy.common.kubectl import (
     kubectl_apply,
     parse_kubectrl_apply,
-    kubectl_get_default_namespace,
     kubectl_set_default_namespace,
-    kubectl_get_namespaces,
     kubectl_set_fake_namespace,
 )
 from adeploy.common.errors import TestError

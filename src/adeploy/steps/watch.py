@@ -72,7 +72,7 @@ class Watch:
                     colors.orange(f"Rendering finished with {num_warnings} warnings")
                 )
             else:
-                self.log.info(colors.green_bold(f"Rendering finished"))
+                self.log.info(colors.green_bold("Rendering finished"))
 
             sys.exit(0)
 

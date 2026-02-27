@@ -51,7 +51,7 @@ class Deployer(HelmProvider):
                     .joinpath(deployment.namespace)
                     .joinpath(self.name)
                     .joinpath(deployment.release)
-                    .joinpath(f"values.yml")
+                    .joinpath("values.yml")
                 )
 
                 result = HelmOutput(

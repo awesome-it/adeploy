@@ -89,7 +89,7 @@ class Deploy:
                     colors.orange(f"Deployment finished with {num_warnings} warnings")
                 )
             else:
-                self.log.info(colors.green_bold(f"Deployment finished"))
+                self.log.info(colors.green_bold("Deployment finished"))
 
             sys.exit(0)
 

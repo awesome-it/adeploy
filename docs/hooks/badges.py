@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import posixpath
 import re
 
 from mkdocs.config.defaults import MkDocsConfig
@@ -56,6 +55,6 @@ def _badge(icon: str, text: str = "", tooltip: str = "", type: str = ""):
             f'<span class="{classes}" title="{tooltip}">',
             *([f'<span class="mdx-badge__icon">:{icon}:</span>'] if icon else []),
             *([f'<span class="mdx-badge__text">{text}</span>'] if text else []),
-            f"</span>",
+            "</span>",
         ]
     )

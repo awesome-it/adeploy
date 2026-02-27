@@ -1,8 +1,6 @@
 import argparse
 import glob
-import os.path
 
-from pathlib import Path
 from subprocess import CalledProcessError
 
 import yaml
@@ -54,7 +52,7 @@ class Deployer(Provider):
             )
 
             if not deployment.manifests_dir.exists():
-                self.log.info(f"... skip deployment without manifests")
+                self.log.info("... skip deployment without manifests")
                 continue
 
             files = []

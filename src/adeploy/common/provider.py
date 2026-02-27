@@ -8,12 +8,10 @@ from pathlib import Path
 from typing import Optional
 
 from packaging.version import parse as parse_version
-from ruamel import yaml
 
 from adeploy.common import colors
 from adeploy.common.deployment import Deployment
 from adeploy.common.errors import RenderError, WrongClusterError
-from adeploy.common.helpers import get_defaults
 from adeploy.common.kubectl import kubectl_get_current_api_server_url
 from adeploy.common.version import get_package_version
 
@@ -221,5 +219,5 @@ class Provider(ABC):
 
     def save_current_cluster_as_last_cluster(self, deployment):
         if self.current_cluster:
-            self.log.info(f"Saving current cluster as last deployed cluster")
+            self.log.info("Saving current cluster as last deployed cluster")
             deployment.set_last_cluster(self.current_cluster, self.args.force)

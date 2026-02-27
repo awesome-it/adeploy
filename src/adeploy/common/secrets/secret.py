@@ -130,7 +130,7 @@ class Secret(ABC):
                 if num_orphaned > 0:
                     log.info(f"Found {colors.bold(num_orphaned)} orphaned secrets.")
                 else:
-                    log.info(f"No orphaned secrets found.")
+                    log.info("No orphaned secrets found.")
 
     def __deprecated_get_value(
         self,

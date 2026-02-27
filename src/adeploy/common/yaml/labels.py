@@ -27,7 +27,7 @@ def find_labels(doc: Union[list, dict], kind=None, labels=None):
 
             if k == "metadata":
                 # Create labels if they do not exist
-                if not "labels" in v:
+                if "labels" not in v:
                     v["labels"] = {}
 
                 labels.append(v.get("labels"))

@@ -1,6 +1,5 @@
 import argparse
 import os
-import shutil
 import time
 from logging import Logger
 from pathlib import Path
@@ -159,12 +158,12 @@ class Watcher(Provider):
             path=os.path.join(self.src_dir, self.templates_dir), recursive=True
         )
         self.create_restart_watcher(path=str(self.defaults_path), recursive=False)
-        self.log.info(f"Startup finished. Watching for changes ...")
+        self.log.info("Startup finished. Watching for changes ...")
         try:
             while True:
                 time.sleep(1)
                 if self.restart_rendering:
-                    self.log.debug(f"Stopping all file watchers...")
+                    self.log.debug("Stopping all file watchers...")
                     for observer in self.watchers:
                         observer.stop()
                         observer.join()

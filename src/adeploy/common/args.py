@@ -153,7 +153,7 @@ def setup_parser():
     parser.add_argument("--version", action="store_true", help="Print version and exit")
 
     subparsers = parser.add_subparsers(
-        title=f"Available build steps", metavar=colors.bold("build-steps")
+        title="Available build steps", metavar=colors.bold("build-steps")
     )
 
     for module, class_name in get_submodules(steps):

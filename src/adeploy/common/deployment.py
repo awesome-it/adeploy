@@ -73,7 +73,7 @@ class Deployment:
 
         if log:
             if not defaults_files:
-                log.warning(f"Not using defaults, continue ...")
+                log.warning("Not using defaults, continue ...")
             else:
                 log.info(
                     f"Using defaults from {colors.bold(', '.join([str(f) for f in defaults_files]))} ..."

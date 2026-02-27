@@ -25,14 +25,14 @@ class SecretsProvider(ABC):
         self.rtrim = rtrim
         if not name:
             name = self.get_id()
-        if not name in self.__created_secrets:
+        if name not in self.__created_secrets:
             self.__created_secrets[name] = self
         else:
             self.log.error(
                 f'Secret "{colors.bold(name)}" of tye {self.__class__} already exists'
             )
             self.log.error(
-                f"Reference the existing secret instead of creating a new one"
+                "Reference the existing secret instead of creating a new one"
             )
             sys.exit(1)
 

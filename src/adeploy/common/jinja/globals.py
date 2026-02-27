@@ -102,7 +102,7 @@ class Handler(object):
             file_extension = force_type
         else:
             file_extension = os.path.splitext(path)[-1].lower()
-        if not file_extension in [".json", ".yaml", ".yml"]:
+        if file_extension not in [".json", ".yaml", ".yml"]:
             self.log.error(
                 f"Unsupported file extension: {file_extension}. Supported extensions are: .json, .yaml, .yml"
             )
@@ -362,7 +362,7 @@ class Handler(object):
             try:
                 data = self.env.get_template(path).render(**values)
 
-            except jinja2.exceptions.TemplateNotFound as e:
+            except jinja2.exceptions.TemplateNotFound:
                 self.log and self.log.debug(
                     f"Used Jinja variables: {json.dumps(values)}"
                 )

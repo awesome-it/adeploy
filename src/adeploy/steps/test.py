@@ -80,7 +80,7 @@ class Test:
                     colors.orange(f"Testing finished with {num_warnings} warnings")
                 )
             else:
-                self.log.info(colors.green_bold(f"Testing finished"))
+                self.log.info(colors.green_bold("Testing finished"))
 
             sys.exit(0)
 
