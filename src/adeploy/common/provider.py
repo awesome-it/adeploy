@@ -27,11 +27,19 @@ class Provider(ABC):
     log: Logger = None
     args: Namespace = None
 
-    extensions: list = ['yml', 'yaml']
+    extensions: list = ["yml", "yaml"]
 
-    def __init__(self, name: str, src_dir: str or Path, build_dir: str or Path, namespaces_dir: str or Path,
-                 args: Namespace, log: Logger, defaults_paths: list[str], **kwargs):
-
+    def __init__(
+        self,
+        name: str,
+        src_dir: str or Path,
+        build_dir: str or Path,
+        namespaces_dir: str or Path,
+        args: Namespace,
+        log: Logger,
+        defaults_paths: list[str],
+        **kwargs,
+    ):
         self.name = name
         self.src_dir = Path(src_dir)
         self.build_dir = Path(build_dir)
@@ -57,8 +65,10 @@ class Provider(ABC):
             if not os.path.exists(path):
                 raise FileNotFoundError(f'"{colors.bold(default_path)}" does not exist')
             if os.path.isdir(path):
-                for defaults_file in [path.joinpath(self.name).with_suffix(f'.{ext}') for ext in
-                                      self.extensions]:
+                for defaults_file in [
+                    path.joinpath(self.name).with_suffix(f".{ext}")
+                    for ext in self.extensions
+                ]:
                     if defaults_file.is_file():
                         paths.append(defaults_file)
             else:
@@ -66,41 +76,52 @@ class Provider(ABC):
         return paths
 
     def get_defaults_file(self) -> Optional[Path]:
-
         if self.defaults_path.exists():
-
             # <defaults_path>
             if self.defaults_path.is_file():
                 return self.defaults_path
 
-        defaults_path = self.defaults_path if self.defaults_path.is_dir() else self.src_dir.joinpath('defaults')
+        defaults_path = (
+            self.defaults_path
+            if self.defaults_path.is_dir()
+            else self.src_dir.joinpath("defaults")
+        )
         if defaults_path.is_dir():
-
             # <defaults_path>/<deployment_name>.(yml|yaml)
-            for defaults_file in [defaults_path.joinpath(self.name).with_suffix(f'.{ext}') for ext in self.extensions]:
+            for defaults_file in [
+                defaults_path.joinpath(self.name).with_suffix(f".{ext}")
+                for ext in self.extensions
+            ]:
                 if defaults_file.is_file():
                     return defaults_file
 
         # Try yaml and yml as suffix
-        for defaults_file in [self.defaults_path.with_suffix(f'.{ext}') for ext in self.extensions]:
+        for defaults_file in [
+            self.defaults_path.with_suffix(f".{ext}") for ext in self.extensions
+        ]:
             if defaults_file.is_file():
                 return defaults_file
 
-        self.log.warning(f'Could not find a default file from path "{colors.bold(self.defaults_path)}", continue ...')
+        self.log.warning(
+            f'Could not find a default file from path "{colors.bold(self.defaults_path)}", continue ...'
+        )
         return None
 
     def load_deployments(self):
-
         self.log.debug(
-            f'Scanning for deployment variables in "{self.namespaces_dir}/*/*.({"|".join(self.extensions)})" ...')
+            f'Scanning for deployment variables in "{self.namespaces_dir}/*/*.({"|".join(self.extensions)})" ...'
+        )
 
         # Structure 1: namespaces / <namespace_name> / <deployment_release>.yml
         # Structure 2: namespaces / <namespace_name> / <deployment_name> / <deployment_release>.yml
 
         deployments = []
 
-        for ns in [d for d in os.listdir(str(self.namespaces_dir)) if self.namespaces_dir.joinpath(d).is_dir()]:
-
+        for ns in [
+            d
+            for d in os.listdir(str(self.namespaces_dir))
+            if self.namespaces_dir.joinpath(d).is_dir()
+        ]:
             # Structure 2
             deployment_dir = self.namespaces_dir.joinpath(ns).joinpath(self.name)
             if not deployment_dir.is_dir():
@@ -108,36 +129,60 @@ class Provider(ABC):
                 deployment_dir = self.namespaces_dir.joinpath(ns)
 
             for ext in self.extensions:
-                for deployment_release_config in [Path(p) for p in glob.glob(f'{deployment_dir}/*.{ext}')]:
+                for deployment_release_config in [
+                    Path(p) for p in glob.glob(f"{deployment_dir}/*.{ext}")
+                ]:
                     deployment_release = deployment_release_config.stem
-                    deployment = Deployment(self.name, deployment_release, ns, str(self.build_dir))
+                    deployment = Deployment(
+                        self.name, deployment_release, ns, str(self.build_dir)
+                    )
 
                     if deployment.skipped(self.args):
-                        self.log.info(f'... Deployment "{colors.blue(deployment)}" skipped by user filter.')
+                        self.log.info(
+                            f'... Deployment "{colors.blue(deployment)}" skipped by user filter.'
+                        )
                         continue
 
-                    self.log.debug(f'Found deployment "{colors.blue(deployment)}", namespace "{colors.bold(ns)}" ...')
+                    self.log.debug(
+                        f'Found deployment "{colors.blue(deployment)}", namespace "{colors.bold(ns)}" ...'
+                    )
 
-                    deployment.load_config(deployment_release_config, self.defaults_paths, self.log)
-                    self.log.debug(f'Using config from "{colors.bold(deployment_release_config)}" ...')
+                    deployment.load_config(
+                        deployment_release_config, self.defaults_paths, self.log
+                    )
+                    self.log.debug(
+                        f'Using config from "{colors.bold(deployment_release_config)}" ...'
+                    )
 
                     # Check valid deployment versions
                     version = get_package_version()
                     if not version:
                         # If version cannot be determined then we're likely running from source
                         version = "0.0.0"
-                    deployment_version = deployment.config.get('_adeploy', {}).get('version', '0.0.0')
-                    if parse_version(str(deployment_version)) > parse_version(version.split('-')[0]):
-                        raise RenderError(f'Deployment requires at least '
-                                          f'adeploy version {deployment_version}, '
-                                          f'current version is {version}')
+                    deployment_version = deployment.config.get("_adeploy", {}).get(
+                        "version", "0.0.0"
+                    )
+                    if parse_version(str(deployment_version)) > parse_version(
+                        version.split("-")[0]
+                    ):
+                        raise RenderError(
+                            f"Deployment requires at least "
+                            f"adeploy version {deployment_version}, "
+                            f"current version is {version}"
+                        )
 
                     # Check valid target cluster
-                    deployment_target_cluster = deployment.config.get('_adeploy', {}).get(
-                        'target_cluster_apiserver_url', None)
-                    if deployment_target_cluster and deployment_target_cluster != self.current_cluster:
-                        raise WrongClusterError(f'Deployment target cluster is "{deployment_target_cluster}", '
-                                                f'but current cluster is {self.current_cluster}')
+                    deployment_target_cluster = deployment.config.get(
+                        "_adeploy", {}
+                    ).get("target_cluster_apiserver_url", None)
+                    if (
+                        deployment_target_cluster
+                        and deployment_target_cluster != self.current_cluster
+                    ):
+                        raise WrongClusterError(
+                            f'Deployment target cluster is "{deployment_target_cluster}", '
+                            f"but current cluster is {self.current_cluster}"
+                        )
 
                     deployments.append(deployment)
 
@@ -151,18 +196,30 @@ class Provider(ABC):
         last_cluster = deployment.get_last_cluster()
         if last_cluster and last_cluster != self.current_cluster:
             if not self.args.force:
-                self.log.warning(f'Skip deployment "{colors.blue(deployment)}" since the target cluster has changed: ')
-                self.log.warning(f'... last cluster is "{colors.red_bold(last_cluster)}"')
-                self.log.warning(f'... current cluster is "{colors.red_bold(self.current_cluster)}"')
-                self.log.warning(f'Force deployment to current cluster with {colors.bold("--force")}.')
+                self.log.warning(
+                    f'Skip deployment "{colors.blue(deployment)}" since the target cluster has changed: '
+                )
+                self.log.warning(
+                    f'... last cluster is "{colors.red_bold(last_cluster)}"'
+                )
+                self.log.warning(
+                    f'... current cluster is "{colors.red_bold(self.current_cluster)}"'
+                )
+                self.log.warning(
+                    f"Force deployment to current cluster with {colors.bold('--force')}."
+                )
                 return False
             else:
-                self.log.warning(f'Target cluster has changed but forcing deployment "{colors.blue(deployment)}": ')
+                self.log.warning(
+                    f'Target cluster has changed but forcing deployment "{colors.blue(deployment)}": '
+                )
                 self.log.warning(f'... last cluster is "{colors.bold(last_cluster)}"')
-                self.log.warning(f'... current cluster is "{colors.bold(self.current_cluster)}"')
+                self.log.warning(
+                    f'... current cluster is "{colors.bold(self.current_cluster)}"'
+                )
         return True
 
     def save_current_cluster_as_last_cluster(self, deployment):
         if self.current_cluster:
-            self.log.info(f'Saving current cluster as last deployed cluster')
+            self.log.info(f"Saving current cluster as last deployed cluster")
             deployment.set_last_cluster(self.current_cluster, self.args.force)

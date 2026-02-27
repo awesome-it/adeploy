@@ -5,6 +5,7 @@ from typing import final
 from adeploy.common import colors
 from adeploy.common.logging import get_logger
 
+
 class SecretsProvider(ABC):
     """
     Abstract class for a secret provider.
@@ -27,8 +28,12 @@ class SecretsProvider(ABC):
         if not name in self.__created_secrets:
             self.__created_secrets[name] = self
         else:
-            self.log.error(f'Secret "{colors.bold(name)}" of tye {self.__class__} already exists')
-            self.log.error(f'Reference the existing secret instead of creating a new one')
+            self.log.error(
+                f'Secret "{colors.bold(name)}" of tye {self.__class__} already exists'
+            )
+            self.log.error(
+                f"Reference the existing secret instead of creating a new one"
+            )
             sys.exit(1)
 
     def __str__(self):
@@ -51,12 +56,16 @@ class SecretsProvider(ABC):
             value = value.lstrip()
         else:
             if value != value.lstrip():
-                self.log.warning(f'"{colors.bold(self.get_id())}" returned leading whitespace')
+                self.log.warning(
+                    f'"{colors.bold(self.get_id())}" returned leading whitespace'
+                )
         if self.rtrim:
             value = value.rstrip()
         else:
             if value != value.rstrip():
-                self.log.warning(f'"{colors.bold(self.get_id())}" returned trailing whitespace')
+                self.log.warning(
+                    f'"{colors.bold(self.get_id())}" returned trailing whitespace'
+                )
         return value
 
     @abstractmethod
