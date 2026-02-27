@@ -9,6 +9,7 @@ from .helm import (
 )
 from .helm_output import HelmOutput
 from .helm_provider import HelmProvider
+from adeploy.common.helpers import get_defaults
 
 __all__ = [
     "helm_repo_add",
@@ -20,4 +21,5 @@ __all__ = [
     "helm_update_app_version",
     "HelmOutput",
     "HelmProvider",
+    "get_defaults",
 ]

@@ -257,8 +257,8 @@ class Handler(object):
         if labels is not None:
             if isinstance(labels, list):
                 flat_labels = {}
-                for l in labels:
-                    flat_labels.update(l)
+                for label in labels:
+                    flat_labels.update(label)
                 labels = flat_labels
             else:
                 # Make a copy to not specified labels dict.

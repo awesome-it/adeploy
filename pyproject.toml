@@ -56,3 +56,6 @@ dev = [
   "beautifulsoup4",
   "mkdocstrings[python]"
 ]
+
+[tool.ruff.lint]
+per-file-ignores = { "src/adeploy/common/jinja/globals.py" = ["F821"] }
