@@ -3,3 +3,5 @@ from .render import Render
 from .test import Test
 from .deploy import Deploy
 from .config import Config
+
+__all__ = ["Config", "Deploy", "Test", "Render", "Watch"]

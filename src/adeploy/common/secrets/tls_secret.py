@@ -72,34 +72,55 @@ class TlsSecret(Secret):
     key: str = None
 
     def _is_legacy_secret(self) -> bool:
-        return not (isinstance(self.cert, SecretsProvider) and isinstance(self.key, SecretsProvider))
+        return not (
+            isinstance(self.cert, SecretsProvider)
+            and isinstance(self.key, SecretsProvider)
+        )
 
-    def __init__(self, deployment, cert: Union[SecretsProvider, str], key: Union[SecretsProvider, str], name: str = None, use_pass: bool = True,
-                 use_gopass_cat: bool = True, custom_cmd: bool = False):
+    def __init__(
+        self,
+        deployment,
+        cert: Union[SecretsProvider, str],
+        key: Union[SecretsProvider, str],
+        name: str = None,
+        use_pass: bool = True,
+        use_gopass_cat: bool = True,
+        custom_cmd: bool = False,
+    ):
         self.cert = cert
         self.key = key
         super().__init__(deployment, name, use_pass, use_gopass_cat, custom_cmd)
 
-    def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
-
-        cert_data = _DUMMY_DATA_CRT if dry_run else self.get_value(self.cert, log, dry_run=False)
-        cert = tempfile.NamedTemporaryFile(delete=False,
-                                           mode='wb' if isinstance(cert_data, (bytes, bytearray)) else 'w')
+    def create(
+        self, log: Logger = None, dry_run: str = None, output: str = None
+    ) -> subprocess.CompletedProcess:
+        cert_data = (
+            _DUMMY_DATA_CRT
+            if dry_run
+            else self.get_value(self.cert, log, dry_run=False)
+        )
+        cert = tempfile.NamedTemporaryFile(
+            delete=False,
+            mode="wb" if isinstance(cert_data, (bytes, bytearray)) else "w",
+        )
         cert.write(cert_data)
         cert.close()
 
-        key_data = _DUMMY_DATA_KEY if dry_run else self.get_value(self.key, log, dry_run=False)
-        key = tempfile.NamedTemporaryFile(delete=False, mode='wb' if isinstance(key_data, (bytes, bytearray)) else 'w')
+        key_data = (
+            _DUMMY_DATA_KEY if dry_run else self.get_value(self.key, log, dry_run=False)
+        )
+        key = tempfile.NamedTemporaryFile(
+            delete=False, mode="wb" if isinstance(key_data, (bytes, bytearray)) else "w"
+        )
         key.write(key_data)
         key.close()
 
         args = [
-            f'--cert={cert.name}',
-            f'--key={key.name}',
+            f"--cert={cert.name}",
+            f"--key={key.name}",
         ]
 
         try:
-
             result = kubectl_create_secret(
                 log=log,
                 name=self.name,
@@ -108,9 +129,10 @@ class TlsSecret(Secret):
                 args=args,
                 output=output,
                 labels={
-                    'adeploy.name': self.deployment.name,
-                    'adeploy.release': self.deployment.release
-                })
+                    "adeploy.name": self.deployment.name,
+                    "adeploy.release": self.deployment.release,
+                },
+            )
 
         finally:
             os.remove(cert.name)

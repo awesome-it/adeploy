@@ -2,7 +2,6 @@ import re
 
 
 class JinjaDict(dict):
-
     delimiter = None
 
     def __init__(self, dict, delimiter: str = None):
@@ -10,13 +9,13 @@ class JinjaDict(dict):
         if delimiter:
             self.delimiter = re.compile(delimiter)
         else:
-            self.delimiter = re.compile('[.:]')
+            self.delimiter = re.compile("[.:]")
 
     def get(self, key, default=None):
         data = super().get(key)
 
         if data is None:
-            data = self.get_path(key)\
+            data = self.get_path(key)
 
         if data is None:
             data = default
