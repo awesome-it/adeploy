@@ -1,4 +1,3 @@
-import copy
 import json
 from bs4 import BeautifulSoup
 
@@ -12,18 +11,17 @@ def on_post_page(output, page, config):
     if 'alt="asciicast"' not in output:
         return output
 
-    soup = BeautifulSoup(output, 'html.parser')
+    soup = BeautifulSoup(output, "html.parser")
     asciicast_elements = soup.findAll("img", {"alt": "asciicast"})
     asciicasts = []
     for idx, element in enumerate(asciicast_elements):
-        asciicast_id = f'asciicast-{idx}'
-        asciicast_src = element.attrs['src']
+        asciicast_id = f"asciicast-{idx}"
+        asciicast_src = element.attrs["src"]
 
         # asciinema options, see https://docs.asciinema.org/manual/player/options/
         options = {"fit": "width", "preload": True}
 
         for key, value in element.attrs.items():
-
             if key in ["src"]:
                 continue
 
@@ -38,7 +36,8 @@ def on_post_page(output, page, config):
         element.replace_with(div_tag)
         asciicasts.append(
             f'asciinema_create_player("{asciicast_src}", '
-            f'document.getElementById("{asciicast_id}"), {json.dumps(options)});')
+            f'document.getElementById("{asciicast_id}"), {json.dumps(options)});'
+        )
 
     asciicast_script = soup.new_tag("script")
     asciicast_script.append("\n".join(asciicasts))

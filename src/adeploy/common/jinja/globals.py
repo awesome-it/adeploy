@@ -2,6 +2,7 @@
 The following functions are globally available in the `default.yml`, the namespace/release configuration or
 in the Jinja templates in your `templates` folder.
 """
+
 import os
 import pathlib
 import sys
@@ -27,18 +28,25 @@ from adeploy.common.secrets_provider.provider import SecretsProvider
 class Handler(object):
     named_passwords = {}
 
-    def __init__(self, env: jinja2.Environment, deployment=None, log: Logger = None, templates_dir: str = None):
+    def __init__(
+        self,
+        env: jinja2.Environment,
+        deployment=None,
+        log: Logger = None,
+        templates_dir: str = None,
+    ):
         self.env = env
         self.deployment = deployment
         self.log = log
         self.templates_dir = templates_dir
 
-
-    def from_json_or_yaml(self,
-                          path: str,
-                          jq_query: str = None,
-                          force_type: Literal['json','yaml'] = None) -> Union[dict, str, list]:
-        """ Include data from an external JSON or YAML file in your defaults.yml or namespace / release configuration.
+    def from_json_or_yaml(
+        self,
+        path: str,
+        jq_query: str = None,
+        force_type: Literal["json", "yaml"] = None,
+    ) -> Union[dict, str, list]:
+        """Include data from an external JSON or YAML file in your defaults.yml or namespace / release configuration.
         Optionally apply a jq query. Useful if a var is not in the `defaults.yml` or in the namespace / release
         configuration but in an external file - for example an ansible hostvars file.
 
@@ -71,7 +79,7 @@ class Handler(object):
         """
         path = os.path.expandvars(path)
         # Check if ADEPLOY_EXTERNAL_INCLUDE_BASEDIR is set and build the alternate path
-        external_base_dir = os.getenv('ADEPLOY_EXTERNAL_INCLUDE_BASEDIR')
+        external_base_dir = os.getenv("ADEPLOY_EXTERNAL_INCLUDE_BASEDIR")
         if external_base_dir:
             external_base_dir = os.path.expandvars(external_base_dir)
 
@@ -81,27 +89,35 @@ class Handler(object):
             path = os.path.expandvars(path)
 
         if not os.path.exists(path):
-            self.log.error(f'Cannot import from {path}: File not found')
+            self.log.error(f"Cannot import from {path}: File not found")
             sys.exit(1)
 
-        self.log.debug(f'Importing from: {path}' + f' with query: {jq_query} ' if jq_query else 'without query')
+        self.log.debug(
+            f"Importing from: {path}" + f" with query: {jq_query} "
+            if jq_query
+            else "without query"
+        )
 
         if force_type:
             file_extension = force_type
         else:
             file_extension = os.path.splitext(path)[-1].lower()
-        if not file_extension in ['.json', '.yaml', '.yml']:
-            self.log.error(f"Unsupported file extension: {file_extension}. Supported extensions are: .json, .yaml, .yml")
+        if file_extension not in [".json", ".yaml", ".yml"]:
+            self.log.error(
+                f"Unsupported file extension: {file_extension}. Supported extensions are: .json, .yaml, .yml"
+            )
             sys.exit(1)
 
         # Load the file based on its extension
-        with open(path, 'r') as f:
-            if file_extension in ['.json']:
+        with open(path, "r") as f:
+            if file_extension in [".json"]:
                 data = json.load(f)
-            elif file_extension in ['.yaml', '.yml']:
-                yaml = YAML(typ='safe', pure=True)
+            elif file_extension in [".yaml", ".yml"]:
+                yaml = YAML(typ="safe", pure=True)
                 # Add a custom constructor for !vault tags (ansible-vault)
-                yaml.constructor.add_constructor('!vault', lambda loader, node: loader.construct_scalar(node))
+                yaml.constructor.add_constructor(
+                    "!vault", lambda loader, node: loader.construct_scalar(node)
+                )
                 data = yaml.load(f)
 
         # If no query is provided, return the entire content of the file
@@ -124,7 +140,7 @@ class Handler(object):
         return results[0]
 
     def uuid(self, short: bool = False, length: int = 8) -> str:
-        """ Generates a UUIDv4 or a short UUID
+        """Generates a UUIDv4 or a short UUID
 
         Args:
             short: Set `True` to return a ShortUUID(), otherwise a UUIDv4 is returned.
@@ -146,11 +162,16 @@ class Handler(object):
                 labels: {{ job.labels }}
             ```
         """
-        return str(uuid.uuid4()) if not short else shortuuid.ShortUUID(
-            alphabet=string.ascii_lowercase + string.digits).random(length)
+        return (
+            str(uuid.uuid4())
+            if not short
+            else shortuuid.ShortUUID(
+                alphabet=string.ascii_lowercase + string.digits
+            ).random(length)
+        )
 
     def version(self, package: str) -> str:
-        """ Returns the version from the given package
+        """Returns the version from the given package
 
         This returns the version from the dict in `versions` that can be specified in `defaults.yml` and in the
         namespace/release configuration.
@@ -175,24 +196,26 @@ class Handler(object):
 
         """
         if not self.deployment:
-            raise errors.RenderError('get_version() or version() cannot be used here!')
+            raise errors.RenderError("get_version() or version() cannot be used here!")
 
-        return self.deployment.config.get('versions', {}).get(package, 'latest')
+        return self.deployment.config.get("versions", {}).get(package, "latest")
 
     def get_version(self, package: str):
-        """ Alias for [version()](functions.md#adeploy.common.jinja.globals.Handler.version) """
+        """Alias for [version()](functions.md#adeploy.common.jinja.globals.Handler.version)"""
         return self.version(package)
 
-    def create_labels(self,
-                      name: str = None,
-                      instance: str = None,
-                      version: str = None,
-                      component: str = None,
-                      part_of: str = None,
-                      managed_by: str = 'adeploy',
-                      labels: Union[dict, list] = None,
-                      **kwargs: dict) -> str:
-        """ Creates a dict of custom and common labels
+    def create_labels(
+        self,
+        name: str = None,
+        instance: str = None,
+        version: str = None,
+        component: str = None,
+        part_of: str = None,
+        managed_by: str = "adeploy",
+        labels: Union[dict, list] = None,
+        **kwargs: dict,
+    ) -> str:
+        """Creates a dict of custom and common labels
 
         This can be used to create (and update) label objects ready to use in k8s manifests.
 
@@ -234,8 +257,8 @@ class Handler(object):
         if labels is not None:
             if isinstance(labels, list):
                 flat_labels = {}
-                for l in labels:
-                    flat_labels.update(l)
+                for label in labels:
+                    flat_labels.update(label)
                 labels = flat_labels
             else:
                 # Make a copy to not specified labels dict.
@@ -246,23 +269,30 @@ class Handler(object):
             labels = kwargs
 
         if name:
-            labels['app.kubernetes.io/name'] = name
+            labels["app.kubernetes.io/name"] = name
         if instance:
-            labels['app.kubernetes.io/instance'] = instance
+            labels["app.kubernetes.io/instance"] = instance
         if version:
-            labels['app.kubernetes.io/version'] = version
+            labels["app.kubernetes.io/version"] = version
         if component:
-            labels['app.kubernetes.io/component'] = component
+            labels["app.kubernetes.io/component"] = component
         if part_of:
-            labels['app.kubernetes.io/part-of'] = part_of
+            labels["app.kubernetes.io/part-of"] = part_of
         if managed_by:
-            labels['app.kubernetes.io/managed-by'] = managed_by
+            labels["app.kubernetes.io/managed-by"] = managed_by
 
         return json.dumps(labels)
 
-    def include_file(self, path: str, direct: bool = False, render: bool = True, indent: int = 4, skip: List[str] = None,
-                     escape: List[str] = None) -> str:
-        """ Include and optionally render arbitrary files into your manifest
+    def include_file(
+        self,
+        path: str,
+        direct: bool = False,
+        render: bool = True,
+        indent: int = 4,
+        skip: List[str] = None,
+        escape: List[str] = None,
+    ) -> str:
+        """Include and optionally render arbitrary files into your manifest
 
         Reads the content of the specified file and returns the corresponding format to include the read content
         into your YAML manifest file or your config map.
@@ -319,13 +349,12 @@ class Handler(object):
             escape = []
 
         tmp_path = None
-        if path.startswith('http'):
+        if path.startswith("http"):
             tmp_path, _ = urllib.request.urlretrieve(path)
             self.env.loader.searchpath.append(os.path.dirname(tmp_path))
             path = os.path.basename(tmp_path)
 
         if render:
-
             values = {}
             if self.deployment:
                 values = self.deployment.get_template_values()
@@ -333,41 +362,58 @@ class Handler(object):
             try:
                 data = self.env.get_template(path).render(**values)
 
-            except jinja2.exceptions.TemplateNotFound as e:
-                self.log and self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
-                raise errors.RenderError(f'Jinja template error: Template "{path}" not found.')
+            except jinja2.exceptions.TemplateNotFound:
+                self.log and self.log.debug(
+                    f"Used Jinja variables: {json.dumps(values)}"
+                )
+                raise errors.RenderError(
+                    f'Jinja template error: Template "{path}" not found.'
+                )
             except jinja2.exceptions.TemplateError as e:
-                self.log and self.log.debug(f'Used Jinja variables: {json.dumps(values)}')
-                raise errors.RenderError(f'Jinja template error in "{colors.bold(path)}": {e}')
+                self.log and self.log.debug(
+                    f"Used Jinja variables: {json.dumps(values)}"
+                )
+                raise errors.RenderError(
+                    f'Jinja template error in "{colors.bold(path)}": {e}'
+                )
         else:
             data, _, _ = self.env.loader.get_source(self.env, path)
 
         # Clean temporary stuff
         if tmp_path is not None:
-            self.env.loader.searchpath = filter(lambda p: p != os.path.dirname(path), self.env.loader.searchpath)
+            self.env.loader.searchpath = filter(
+                lambda p: p != os.path.dirname(path), self.env.loader.searchpath
+            )
             os.remove(tmp_path)
 
         if direct:
-            prefix = '\n'
+            prefix = "\n"
         else:
-            prefix = '|\n'
+            prefix = "|\n"
 
         for token in skip:
-            replace = ''
+            replace = ""
             if type(token) is tuple:
                 token, replace = token
             data = data.replace(token, replace)
             prefix = prefix.replace(token, replace)
 
         for token in escape:
-            data = data.replace(token, f'\\{token}')
-            prefix = prefix.replace(token, f'\\{token}')
+            data = data.replace(token, f"\\{token}")
+            prefix = prefix.replace(token, f"\\{token}")
 
-        return f'{prefix}{textwrap.indent(data, indent * " ")}'
+        return f"{prefix}{textwrap.indent(data, indent * ' ')}"
 
-    def list_dir(self, dir: str, direct: bool = False, render: bool = True, indent: int = 4, skip: List[str] = None,
-                 escape: List[str] = None) -> dict:
-        """ Include files from a directory
+    def list_dir(
+        self,
+        dir: str,
+        direct: bool = False,
+        render: bool = True,
+        indent: int = 4,
+        skip: List[str] = None,
+        escape: List[str] = None,
+    ) -> dict:
+        """Include files from a directory
 
         This will include and optionally render all files from the given directory. Expect the `dir` arg, you can
         pass the same args to `list_dir()` as for [`include_file()`](functions.md#adeploy.common.jinja.global.Handler.include_file)
@@ -391,18 +437,33 @@ class Handler(object):
             --8<-- "docs/common/includes.md:example"
         """
         contents = {}
-        for item in sorted(pathlib.Path(pathlib.Path(self.templates_dir) / dir).iterdir()):
+        for item in sorted(
+            pathlib.Path(pathlib.Path(self.templates_dir) / dir).iterdir()
+        ):
             if item.is_file():
                 self.env.loader.searchpath.append(str(item.parent))
                 contents[item.name] = self.include_file(
-                    str(item.relative_to(self.templates_dir)), direct, render, indent, skip, escape)
+                    str(item.relative_to(self.templates_dir)),
+                    direct,
+                    render,
+                    indent,
+                    skip,
+                    escape,
+                )
 
         return contents
 
-    def create_secret(self, name: str = None, use_pass: bool = True, use_gopass_cat: bool = True,
-                      custom_cmd: bool = False, as_ref: bool = False,
-                      data: dict = None, **kwargs: Dict[str, "SecretsProvider"]) -> str:
-        """ Creates k8s secrets
+    def create_secret(
+        self,
+        name: str = None,
+        use_pass: bool = True,
+        use_gopass_cat: bool = True,
+        custom_cmd: bool = False,
+        as_ref: bool = False,
+        data: dict = None,
+        **kwargs: Dict[str, "SecretsProvider"],
+    ) -> str:
+        """Creates k8s secrets
 
         Creates a k8s secret if it does not exist and returns the secret name. It won't overwrite any existing secret.
         If `adeploy --recreate-secrets` was specified, the secret will be re-created. This can be used to update the
@@ -489,14 +550,20 @@ class Handler(object):
             existing secrets.
         """
         if not data and not kwargs:
-            raise errors.RenderError('create_secret() requires at least one secret key to be specified')
+            raise errors.RenderError(
+                "create_secret() requires at least one secret key to be specified"
+            )
         if not self.deployment:
-            raise errors.RenderError('create_secret() cannot be used here')
+            raise errors.RenderError("create_secret() cannot be used here")
 
-        s = secret.GenericSecret(self.deployment, data or kwargs, name, use_pass, use_gopass_cat, custom_cmd)
+        s = secret.GenericSecret(
+            self.deployment, data or kwargs, name, use_pass, use_gopass_cat, custom_cmd
+        )
         if secret.Secret.register(s) and self.log:
-            self.log.info(f'Registered generic secret "{colors.bold(s.name)}" '
-                          f'for deployment "{colors.blue(self.deployment)} ...')
+            self.log.info(
+                f'Registered generic secret "{colors.bold(s.name)}" '
+                f'for deployment "{colors.blue(self.deployment)} ...'
+            )
 
         if not as_ref:
             return s.name
@@ -504,18 +571,21 @@ class Handler(object):
         keys = (data or kwargs).keys()
         if len(keys) == 0:
             raise errors.RenderError(
-                'You must specify at least a secret key if using create_secret() with key_ref = True')
+                "You must specify at least a secret key if using create_secret() with key_ref = True"
+            )
 
-        return json.dumps({'name': s.name, 'key': list(keys)[0]})
+        return json.dumps({"name": s.name, "key": list(keys)[0]})
 
-    def create_tls_secret(self,
-                          cert: Union[str, "SecretsProvider"],
-                          key: Union[str, "SecretsProvider"],
-                          name: str = None,
-                          use_pass: bool = True,
-                          use_gopass_cat: bool = True,
-                          custom_cmd: bool = False) -> str:
-        """ Creates a secret from type `kubernetes.io/tls`
+    def create_tls_secret(
+        self,
+        cert: Union[str, "SecretsProvider"],
+        key: Union[str, "SecretsProvider"],
+        name: str = None,
+        use_pass: bool = True,
+        use_gopass_cat: bool = True,
+        custom_cmd: bool = False,
+    ) -> str:
+        """Creates a secret from type `kubernetes.io/tls`
 
         Creates a TLS secret from type `kubernetes.io/tls` by using [`create_secret()`](#adeploy.common.jinja.globals.Handler.create_create).
         In doing so, you can specify a Gopass path (default), a custom command (`custom_cmd=True`) or direct data
@@ -552,27 +622,37 @@ class Handler(object):
             --8<-- "docs/common/secrets.md:example-tls"
         """
         if not self.deployment:
-            raise errors.RenderError('create_tls_secret() cannot be used here')
+            raise errors.RenderError("create_tls_secret() cannot be used here")
 
-        s = secret.TlsSecret(deployment=self.deployment, name=name, cert=cert, key=key, use_pass=use_pass,
-                             use_gopass_cat=use_gopass_cat,
-                             custom_cmd=custom_cmd)
+        s = secret.TlsSecret(
+            deployment=self.deployment,
+            name=name,
+            cert=cert,
+            key=key,
+            use_pass=use_pass,
+            use_gopass_cat=use_gopass_cat,
+            custom_cmd=custom_cmd,
+        )
 
         if secret.Secret.register(s) and self.log:
-            self.log.info(f'Registering TLS secret "{colors.bold(s.name)}" '
-                          f'for deployment "{colors.blue(self.deployment)} ...')
+            self.log.info(
+                f'Registering TLS secret "{colors.bold(s.name)}" '
+                f'for deployment "{colors.blue(self.deployment)} ...'
+            )
         return s.name
 
-    def create_docker_registry_secret(self,
-                                      server: str,
-                                      username: str,
-                                      password: Union["SecretsProvider", str],
-                                      email: str = None,
-                                      name: str = None,
-                                      use_pass: bool = True,
-                                      use_gopass_cat: bool = True,
-                                      custom_cmd: bool = False) -> str:
-        """ Creates a secret from type "kubernetes.io/dockerconfigjson"
+    def create_docker_registry_secret(
+        self,
+        server: str,
+        username: str,
+        password: Union["SecretsProvider", str],
+        email: str = None,
+        name: str = None,
+        use_pass: bool = True,
+        use_gopass_cat: bool = True,
+        custom_cmd: bool = False,
+    ) -> str:
+        """Creates a secret from type "kubernetes.io/dockerconfigjson"
 
         Creates a secret from type "kubernetes.io/dockerconfigjson" that can be used i.e. as an image pull secret.
 
@@ -604,13 +684,26 @@ class Handler(object):
             --8<-- "docs/common/secrets.md:example-docker"
         """
         if not self.deployment:
-            raise errors.RenderError('create_docker_registry_secret() cannot be used here')
+            raise errors.RenderError(
+                "create_docker_registry_secret() cannot be used here"
+            )
 
-        s = secret.DockerRegistrySecret(self.deployment, server, username, password, email, name,
-                                        use_pass, use_gopass_cat, custom_cmd)
+        s = secret.DockerRegistrySecret(
+            self.deployment,
+            server,
+            username,
+            password,
+            email,
+            name,
+            use_pass,
+            use_gopass_cat,
+            custom_cmd,
+        )
         if secret.Secret.register(s) and self.log:
-            self.log.info(f'Registering docker registry secret "{colors.bold(s.name)}" '
-                          f'for deployment "{colors.blue(self.deployment)} ...')
+            self.log.info(
+                f'Registering docker registry secret "{colors.bold(s.name)}" '
+                f'for deployment "{colors.blue(self.deployment)} ...'
+            )
 
         return s.name
 
@@ -640,6 +733,7 @@ class Handler(object):
             ```
         """
         from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
+
         return GopassSecretProvider(path, log=self.log, use_show=use_show)
 
     def from_shell_command(self, cmd: str) -> "ShellCommandSecretProvider":
@@ -651,7 +745,10 @@ class Handler(object):
         Returns:
 
         """
-        from adeploy.common.secrets_provider.shell_command_provider import ShellCommandSecretProvider
+        from adeploy.common.secrets_provider.shell_command_provider import (
+            ShellCommandSecretProvider,
+        )
+
         return ShellCommandSecretProvider(cmd, log=self.log)
 
     def random_string(self, length: int = 32) -> "RandomSecretProvider":
@@ -667,6 +764,7 @@ class Handler(object):
 
         """
         from adeploy.common.secrets_provider.random_provider import RandomSecretProvider
+
         return RandomSecretProvider(length, log=self.log)
 
     def from_plaintext(self, plaintext_secret) -> "PlaintextSecretProvider":
@@ -681,10 +779,13 @@ class Handler(object):
                             or rendered directly in the Jinja template for debugging purposes.
 
         """
-        from adeploy.common.secrets_provider.plaintext_provider import PlaintextSecretProvider
+        from adeploy.common.secrets_provider.plaintext_provider import (
+            PlaintextSecretProvider,
+        )
+
         return PlaintextSecretProvider(plaintext_secret, log=self.log)
 
     # Not ready to be merged
-    #def value_from_ansible_vault(self, secret: str) -> "AnsibleVaultSecretProvider":
+    # def value_from_ansible_vault(self, secret: str) -> "AnsibleVaultSecretProvider":
     #    from adeploy.common.secrets_provider.ansible_vault_provider import AnsibleVaultSecretProvider
     #    return AnsibleVaultSecretProvider(secret=secret, log=self.log)

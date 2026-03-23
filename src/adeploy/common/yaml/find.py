@@ -1,8 +1,7 @@
 from typing import Union
 
 
-def find(d, tags: Union[str,list]):
-
+def find(d, tags: Union[str, list]):
     if not d:
         return []
 

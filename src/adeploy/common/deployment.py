@@ -29,40 +29,55 @@ class Deployment:
 
         self.build_dir = Path(build_dir)
 
-        self.manifests_dir = Path(build_dir) \
-            .joinpath(self.namespace) \
-            .joinpath(self.name) \
+        self.manifests_dir = (
+            Path(build_dir)
+            .joinpath(self.namespace)
+            .joinpath(self.name)
             .joinpath(self.release)
+        )
 
-        self.last_cluster_file = Path(build_dir) \
-            .joinpath('.last_cluster') \
-            .joinpath(self.namespace) \
-            .joinpath(self.name) \
+        self.last_cluster_file = (
+            Path(build_dir)
+            .joinpath(".last_cluster")
+            .joinpath(self.namespace)
+            .joinpath(self.name)
             .joinpath(self.release)
+        )
 
     def __repr__(self):
-        return f'{self.namespace}/{self.name}-{self.release}'
+        return f"{self.namespace}/{self.name}-{self.release}"
 
     def skipped(self, args):
-        filters_namespace = [t[0] for t in args.filters_namespace] if args.filters_namespace else None
-        filters_release = [t[0] for t in args.filters_release] if args.filters_release else None
+        filters_namespace = (
+            [t[0] for t in args.filters_namespace] if args.filters_namespace else None
+        )
+        filters_release = (
+            [t[0] for t in args.filters_release] if args.filters_release else None
+        )
 
-        if (filters_namespace and self.namespace not in filters_namespace) or \
-                (filters_release and self.name not in filters_release and self.release not in filters_release):
+        if (filters_namespace and self.namespace not in filters_namespace) or (
+            filters_release
+            and self.name not in filters_release
+            and self.release not in filters_release
+        ):
             return True
 
         return False
 
-    def load_config(self, config_path: Path, defaults_files: list = None, log: Logger = None):
+    def load_config(
+        self, config_path: Path, defaults_files: list = None, log: Logger = None
+    ):
         # We're not yet rendering.
         # Reset list of known secrets in order to allow multiple deployments to use the same defaults file
         SecretsProvider.reset_created_secrets_list()
 
         if log:
             if not defaults_files:
-                log.warning(f'Not using defaults, continue ...')
+                log.warning("Not using defaults, continue ...")
             else:
-                log.info(f'Using defaults from {colors.bold(", ".join([str(f) for f in defaults_files]))} ...')
+                log.info(
+                    f"Using defaults from {colors.bold(', '.join([str(f) for f in defaults_files]))} ..."
+                )
 
         self.config = {}
 
@@ -70,48 +85,59 @@ class Deployment:
             return self.config
 
         for defaults_file in defaults_files:
-
             try:
-
                 # Compile defaults with default Jinja renderer i.e. to provide globals and filters
-                defaults = get_defaults(defaults_file,
-                                        deployment=self, log=log,
-                                        template_values=self.get_template_values())
+                defaults = get_defaults(
+                    defaults_file,
+                    deployment=self,
+                    log=log,
+                    template_values=self.get_template_values(),
+                )
                 if defaults is not None:
                     self.config.update(defaults)
 
             except ParserError as e:
-                raise Error(f'Unexpected error while parsing YAML "{colors.bold(defaults_file)}": {e}')
+                raise Error(
+                    f'Unexpected error while parsing YAML "{colors.bold(defaults_file)}": {e}'
+                )
 
         try:
             # Compile config with default Jinja renderer i.e. to provide globals and filters
             env = jinja_env.create([config_path.parent], deployment=self, log=log)
-            template = env.get_template(config_path.name).render(defaults=self.config, **self.get_template_values())
-            self.config = dict_update_recursive(self.config, yaml.load(template, Loader=yaml.FullLoader))
+            template = env.get_template(config_path.name).render(
+                defaults=self.config, **self.get_template_values()
+            )
+            self.config = dict_update_recursive(
+                self.config, yaml.load(template, Loader=yaml.FullLoader)
+            )
 
         except ScannerError as e:
-            raise Error(f'Unexpected error while scanning YAML "{colors.bold(config_path)}": {e}\n'
-                        f'{colors.bold("Template")}:\n{template}')
+            raise Error(
+                f'Unexpected error while scanning YAML "{colors.bold(config_path)}": {e}\n'
+                f"{colors.bold('Template')}:\n{template}"
+            )
 
         except ParserError as e:
-            raise Error(f'Unexpected error while parsing YAML "{colors.bold(config_path)}": {e}\n'
-                        f'{colors.bold("Template")}:\n{template}')
+            raise Error(
+                f'Unexpected error while parsing YAML "{colors.bold(config_path)}": {e}\n'
+                f"{colors.bold('Template')}:\n{template}"
+            )
 
         return self.config
 
     def get_template_values(self):
-
         values = copy.deepcopy(self.config)
-        values.update({
-            'name': self.name.replace('.', '-'),
-            'release': self.release.replace('.', '-'),
-            'namespace': self.namespace,
-            'deployment': jinja_dict.JinjaDict(self.config),
-
-            # Some legacy variables
-            'node_selector': self.config.get('node', {}),
-            'default_versions': self.config.get('versions', {})
-        })
+        values.update(
+            {
+                "name": self.name.replace(".", "-"),
+                "release": self.release.replace(".", "-"),
+                "namespace": self.namespace,
+                "deployment": jinja_dict.JinjaDict(self.config),
+                # Some legacy variables
+                "node_selector": self.config.get("node", {}),
+                "default_versions": self.config.get("versions", {}),
+            }
+        )
 
         return jinja_dict.JinjaDict(values)
 
@@ -124,11 +150,10 @@ class Deployment:
     def set_last_cluster(self, cluster, force=False):
         if force or not self.last_cluster_file.exists():
             self.last_cluster_file.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.last_cluster_file, 'w') as f:
+            with open(self.last_cluster_file, "w") as f:
                 f.write(cluster)
 
     def clean_build_dir(self):
-
         dirs_to_remove = [
             self.manifests_dir,  # Contains the rendered manifests
             self.build_dir / self.name,  # Contains secrets

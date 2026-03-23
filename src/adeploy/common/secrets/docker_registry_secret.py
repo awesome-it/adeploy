@@ -14,8 +14,18 @@ class DockerRegistrySecret(Secret):
     password: str = None
     email: str = None
 
-    def __init__(self, deployment, server: str, username: str, password: Union[SecretsProvider, str], email: str = None, name: str = None,
-                 use_pass: bool = True, use_gopass_cat: bool = True, custom_cmd: bool = False):
+    def __init__(
+        self,
+        deployment,
+        server: str,
+        username: str,
+        password: Union[SecretsProvider, str],
+        email: str = None,
+        name: str = None,
+        use_pass: bool = True,
+        use_gopass_cat: bool = True,
+        custom_cmd: bool = False,
+    ):
         self.server = server
         self.username = username
         self.password = password
@@ -25,21 +35,28 @@ class DockerRegistrySecret(Secret):
     def _is_legacy_secret(self) -> bool:
         return not isinstance(self.password, SecretsProvider)
 
-    def create(self, log: Logger = None, dry_run: str = None, output: str = None) -> subprocess.CompletedProcess:
-        args = [f'--docker-server={self.server}',
-                f'--docker-username={self.username}']
+    def create(
+        self, log: Logger = None, dry_run: str = None, output: str = None
+    ) -> subprocess.CompletedProcess:
+        args = [f"--docker-server={self.server}", f"--docker-username={self.username}"]
 
         if self.email:
-            args.append(f'--docker-email={self.email}')
+            args.append(f"--docker-email={self.email}")
 
-        args.append(f'--docker-password={self.get_value(self.password, log, dry_run=dry_run)}')
+        args.append(
+            f"--docker-password={self.get_value(self.password, log, dry_run=dry_run)}"
+        )
 
         return kubectl_create_secret(
-            log=log, name=self.name,
+            log=log,
+            name=self.name,
             namespace=self.deployment.namespace,
-            type=self.type, dry_run=dry_run,
-            args=args, output=output,
+            type=self.type,
+            dry_run=dry_run,
+            args=args,
+            output=output,
             labels={
-                'adeploy.name': self.deployment.name,
-                'adeploy.release': self.deployment.release
-            })
+                "adeploy.name": self.deployment.name,
+                "adeploy.release": self.deployment.release,
+            },
+        )

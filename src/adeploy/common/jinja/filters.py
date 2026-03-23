@@ -8,7 +8,7 @@ import adeploy.common.jinja.dict as jinja_dict
 
 
 def yaml(obj: Union[jinja_dict.JinjaDict, dict], flow_style: bool) -> str:
-    """ Converts given object into YAML formatted string
+    """Converts given object into YAML formatted string
 
     This filter is using [PyYAML](https://pyyaml.org/wiki/PyYAMLDocumentation) to convert the given object into a
     YAML formatted string.
@@ -40,7 +40,7 @@ def yaml(obj: Union[jinja_dict.JinjaDict, dict], flow_style: bool) -> str:
 
 
 def quote(string: str) -> str:
-    """ Quotes the given string
+    """Quotes the given string
 
     This filter add quotations `"..."` around the given string and escapes any quotations inside the string.
 
@@ -67,7 +67,7 @@ def quote(string: str) -> str:
 
 
 def base64_encode(string: str) -> str:
-    """ Returns base64-encoded string
+    """Returns base64-encoded string
 
     The given UTF-8 string is encoded to base64 using [base64.b64encode](https://docs.python.org/3/library/base64.html).
 
@@ -78,11 +78,11 @@ def base64_encode(string: str) -> str:
         str: Base64-encoded string.
 
     """
-    return str(base64.b64encode(string.encode('utf-8')), 'utf-8')
+    return str(base64.b64encode(string.encode("utf-8")), "utf-8")
 
 
 def sha256sum(string: str) -> str:
-    """ Creates a SHA256 hash
+    """Creates a SHA256 hash
 
     Creates a SHA256 hash from the given string using [hashlib.sha256](https://docs.python.org/3/library/hashlib.html#hashlib.sha256).
 
@@ -98,12 +98,12 @@ def sha256sum(string: str) -> str:
         ```
     """
     hash = hashlib.sha256()
-    hash.update(string.encode('utf-8'))
+    hash.update(string.encode("utf-8"))
     return hash.hexdigest()
 
 
 def basename(path: str) -> str:
-    """ Returns the basename of the given path using [pathlib.Path](https://docs.python.org/3/library/pathlib.html#basic-use).
+    """Returns the basename of the given path using [pathlib.Path](https://docs.python.org/3/library/pathlib.html#basic-use).
 
     Args:
         path: The path to get the basename from.
