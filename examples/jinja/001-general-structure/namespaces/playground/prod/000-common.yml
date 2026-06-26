@@ -1,0 +1,5 @@
+versions:
+  nginx: 1.22
+
+nginx:
+  upstream_base_port: 8000

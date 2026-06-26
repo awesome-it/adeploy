@@ -36,6 +36,18 @@ In any cases the basic structure of your `adeploy` repository looks as follows:
   defaults.yml
 ```
 
+You can also split a release configuration into multiple ordered files:
+
+```
+<project_name>/
+  namespaces/
+    <namespace>/
+      <release>/
+        000-common.yml
+        010-app.yml
+  defaults.yml
+```
+
 !!!tip
     You can specify a custom project name using `adeploy --name <project_name>`.
     You can also use a different namespaces directory using `adeploy --namespaces <namespaces_dir>` i.e. to switch between variables/configs for different clusters.
@@ -47,20 +59,28 @@ The `defaults.yml` contains your global variables for the Helm chart or your Jin
 * Global labels, prob and resource definitions.
 
 In the `namespaces` folder you define namespace- and release-specific variables (and secrets) which will overwrite the 
-default variables from above: `namespaces/<namespace>/<release>.yml`.
+default variables from above. Use either `namespaces/<namespace>/<release>.yml` or the split form
+`namespaces/<namespace>/<release>/*.yml`.
 
 ## Variables
 
-The variables you specify in `defaults.yml` and in `namespaces/<namespace>/<release>.yml` are recursively merged so that 
+The variables you specify in `defaults.yml` and in `namespaces/<namespace>/<release>.yml` or
+`namespaces/<namespace>/<release>/*.yml` are recursively merged so that
 
 * you can use them as Jinja variables in the template files in the [`templates` folder](#jinja-templates) 
 * or there are directly [passed as configuration](https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing) for your [Helm chart](#helm-charts).
 
-Please note that the namespace/release configuration in `namespaces/<namespace>/<release>.yml` is also rendered using 
-the Jinja renderer and the variables from `defaults.yml`. So you can also use Jinja templating and some of the `adeploy`
-specific macros and filters for `namespace/<namespace>/<release>.yml`, too. 
+Please note that the namespace/release configuration is also rendered using the Jinja renderer and the variables from
+`defaults.yml`. So you can also use Jinja templating and some of the `adeploy` specific macros and filters for
+`namespaces/<namespace>/<release>.yml` and `namespaces/<namespace>/<release>/*.yml`, too.
 
-This might be useful to create your namespace/release config for your templates or customize your Helm configuration.  
+This might be useful to create your namespace/release config for your templates or customize your Helm configuration.
+If you use the split form, files are processed in lexicographic order. Each file can use variables from `defaults.yml`
+and all earlier files in the same release directory, for example `010-app.yml` can use variables from `000-common.yml`.
+This also allows release- or namespace-local secrets to stay out of `defaults.yml` while avoiding duplicate values.
+
+Do not define the same release with both structures. If `namespaces/<namespace>/<release>.yml` and
+`namespaces/<namespace>/<release>/` both exist, `adeploy` fails instead of choosing one silently.
 
 See [Jinja](jinja/index.md) for defaults about what you can do with Jinja templating.
 
@@ -111,8 +131,12 @@ these versions using the `version(name)` macro that falls back to a `latest` str
 --8<-- "examples/jinja/001-general-structure/defaults.yml"
 ```
 
-``` {.jinja title="namespaces/playground/prod.yml"}      
---8<-- "examples/jinja/001-general-structure/namespaces/playground/prod.yml"
+``` {.yaml title="namespaces/playground/prod/000-common.yml"}
+--8<-- "examples/jinja/001-general-structure/namespaces/playground/prod/000-common.yml"
+```
+
+``` {.jinja title="namespaces/playground/prod/010-nginx.yml"}
+--8<-- "examples/jinja/001-general-structure/namespaces/playground/prod/010-nginx.yml"
 ```
 
 You can use `adeploy -p <provider> config` to print out the fully merged namespace configuration for each release (here: `prod`):
@@ -170,6 +194,9 @@ The Jinja templates must be placed in a sub-folder called `myproject/templates` 
   namespaces/
     <namespace>/
       <release>.yml
+      <release>/
+        000-common.yml
+        010-app.yml
   defaults.yml
 ```
 
@@ -194,6 +221,9 @@ chart in the subfolder `myproject/chart`:
   namespaces/
     <namespace>/
       <release>.yml
+      <release>/
+        000-common.yml
+        010-app.yml
   defaults.yml
 ```
 

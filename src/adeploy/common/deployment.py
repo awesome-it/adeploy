@@ -65,7 +65,10 @@ class Deployment:
         return False
 
     def load_config(
-        self, config_path: Path, defaults_files: list = None, log: Logger = None
+        self,
+        config_path: Path | list[Path],
+        defaults_files: list = None,
+        log: Logger = None,
     ):
         # We're not yet rendering.
         # Reset list of known secrets in order to allow multiple deployments to use the same defaults file
@@ -101,27 +104,35 @@ class Deployment:
                     f'Unexpected error while parsing YAML "{colors.bold(defaults_file)}": {e}'
                 )
 
-        try:
-            # Compile config with default Jinja renderer i.e. to provide globals and filters
-            env = jinja_env.create([config_path.parent], deployment=self, log=log)
-            template = env.get_template(config_path.name).render(
-                defaults=self.config, **self.get_template_values()
-            )
-            self.config = dict_update_recursive(
-                self.config, yaml.load(template, Loader=yaml.FullLoader)
-            )
+        config_paths = (
+            [Path(config_path)]
+            if isinstance(config_path, (str, Path))
+            else [Path(path) for path in config_path]
+        )
 
-        except ScannerError as e:
-            raise Error(
-                f'Unexpected error while scanning YAML "{colors.bold(config_path)}": {e}\n'
-                f"{colors.bold('Template')}:\n{template}"
-            )
+        for path in config_paths:
+            template = ""
+            try:
+                # Compile config with default Jinja renderer i.e. to provide globals and filters
+                env = jinja_env.create([path.parent], deployment=self, log=log)
+                template = env.get_template(path.name).render(
+                    defaults=self.config, **self.get_template_values()
+                )
+                self.config = dict_update_recursive(
+                    self.config, yaml.load(template, Loader=yaml.FullLoader)
+                )
 
-        except ParserError as e:
-            raise Error(
-                f'Unexpected error while parsing YAML "{colors.bold(config_path)}": {e}\n'
-                f"{colors.bold('Template')}:\n{template}"
-            )
+            except ScannerError as e:
+                raise Error(
+                    f'Unexpected error while scanning YAML "{colors.bold(path)}": {e}\n'
+                    f"{colors.bold('Template')}:\n{template}"
+                )
+
+            except ParserError as e:
+                raise Error(
+                    f'Unexpected error while parsing YAML "{colors.bold(path)}": {e}\n'
+                    f"{colors.bold('Template')}:\n{template}"
+                )
 
         return self.config
 

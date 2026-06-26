@@ -54,7 +54,8 @@ dev = [
   "mkdocs",
   "mkdocs-material",
   "beautifulsoup4",
-  "mkdocstrings[python]"
+  "mkdocstrings[python]",
+  "pytest>=8,<9"
 ]
 
 [tool.ruff.lint]
