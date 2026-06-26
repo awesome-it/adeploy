@@ -1,0 +1,2 @@
+service_account_name: "{{ release }}-hello-world"
+replicaCount: 2

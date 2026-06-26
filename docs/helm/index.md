@@ -5,8 +5,10 @@ release `test` in the namespace `playground` using `adeploy`, create the basic r
 
 ``` { .bash .copy }
 mkdir hello-world && cd hello-world
-mkdir -p namespaces/playground
-touch defaults.yml namespaces/playground/test.yml
+mkdir -p namespaces/playground/prod
+touch defaults.yml namespaces/playground/test.yml \
+  namespaces/playground/prod/000-common.yml \
+  namespaces/playground/prod/010-service-account.yml
 ```
 
 ## Default Variables
@@ -32,17 +34,31 @@ Add the Helm Chart repo, the Chart version and default variables to configure th
     ```
 ## Namespace/Release Configuration
 
-In the next step, the namespace and the release of the deployment must be defined by creating the namespace/release 
-configuration in `namespaces/<namespace>/<release>.yml`.
+In the next step, the namespace and the release of the deployment must be defined by creating namespace/release
+configuration. You can use the legacy single file form `namespaces/<namespace>/<release>.yml` or split one release into
+multiple ordered files below `namespaces/<namespace>/<release>/`.
 
-For the namespace `playground` and release `test` the configuration look as follows:
+For the namespace `playground`, this example keeps `test` as a single file and adds a split `prod` release:
 
-``` { .yaml title="namespaces/playground/test.yml"}
---8<-- "examples/helm/001-quickstart/namespaces/playground/test.yml"
-```
+===+ "`test.yml`"
+    ``` { .yaml title="namespaces/playground/test.yml"}
+    --8<-- "examples/helm/001-quickstart/namespaces/playground/test.yml"
+    ```
+
+=== "`prod/000-common.yml`"
+    ``` { .yaml title="namespaces/playground/prod/000-common.yml"}
+    --8<-- "examples/helm/001-quickstart/namespaces/playground/prod/000-common.yml"
+    ```
+
+=== "`prod/010-service-account.yml`"
+    ``` { .yaml title="namespaces/playground/prod/010-service-account.yml"}
+    --8<-- "examples/helm/001-quickstart/namespaces/playground/prod/010-service-account.yml"
+    ```
 
 Note that the namespace/release configuration will be rendered using Jinja. So you can use the variables from 
 `defaults.yml`, [Jinja native macros and filters](https://jinja.palletsprojects.com/) and the [Jinja macros, filters and functions provided by `adeploy`](../common/index.md). 
+If you use a release directory, files are rendered and merged in lexicographic order. In the example above,
+`010-service-account.yml` can use `service_account_name` from `000-common.yml`.
 
 
 ## Render

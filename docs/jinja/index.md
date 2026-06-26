@@ -5,8 +5,10 @@ create the basic repository structure as follows:
 
 ``` { .bash .copy }
 mkdir my-deployment && cd my-deployment
-mkdir -p namespaces/playground
-touch defaults.yml namespaces/playground/test.yml namespaces/playground/prod.yml
+mkdir -p namespaces/playground/prod
+touch defaults.yml namespaces/playground/test.yml \
+  namespaces/playground/prod/000-common.yml \
+  namespaces/playground/prod/010-nginx.yml
 ```
 
 ## Default Variables
@@ -29,20 +31,29 @@ A possible `defaults.yml` might look as follows:
 
 ## Namespace/Release Configuration
 
-The destination namespace and the releases of the deployment must be defined by creating the namespace/release 
-configurations in `namespaces/<namespace>/<release>.yml`.
+The destination namespace and the releases of the deployment must be defined by creating namespace/release
+configurations. You can use the legacy single file form `namespaces/<namespace>/<release>.yml` or split one release into
+multiple ordered files below `namespaces/<namespace>/<release>/`.
 
-For the namespace `playground` and releases `test` and `prod` the following configuration file must be created:
+For the namespace `playground`, this example keeps `test` as a single file and splits `prod` into two files:
 
-===+ "`prod.yml`"
-    ``` { .yaml title="namespaces/playground/test.yml"}
-    --8<-- "examples/jinja/001-general-structure/namespaces/playground/prod.yml"
-    ```
-
-=== "`test.yml`"
+===+ "`test.yml`"
     ``` { .yaml title="namespaces/playground/test.yml"}
     --8<-- "examples/jinja/001-general-structure/namespaces/playground/test.yml"
     ```
+
+=== "`prod/000-common.yml`"
+    ``` { .yaml title="namespaces/playground/prod/000-common.yml"}
+    --8<-- "examples/jinja/001-general-structure/namespaces/playground/prod/000-common.yml"
+    ```
+
+=== "`prod/010-nginx.yml`"
+    ``` { .yaml title="namespaces/playground/prod/010-nginx.yml"}
+    --8<-- "examples/jinja/001-general-structure/namespaces/playground/prod/010-nginx.yml"
+    ```
+
+The files in a release directory are rendered and merged in lexicographic order. In the example above,
+`010-nginx.yml` can use `nginx.upstream_base_port` from `000-common.yml`.
 
 ## Render
 
