@@ -169,64 +169,65 @@ class Provider(ABC):
                 # Structure 1
                 deployment_dir = self.namespaces_dir.joinpath(ns)
 
-            for deployment_release, deployment_release_configs in (
-                self.__get_deployment_release_configs(deployment_dir)
-            ):
-                    deployment = Deployment(
-                        self.name, deployment_release, ns, str(self.build_dir)
+            for (
+                deployment_release,
+                deployment_release_configs,
+            ) in self.__get_deployment_release_configs(deployment_dir):
+                deployment = Deployment(
+                    self.name, deployment_release, ns, str(self.build_dir)
+                )
+
+                if deployment.skipped(self.args):
+                    self.log.info(
+                        f'... Deployment "{colors.blue(deployment)}" skipped by user filter.'
+                    )
+                    continue
+
+                self.log.debug(
+                    f'Found deployment "{colors.blue(deployment)}", namespace "{colors.bold(ns)}" ...'
+                )
+
+                deployment.load_config(
+                    deployment_release_configs, self.defaults_paths, self.log
+                )
+                deployment_release_configs_msg = ", ".join(
+                    str(path) for path in deployment_release_configs
+                )
+                self.log.debug(
+                    f'Using config from "{colors.bold(deployment_release_configs_msg)}" ...'
+                )
+
+                # Check valid deployment versions
+                version = get_package_version()
+                if not version:
+                    # If version cannot be determined then we're likely running from source
+                    version = "0.0.0"
+                deployment_version = deployment.config.get("_adeploy", {}).get(
+                    "version", "0.0.0"
+                )
+                if parse_version(str(deployment_version)) > parse_version(
+                    version.split("-")[0]
+                ):
+                    raise RenderError(
+                        f"Deployment requires at least "
+                        f"adeploy version {deployment_version}, "
+                        f"current version is {version}"
                     )
 
-                    if deployment.skipped(self.args):
-                        self.log.info(
-                            f'... Deployment "{colors.blue(deployment)}" skipped by user filter.'
-                        )
-                        continue
-
-                    self.log.debug(
-                        f'Found deployment "{colors.blue(deployment)}", namespace "{colors.bold(ns)}" ...'
+                # Check valid target cluster
+                deployment_target_cluster = deployment.config.get("_adeploy", {}).get(
+                    "target_cluster_apiserver_url", None
+                )
+                if (
+                    deployment_target_cluster
+                    and deployment_target_cluster != self.current_cluster
+                ):
+                    raise WrongClusterError(
+                        f'Deployment target cluster is "{deployment_target_cluster}", '
+                        f"but current cluster is {self.current_cluster}"
                     )
 
-                    deployment.load_config(
-                        deployment_release_configs, self.defaults_paths, self.log
-                    )
-                    deployment_release_configs_msg = ", ".join(
-                        str(path) for path in deployment_release_configs
-                    )
-                    self.log.debug(
-                        f'Using config from "{colors.bold(deployment_release_configs_msg)}" ...'
-                    )
-
-                    # Check valid deployment versions
-                    version = get_package_version()
-                    if not version:
-                        # If version cannot be determined then we're likely running from source
-                        version = "0.0.0"
-                    deployment_version = deployment.config.get("_adeploy", {}).get(
-                        "version", "0.0.0"
-                    )
-                    if parse_version(str(deployment_version)) > parse_version(
-                        version.split("-")[0]
-                    ):
-                        raise RenderError(
-                            f"Deployment requires at least "
-                            f"adeploy version {deployment_version}, "
-                            f"current version is {version}"
-                        )
-
-                    # Check valid target cluster
-                    deployment_target_cluster = deployment.config.get(
-                        "_adeploy", {}
-                    ).get("target_cluster_apiserver_url", None)
-                    if (
-                        deployment_target_cluster
-                        and deployment_target_cluster != self.current_cluster
-                    ):
-                        raise WrongClusterError(
-                            f'Deployment target cluster is "{deployment_target_cluster}", '
-                            f"but current cluster is {self.current_cluster}"
-                        )
-
-                    deployments.append(deployment)
+                deployments.append(deployment)
 
         if self.args.show_configs:
             print("Hello World")
