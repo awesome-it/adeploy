@@ -93,7 +93,7 @@ def dict_update_recursive(d: dict, u: dict) -> dict:
         for k, v in u.items():
             if isinstance(v, collections.abc.Mapping):
                 sub = {}
-                if d and k in d and d[k] and len(d[k]) > 0:
+                if d and k in d and isinstance(d[k], collections.abc.Mapping):
                     sub = d[k]
                 d[k] = dict_update_recursive(sub, v)
             # We don't merge lists! List will be overwritten completely.
