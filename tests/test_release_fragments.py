@@ -5,6 +5,7 @@ import adeploy.main  # noqa: F401 - initializes package imports in CLI order.
 import pytest
 
 from adeploy.common.errors import RenderError
+from adeploy.common.helpers import dict_update_recursive
 from adeploy.common.provider import Provider
 
 
@@ -91,3 +92,34 @@ def test_rejects_legacy_file_and_release_directory_for_same_release(
 
     with pytest.raises(RenderError, match="defined more than once"):
         make_provider(tmp_path).load_deployments()
+
+
+def test_recursive_merge_allows_mapping_to_replace_scalar():
+    defaults = {
+        "backend": {
+            "envVars": {
+                "COLLABORATION_SERVER_SECRET": "my-secret",
+            }
+        }
+    }
+    release_config = {
+        "backend": {
+            "envVars": {
+                "COLLABORATION_SERVER_SECRET": {
+                    "name": "secret-name",
+                    "key": "COLLABORATION_SERVER_SECRET",
+                }
+            }
+        }
+    }
+
+    assert dict_update_recursive(defaults, release_config) == {
+        "backend": {
+            "envVars": {
+                "COLLABORATION_SERVER_SECRET": {
+                    "name": "secret-name",
+                    "key": "COLLABORATION_SERVER_SECRET",
+                }
+            }
+        }
+    }
