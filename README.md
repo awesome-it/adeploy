@@ -61,3 +61,4 @@ See the [usage documentation](https://awesome-it.de/docs/adeploy/latest/usage/) 
 ## Read More
 
 * https://awesome-it.de/2020/09/11/adeploy-an-universal-deployment-tool-for-kubernetes/
+
