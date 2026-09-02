@@ -1,5 +1,6 @@
 import glob
 import hashlib
+import inspect
 import json
 import shutil
 import subprocess
@@ -9,7 +10,24 @@ from abc import ABC, abstractmethod
 from logging import Logger
 from pathlib import Path
 from pickle import dump, load
-from typing import Union
+from typing import Optional, Union
+
+_ADEPLOY_SRC_ROOT = str(Path(__file__).resolve().parent.parent.parent)
+
+
+def _find_caller_source() -> Optional[str]:
+    """Walk the stack and return the first frame that looks like a caller's source file
+    (e.g. a Jinja template or a user config), skipping adeploy internals and .py frames."""
+    for fi in inspect.stack()[1:]:
+        fname = fi.filename
+        if not fname or fname.startswith("<"):
+            continue
+        if fname.startswith(_ADEPLOY_SRC_ROOT):
+            continue
+        if fname.endswith(".py"):
+            continue
+        return f"{fname}:{fi.lineno}"
+    return None
 
 from adeploy.common import colors
 from adeploy.common.errors import RenderError
@@ -138,22 +156,27 @@ class Secret(ABC):
         log: Logger = None,
         dry_run: Union[bool, str] = False,
     ) -> str:
+        src = (
+            f" (used in {self._source_location})"
+            if getattr(self, "_source_location", None)
+            else ""
+        )
         if dry_run:
-            warnings.warn("Using deprecated value retrieval", FutureWarning)
+            warnings.warn(f"Using deprecated value retrieval{src}", FutureWarning)
             return "*****"
 
         if self.custom_cmd:
             warnings.warn(
-                "The use of custom commands in create_secret is deprecated."
-                "Please use value_from_shell_command() instead.",
+                "The use of custom commands in create_secret is deprecated. "
+                f"Please use value_from_shell_command() instead.{src}",
                 FutureWarning,
             )
             return ShellCommandSecretProvider(command=data, log=log).get_value()
 
         if self.use_pass:
             warnings.warn(
-                "The use of gopass in create_secret() is deprecated."
-                "Please use from_gopass() instead.",
+                "The use of gopass in create_secret() is deprecated. "
+                f"Please use from_gopass() instead.{src}",
                 FutureWarning,
             )
             return GopassSecretProvider(
@@ -161,8 +184,8 @@ class Secret(ABC):
             ).get_value()
         # A plaintext secret
         warnings.warn(
-            "The use of plaintext in create_secret() is deprecated."
-            "Please use from_plaintext() instead.",
+            "The use of plaintext in create_secret() is deprecated. "
+            f"Please use from_plaintext() instead.{src}",
             FutureWarning,
         )
         return data
@@ -193,28 +216,30 @@ class Secret(ABC):
     ):
         self.name = name if name else self._gen_name()
         self.deployment = deployment
+        self._source_location = _find_caller_source()
 
         # Remove this in the future
         self.use_pass = use_pass
         self.custom_cmd = custom_cmd
         self.use_gopass_cat = use_gopass_cat
         if self._is_legacy_secret():
+            src = f" (used in {self._source_location})" if self._source_location else ""
             if use_pass:
                 warnings.warn(
-                    "The use of gopass in create_secret() is deprecated."
-                    "Please use from_gopass() instead.",
+                    "The use of gopass in create_secret() is deprecated. "
+                    f"Please use from_gopass() instead.{src}",
                     FutureWarning,
                 )
             if custom_cmd:
                 warnings.warn(
-                    "The use of custom commands in create_secret is deprecated."
-                    "Please use value_from_shell_command() instead.",
+                    "The use of custom commands in create_secret is deprecated. "
+                    f"Please use value_from_shell_command() instead.{src}",
                     FutureWarning,
                 )
             if not use_pass and not custom_cmd:
                 warnings.warn(
-                    "The use of plaintext in create_secret() is deprecated."
-                    "Please use from_plaintext() instead.",
+                    "The use of plaintext in create_secret() is deprecated. "
+                    f"Please use from_plaintext() instead.{src}",
                     FutureWarning,
                 )
 
