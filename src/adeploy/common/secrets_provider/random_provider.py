@@ -1,6 +1,6 @@
+import hashlib
 import secrets
 import string
-import hashlib
 
 from adeploy.common.secrets_provider.provider import SecretsProvider
 

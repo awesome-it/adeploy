@@ -1,13 +1,12 @@
 import argparse
 import glob
-
 from subprocess import CalledProcessError
 
 import yaml
 
 from adeploy.common import colors
-from adeploy.common.kubectl import kubectl_apply, parse_kubectrl_apply
 from adeploy.common.errors import DeployError
+from adeploy.common.kubectl import kubectl_apply, parse_kubectrl_apply
 from adeploy.common.provider import Provider
 
 

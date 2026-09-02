@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import logging
 import os
 import sys
@@ -9,10 +7,11 @@ from colorama import init
 from . import steps
 from .common import colors
 from .common.args import parse, setup_parser
-from .common.errors import InputError, Error
-from .common.helpers import get_provider, get_submodules, get_providers
-from .common.logging import setup as setup_logging, get_logger
+from .common.errors import Error, InputError
+from .common.helpers import get_provider, get_providers, get_submodules
 from .common.kubectl import kubectl_init
+from .common.logging import get_logger
+from .common.logging import setup as setup_logging
 from .common.version import get_package_version
 
 log = get_logger("adeploy")
@@ -62,12 +61,10 @@ def main():
             )
 
     except InputError as e:
-        log.error(
-            colors.red(colors.bold(f'Input error in module "{module}": {str(e)}'))
-        )
+        log.error(colors.red(colors.bold(f'Input error in module "{module}": {e!s}')))
         sys.exit(1)
     except Error as e:
-        log.error(colors.red(colors.bold(f'Error in module "{module}": {str(e)}')))
+        log.error(colors.red(colors.bold(f'Error in module "{module}": {e!s}')))
         sys.exit(1)
 
     parser.print_help()

@@ -1,11 +1,10 @@
 import json
 import os
+import random
 import string
 import subprocess
 import tempfile
-import random
 from logging import Logger
-from typing import Optional
 
 import yaml
 
@@ -244,7 +243,7 @@ def parse_kubectrl_apply(
             )
 
 
-def kubectl_get_current_api_server_url(log: Logger) -> Optional[str]:
+def kubectl_get_current_api_server_url(log: Logger) -> str | None:
     args = [
         "config",
         "view",

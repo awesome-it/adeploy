@@ -3,8 +3,9 @@ import os
 import time
 from logging import Logger
 from pathlib import Path
-from watchdog.observers import Observer
+
 from watchdog.events import FileModifiedEvent, FileSystemEventHandler
+from watchdog.observers import Observer
 
 from adeploy.common import colors
 from adeploy.common.errors import DeployError, RenderError, TestError

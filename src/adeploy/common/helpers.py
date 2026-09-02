@@ -3,15 +3,14 @@ import logging
 import os
 import pkgutil
 import subprocess
+from collections import namedtuple
 from pathlib import PosixPath
 
 import yaml
 
-from collections import namedtuple
-from adeploy import providers
-
-import adeploy.common.colors as colors
 import adeploy.common.jinja.env as jinja_env
+from adeploy import providers
+from adeploy.common import colors
 
 
 def get_submodules(pkg):
@@ -42,10 +41,10 @@ def get_providers() -> dict:
             module_spec = module_finder.find_spec(name)
             module = module_spec.loader.load_module()
             found[name] = namedtuple("Provider", "renderer tester deployer watcher")(
-                renderer=getattr(module, "Renderer"),
-                tester=getattr(module, "Tester"),
-                deployer=getattr(module, "Deployer"),
-                watcher=getattr(module, "Watcher"),
+                renderer=module.Renderer,
+                tester=module.Tester,
+                deployer=module.Deployer,
+                watcher=module.Watcher,
             )
     return found
 

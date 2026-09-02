@@ -1,12 +1,11 @@
 import os
-import subprocess
 import re
+import subprocess
 import warnings
-
+from logging import Logger
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import List, Union
-from logging import Logger
+
 from packaging.version import parse as parse_version
 
 from adeploy.common import colors
@@ -109,7 +108,7 @@ class GopassSecretProvider(SecretsProvider):
             return None
 
     @staticmethod
-    def gopass_get_repos() -> List[str]:
+    def gopass_get_repos() -> list[str]:
         repos = [""]
 
         gopass_repos = get_args().gopass_repo
@@ -138,7 +137,7 @@ class GopassSecretProvider(SecretsProvider):
 
     def gopass_try(
         self,
-        repo_path: Union[Path, str],
+        repo_path: Path | str,
         log: Logger,
         explicit_pass=False,
         skip_parsing=True,
@@ -180,7 +179,6 @@ class GopassSecretProvider(SecretsProvider):
 
             except UnicodeDecodeError:
                 log.debug("Decoding failed ... assuming binary data")
-                pass
 
             return result
         else:

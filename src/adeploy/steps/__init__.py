@@ -1,7 +1,7 @@
-from .watch import Watch
+from .config import Config
+from .deploy import Deploy
 from .render import Render
 from .test import Test
-from .deploy import Deploy
-from .config import Config
+from .watch import Watch
 
-__all__ = ["Config", "Deploy", "Test", "Render", "Watch"]
+__all__ = ["Config", "Deploy", "Render", "Test", "Watch"]

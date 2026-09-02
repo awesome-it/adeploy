@@ -1,6 +1,5 @@
 import subprocess
 from logging import Logger
-from typing import Union
 
 from adeploy.common.kubectl import kubectl_create_secret
 from adeploy.common.secrets.secret import Secret
@@ -19,7 +18,7 @@ class DockerRegistrySecret(Secret):
         deployment,
         server: str,
         username: str,
-        password: Union[SecretsProvider, str],
+        password: SecretsProvider | str,
         email: str = None,
         name: str = None,
         use_pass: bool = True,

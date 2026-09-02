@@ -1,16 +1,14 @@
-from inspect import getmembers, isfunction, ismethod, getfile
+from inspect import getfile, getmembers, isfunction, ismethod
 from logging import Logger
 from pathlib import Path
-from typing import List
 
 import jinja2
 
-import adeploy.common.jinja.globals as globals
-import adeploy.common.jinja.filters as filters
+from adeploy.common.jinja import filters, globals
 
 
 def create(
-    pathes: List[str or Path] = None,
+    pathes: list[str or Path] = None,
     log: Logger = None,
     deployment=None,
     templates_dir=None,
@@ -45,7 +43,7 @@ def register_globals(
         if log:
             log.debug(
                 f'Registering global function "{name}" '
-                + (f'for deployment "{str(deployment)}" ' if deployment else "")
+                + (f'for deployment "{deployment!s}" ' if deployment else "")
                 + f'from "{getfile(method)}"'
             )
 
@@ -59,7 +57,7 @@ def register_globals(
         if log:
             log.debug(
                 f'Registering global function "{name}" '
-                + (f'for deployment "{str(deployment)}" ' if deployment else "")
+                + (f'for deployment "{deployment!s}" ' if deployment else "")
                 + f'from "{getfile(func_creator)}"'
             )
 

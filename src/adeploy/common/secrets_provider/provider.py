@@ -72,7 +72,6 @@ class SecretsProvider(ABC):
         Return the secret value.
         Used to generate the k8s secret API object and by __str__ to render the object.
         """
-        pass
 
     @abstractmethod
     def get_id(self) -> str:
@@ -81,7 +80,6 @@ class SecretsProvider(ABC):
         This is used to create the k8s secrets name and to reference it from deployments.
         The identifier must be unique for each secret and must not depend on the secret value.
         """
-        pass
 
     @classmethod
     def reset_created_secrets_list(cls):
