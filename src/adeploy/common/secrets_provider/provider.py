@@ -1,4 +1,3 @@
-import sys
 from abc import ABC, abstractmethod
 from typing import final
 
@@ -28,13 +27,12 @@ class SecretsProvider(ABC):
         if name not in self.__created_secrets:
             self.__created_secrets[name] = self
         else:
-            self.log.error(
+            self.log.warning(
                 f'Secret "{colors.bold(name)}" of tye {self.__class__} already exists'
             )
-            self.log.error(
+            self.log.warning(
                 "Reference the existing secret instead of creating a new one"
             )
-            sys.exit(1)
 
     def __str__(self):
         """
