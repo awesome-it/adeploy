@@ -22,7 +22,7 @@ def setup(args):
     logging.getLogger("requests").setLevel(logging.WARNING)
 
 
-def get_logger(name: str = None):
+def get_logger(name: str | None = None):
     return logging.getLogger(name)
 
 

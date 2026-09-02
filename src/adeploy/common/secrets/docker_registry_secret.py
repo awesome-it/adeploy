@@ -19,8 +19,8 @@ class DockerRegistrySecret(Secret):
         server: str,
         username: str,
         password: SecretsProvider | str,
-        email: str = None,
-        name: str = None,
+        email: str | None = None,
+        name: str | None = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,
         custom_cmd: bool = False,
@@ -35,7 +35,10 @@ class DockerRegistrySecret(Secret):
         return not isinstance(self.password, SecretsProvider)
 
     def create(
-        self, log: Logger = None, dry_run: str = None, output: str = None
+        self,
+        log: Logger | None = None,
+        dry_run: str | None = None,
+        output: str | None = None,
     ) -> subprocess.CompletedProcess:
         args = [f"--docker-server={self.server}", f"--docker-username={self.username}"]
 

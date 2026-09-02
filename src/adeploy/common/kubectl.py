@@ -101,9 +101,9 @@ def kubectl_create_secret(
     namespace,
     type,
     args,
-    labels: dict = None,
-    dry_run: bool = None,
-    output: str = None,
+    labels: dict | None = None,
+    dry_run: bool | None = None,
+    output: str | None = None,
 ) -> subprocess.CompletedProcess:
     # Get manifest for secret
     result = kubectl(
@@ -137,7 +137,7 @@ def kubectl_create_secret(
 
 
 def kubectl(
-    log: Logger, args: list, namespace: str = None
+    log: Logger, args: list, namespace: str | None = None
 ) -> subprocess.CompletedProcess:
     cmd = ["kubectl", "--kubeconfig", str(KUBECONF)]
     if namespace:
@@ -169,10 +169,10 @@ def kubectl_init(args):
 def parse_kubectrl_apply(
     log,
     stdout,
-    manifests: dict = None,
-    fake_ns: str = None,
-    default_ns: str = None,
-    deployment_ns: str = None,
+    manifests: dict | None = None,
+    fake_ns: str | None = None,
+    default_ns: str | None = None,
+    deployment_ns: str | None = None,
     prefix="...",
 ):
     # If there is no fake_ns, we need to determine by comparing existing namespaces

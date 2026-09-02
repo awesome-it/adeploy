@@ -20,9 +20,7 @@ def get_submodules(pkg):
     ):
         module_spec = module_finder.find_spec(name)
         module = module_spec.loader.load_module()
-        class_name = list(filter(lambda m: module.__name__ == m.lower(), dir(module)))[
-            0
-        ]
+        class_name = next(filter(lambda m: module.__name__ == m.lower(), dir(module)))
         modules.append((module, class_name))
 
     return modules

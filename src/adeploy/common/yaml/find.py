@@ -9,7 +9,6 @@ def find(d, tags: str | list):
         if tag in d:
             yield d[tag]
 
-    for k, v in d.items():
+    for v in d.values():
         if isinstance(v, dict):
-            for i in find(v, tags):
-                yield i
+            yield from find(v, tags)

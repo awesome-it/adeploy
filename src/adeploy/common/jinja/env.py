@@ -8,8 +8,8 @@ from adeploy.common.jinja import filters, globals
 
 
 def create(
-    pathes: list[str or Path] = None,
-    log: Logger = None,
+    pathes: list[str or Path] | None = None,
+    log: Logger | None = None,
     deployment=None,
     templates_dir=None,
 ) -> jinja2.Environment:
@@ -33,7 +33,10 @@ def create(
 
 
 def register_globals(
-    env: jinja2.Environment, deployment=None, log: Logger = None, templates_dir=None
+    env: jinja2.Environment,
+    deployment=None,
+    log: Logger | None = None,
+    templates_dir=None,
 ):
     handler = globals.Handler(env, deployment, log, templates_dir)
     for name, method in getmembers(handler, predicate=ismethod):

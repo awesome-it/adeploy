@@ -16,7 +16,7 @@ class GenericSecret(Secret):
         self,
         deployment,
         data: dict,
-        name: str = None,
+        name: str | None = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,
         custom_cmd: bool = False,
@@ -25,10 +25,13 @@ class GenericSecret(Secret):
         super().__init__(deployment, name, use_pass, use_gopass_cat, custom_cmd)
 
     def _is_legacy_secret(self) -> bool:
-        return not all([isinstance(d, SecretsProvider) for d in self.data.values()])
+        return not all(isinstance(d, SecretsProvider) for d in self.data.values())
 
     def create(
-        self, log: Logger = None, dry_run: str = None, output: str = None
+        self,
+        log: Logger | None = None,
+        dry_run: str | None = None,
+        output: str | None = None,
     ) -> subprocess.CompletedProcess:
         args = []
         temp_files = []
