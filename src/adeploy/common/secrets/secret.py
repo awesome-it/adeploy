@@ -10,24 +10,7 @@ from abc import ABC, abstractmethod
 from logging import Logger
 from pathlib import Path
 from pickle import dump, load
-from typing import Optional, Union
-
-_ADEPLOY_SRC_ROOT = str(Path(__file__).resolve().parent.parent.parent)
-
-
-def _find_caller_source() -> Optional[str]:
-    """Walk the stack and return the first frame that looks like a caller's source file
-    (e.g. a Jinja template or a user config), skipping adeploy internals and .py frames."""
-    for fi in inspect.stack()[1:]:
-        fname = fi.filename
-        if not fname or fname.startswith("<"):
-            continue
-        if fname.startswith(_ADEPLOY_SRC_ROOT):
-            continue
-        if fname.endswith(".py"):
-            continue
-        return f"{fname}:{fi.lineno}"
-    return None
+from typing import Union
 
 from adeploy.common import colors
 from adeploy.common.errors import RenderError
@@ -42,6 +25,23 @@ from adeploy.common.secrets_provider.provider import SecretsProvider
 from adeploy.common.secrets_provider.shell_command_provider import (
     ShellCommandSecretProvider,
 )
+
+_ADEPLOY_SRC_ROOT = str(Path(__file__).resolve().parent.parent.parent)
+
+
+def _find_caller_source() -> str | None:
+    """Walk the stack and return the first frame that looks like a caller's source file
+    (e.g. a Jinja template or a user config), skipping adeploy internals and .py frames."""
+    for fi in inspect.stack()[1:]:
+        fname = fi.filename
+        if not fname or fname.startswith("<"):
+            continue
+        if fname.startswith(_ADEPLOY_SRC_ROOT):
+            continue
+        if fname.endswith(".py"):
+            continue
+        return f"{fname}:{fi.lineno}"
+    return None
 
 
 class Secret(ABC):
