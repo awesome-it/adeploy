@@ -4,7 +4,7 @@ import re
 class JinjaDict(dict):
     delimiter = None
 
-    def __init__(self, dict, delimiter: str = None):
+    def __init__(self, dict, delimiter: str | None = None):
         super().__init__(dict)
         if delimiter:
             self.delimiter = re.compile(delimiter)

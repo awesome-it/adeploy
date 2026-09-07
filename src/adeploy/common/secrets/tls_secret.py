@@ -2,7 +2,6 @@ import os
 import subprocess
 import tempfile
 from logging import Logger
-from typing import Union
 
 from adeploy.common.kubectl import kubectl_create_secret
 from adeploy.common.secrets.secret import Secret
@@ -80,9 +79,9 @@ class TlsSecret(Secret):
     def __init__(
         self,
         deployment,
-        cert: Union[SecretsProvider, str],
-        key: Union[SecretsProvider, str],
-        name: str = None,
+        cert: SecretsProvider | str,
+        key: SecretsProvider | str,
+        name: str | None = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,
         custom_cmd: bool = False,
@@ -92,14 +91,17 @@ class TlsSecret(Secret):
         super().__init__(deployment, name, use_pass, use_gopass_cat, custom_cmd)
 
     def create(
-        self, log: Logger = None, dry_run: str = None, output: str = None
+        self,
+        log: Logger | None = None,
+        dry_run: str | None = None,
+        output: str | None = None,
     ) -> subprocess.CompletedProcess:
         cert_data = (
             _DUMMY_DATA_CRT
             if dry_run
             else self.get_value(self.cert, log, dry_run=False)
         )
-        cert = tempfile.NamedTemporaryFile(
+        cert = tempfile.NamedTemporaryFile(  # noqa: SIM115
             delete=False,
             mode="wb" if isinstance(cert_data, (bytes, bytearray)) else "w",
         )
@@ -109,7 +111,7 @@ class TlsSecret(Secret):
         key_data = (
             _DUMMY_DATA_KEY if dry_run else self.get_value(self.key, log, dry_run=False)
         )
-        key = tempfile.NamedTemporaryFile(
+        key = tempfile.NamedTemporaryFile(  # noqa: SIM115
             delete=False, mode="wb" if isinstance(key_data, (bytes, bytearray)) else "w"
         )
         key.write(key_data)

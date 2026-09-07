@@ -1,6 +1,6 @@
+import hashlib
 import secrets
 import string
-import hashlib
 
 from adeploy.common.secrets_provider.provider import SecretsProvider
 
@@ -29,7 +29,7 @@ class RandomSecretProvider(SecretsProvider):
         https://docs.python.org/3/library/secrets.html#recipes-and-best-practices
         """
         if not isinstance(length, int):
-            raise ValueError("create_random_string() requires an integer as length")
+            raise TypeError("create_random_string() requires an integer as length")
         if length < 16:
             raise ValueError(
                 "create_random_string() requires a length of at least 16 characters"

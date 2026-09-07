@@ -173,7 +173,7 @@ class Renderer(Provider):
 
     def run(self):
         self.log.debug(f'Working on deployment "{self.name}" ...')
-        template_dir, templates = self.load_templates()
+        _template_dir, templates = self.load_templates()
         for deployment in self.load_deployments():
             # List of known secrets is a per deployment list. Reset for each new deployment
             SecretsProvider.reset_created_secrets_list()

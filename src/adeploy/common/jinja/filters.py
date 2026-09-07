@@ -1,13 +1,13 @@
 import base64
 import hashlib
 from pathlib import Path
-from typing import Union
 
 import yaml as _yaml
+
 import adeploy.common.jinja.dict as jinja_dict
 
 
-def yaml(obj: Union[jinja_dict.JinjaDict, dict], flow_style: bool) -> str:
+def yaml(obj: jinja_dict.JinjaDict | dict, flow_style: bool) -> str:
     """Converts given object into YAML formatted string
 
     This filter is using [PyYAML](https://pyyaml.org/wiki/PyYAMLDocumentation) to convert the given object into a

@@ -1,12 +1,11 @@
 import os
-import subprocess
 import re
+import subprocess
 import warnings
-
+from logging import Logger
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import List, Union
-from logging import Logger
+
 from packaging.version import parse as parse_version
 
 from adeploy.common import colors
@@ -72,7 +71,7 @@ class GopassSecretProvider(SecretsProvider):
                     return False
         return True
 
-    def _get_value(self, log: Logger = None) -> str:
+    def _get_value(self, log: Logger | None = None) -> str:
         if not self.__check_for_usable_gopass():
             raise InputError("Gopass is not installed. Please install Gopass first.")
         if not log:
@@ -109,14 +108,14 @@ class GopassSecretProvider(SecretsProvider):
             return None
 
     @staticmethod
-    def gopass_get_repos() -> List[str]:
+    def gopass_get_repos() -> list[str]:
         repos = [""]
 
         gopass_repos = get_args().gopass_repo
         if gopass_repos and len(gopass_repos) > 0:
             repos += [r[0] for r in gopass_repos]
 
-        elif os.getenv("ADEPLOY_GOPASS_REPOS", False):
+        elif os.getenv("ADEPLOY_GOPASS_REPOS"):
             repos += os.getenv("ADEPLOY_GOPASS_REPOS", "").split(",")
 
         return repos
@@ -138,7 +137,7 @@ class GopassSecretProvider(SecretsProvider):
 
     def gopass_try(
         self,
-        repo_path: Union[Path, str],
+        repo_path: Path | str,
         log: Logger,
         explicit_pass=False,
         skip_parsing=True,
@@ -151,7 +150,7 @@ class GopassSecretProvider(SecretsProvider):
             + [str(repo_path)]
         )
         log.debug(f"Executing command {colors.bold(' '.join(cmd))}")
-        result = subprocess.run(cmd, capture_output=True)
+        result = subprocess.run(cmd, capture_output=True, check=False)
         log.debug(
             f"... command exited with return code {colors.bold(result.returncode)}"
         )
@@ -180,7 +179,6 @@ class GopassSecretProvider(SecretsProvider):
 
             except UnicodeDecodeError:
                 log.debug("Decoding failed ... assuming binary data")
-                pass
 
             return result
         else:

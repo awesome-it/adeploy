@@ -3,37 +3,36 @@ The following functions are globally available in the `default.yml`, the namespa
 in the Jinja templates in your `templates` folder.
 """
 
+import json
 import os
 import pathlib
-import sys
-import uuid
-import shortuuid
-import jq
 import string
-import json
+import sys
 import textwrap
 import urllib.request
-import jinja2
-
+import uuid
 from logging import Logger
-from typing import Dict, List, Literal, Union
+from typing import ClassVar, Literal, Union
+
+import jinja2
+import jq
+import shortuuid
 from ruamel.yaml import YAML
 
-import adeploy.common.colors as colors
 import adeploy.common.secrets as secret
-import adeploy.common.errors as errors
+from adeploy.common import colors, errors
 from adeploy.common.secrets_provider.provider import SecretsProvider
 
 
-class Handler(object):
-    named_passwords = {}
+class Handler:
+    named_passwords: ClassVar[dict] = {}
 
     def __init__(
         self,
         env: jinja2.Environment,
         deployment=None,
-        log: Logger = None,
-        templates_dir: str = None,
+        log: Logger | None = None,
+        templates_dir: str | None = None,
     ):
         self.env = env
         self.deployment = deployment
@@ -43,9 +42,9 @@ class Handler(object):
     def from_json_or_yaml(
         self,
         path: str,
-        jq_query: str = None,
-        force_type: Literal["json", "yaml"] = None,
-    ) -> Union[dict, str, list]:
+        jq_query: str | None = None,
+        force_type: Literal["json", "yaml"] | None = None,
+    ) -> dict | str | list:
         """Include data from an external JSON or YAML file in your defaults.yml or namespace / release configuration.
         Optionally apply a jq query. Useful if a var is not in the `defaults.yml` or in the namespace / release
         configuration but in an external file - for example an ansible hostvars file.
@@ -127,7 +126,7 @@ class Handler(object):
         # Apply jq-like query to the data
         try:
             results = jq.all(jq_query, data)  # Get all matches
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.log.error(f"Error applying query: {jq_query}. Error: {e}")
             sys.exit(1)
 
@@ -206,13 +205,13 @@ class Handler(object):
 
     def create_labels(
         self,
-        name: str = None,
-        instance: str = None,
-        version: str = None,
-        component: str = None,
-        part_of: str = None,
+        name: str | None = None,
+        instance: str | None = None,
+        version: str | None = None,
+        component: str | None = None,
+        part_of: str | None = None,
         managed_by: str = "adeploy",
-        labels: Union[dict, list] = None,
+        labels: dict | list | None = None,
         **kwargs: dict,
     ) -> str:
         """Creates a dict of custom and common labels
@@ -289,8 +288,8 @@ class Handler(object):
         direct: bool = False,
         render: bool = True,
         indent: int = 4,
-        skip: List[str] = None,
-        escape: List[str] = None,
+        skip: list[str] | None = None,
+        escape: list[str] | None = None,
     ) -> str:
         """Include and optionally render arbitrary files into your manifest
 
@@ -410,8 +409,8 @@ class Handler(object):
         direct: bool = False,
         render: bool = True,
         indent: int = 4,
-        skip: List[str] = None,
-        escape: List[str] = None,
+        skip: list[str] | None = None,
+        escape: list[str] | None = None,
     ) -> dict:
         """Include files from a directory
 
@@ -455,13 +454,13 @@ class Handler(object):
 
     def create_secret(
         self,
-        name: str = None,
+        name: str | None = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,
         custom_cmd: bool = False,
         as_ref: bool = False,
-        data: dict = None,
-        **kwargs: Dict[str, "SecretsProvider"],
+        data: dict | None = None,
+        **kwargs: dict[str, "SecretsProvider"],
     ) -> str:
         """Creates k8s secrets
 
@@ -574,13 +573,13 @@ class Handler(object):
                 "You must specify at least a secret key if using create_secret() with key_ref = True"
             )
 
-        return json.dumps({"name": s.name, "key": list(keys)[0]})
+        return json.dumps({"name": s.name, "key": next(iter(keys))})
 
     def create_tls_secret(
         self,
         cert: Union[str, "SecretsProvider"],
         key: Union[str, "SecretsProvider"],
-        name: str = None,
+        name: str | None = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,
         custom_cmd: bool = False,
@@ -646,8 +645,8 @@ class Handler(object):
         server: str,
         username: str,
         password: Union["SecretsProvider", str],
-        email: str = None,
-        name: str = None,
+        email: str | None = None,
+        name: str | None = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,
         custom_cmd: bool = False,

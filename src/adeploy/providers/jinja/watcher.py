@@ -3,8 +3,10 @@ import os
 import time
 from logging import Logger
 from pathlib import Path
-from watchdog.observers import Observer
+from typing import ClassVar
+
 from watchdog.events import FileModifiedEvent, FileSystemEventHandler
+from watchdog.observers import Observer
 
 from adeploy.common import colors
 from adeploy.common.errors import DeployError, RenderError, TestError
@@ -17,7 +19,7 @@ class Watcher(Provider):
     auto_test: bool = False
     auto_deploy: bool = False
     deploy_on_start: bool = False
-    watchers: list = []
+    watchers: ClassVar[list] = []
     restart_rendering = False
     renderer = None
     tester = None
@@ -117,7 +119,7 @@ class Watcher(Provider):
 
     def run(self):
         self.log.debug(f'Working on deployment "{self.name}" ...')
-        template_dir, templates = self.renderer.load_templates()
+        _template_dir, templates = self.renderer.load_templates()
         for deployment in self.renderer.load_deployments():
             self.log.debug(
                 f"Clean build dirs: {[colors.bold(d) for d in deployment.clean_build_dir()]}"

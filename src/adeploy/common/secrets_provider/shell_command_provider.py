@@ -31,7 +31,9 @@ class ShellCommandSecretProvider(SecretsProvider):
             return self.__value
 
         log.debug(f'... executing command "{colors.bold(self.command)}"')
-        result = subprocess.run(self.command, shell=True, capture_output=True)
+        result = subprocess.run(
+            self.command, shell=True, capture_output=True, check=False
+        )
         result.check_returncode()
 
         try:

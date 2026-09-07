@@ -1,6 +1,6 @@
 import sys
 from abc import ABC, abstractmethod
-from typing import final
+from typing import ClassVar, final
 
 from adeploy.common import colors
 from adeploy.common.logging import get_logger
@@ -14,7 +14,7 @@ class SecretsProvider(ABC):
     It provides the ability to reference a secret without the need of actually decrypting it.
     """
 
-    __created_secrets = {}
+    __created_secrets: ClassVar[dict] = {}
 
     def __init__(self, name, log, ltrim: bool = False, rtrim: bool = False):
         if not log:
@@ -74,7 +74,6 @@ class SecretsProvider(ABC):
         Return the secret value.
         Used to generate the k8s secret API object and by __str__ to render the object.
         """
-        pass
 
     @abstractmethod
     def get_id(self) -> str:
@@ -83,7 +82,6 @@ class SecretsProvider(ABC):
         This is used to create the k8s secrets name and to reference it from deployments.
         The identifier must be unique for each secret and must not depend on the secret value.
         """
-        pass
 
     @classmethod
     def reset_created_secrets_list(cls):

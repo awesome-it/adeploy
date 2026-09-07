@@ -7,10 +7,11 @@ import yaml
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
+from adeploy.common import colors
 from adeploy.common.errors import Error
 from adeploy.common.helpers import dict_update_recursive, get_defaults
-from adeploy.common.jinja import env as jinja_env, dict as jinja_dict
-from adeploy.common import colors
+from adeploy.common.jinja import dict as jinja_dict
+from adeploy.common.jinja import env as jinja_env
 from adeploy.common.secrets_provider.provider import SecretsProvider
 
 
@@ -55,20 +56,19 @@ class Deployment:
             [t[0] for t in args.filters_release] if args.filters_release else None
         )
 
-        if (filters_namespace and self.namespace not in filters_namespace) or (
-            filters_release
+        return bool(
+            filters_namespace
+            and self.namespace not in filters_namespace
+            or filters_release
             and self.name not in filters_release
             and self.release not in filters_release
-        ):
-            return True
-
-        return False
+        )
 
     def load_config(
         self,
         config_path: Path | list[Path],
-        defaults_files: list = None,
-        log: Logger = None,
+        defaults_files: list | None = None,
+        log: Logger | None = None,
     ):
         # We're not yet rendering.
         # Reset list of known secrets in order to allow multiple deployments to use the same defaults file

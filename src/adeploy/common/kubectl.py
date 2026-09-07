@@ -1,11 +1,10 @@
 import json
 import os
+import random
 import string
 import subprocess
 import tempfile
-import random
 from logging import Logger
-from typing import Optional
 
 import yaml
 
@@ -102,9 +101,9 @@ def kubectl_create_secret(
     namespace,
     type,
     args,
-    labels: dict = None,
-    dry_run: bool = None,
-    output: str = None,
+    labels: dict | None = None,
+    dry_run: bool | None = None,
+    output: str | None = None,
 ) -> subprocess.CompletedProcess:
     # Get manifest for secret
     result = kubectl(
@@ -117,7 +116,7 @@ def kubectl_create_secret(
     # Add labels
     manifest = dict_update_recursive(manifest, {"metadata": {"labels": labels}})
 
-    fd = tempfile.NamedTemporaryFile(delete=False, mode="w")
+    fd = tempfile.NamedTemporaryFile(delete=False, mode="w")  # noqa: SIM115
     yaml.dump(manifest, fd)
     fd.close()
 
@@ -138,7 +137,7 @@ def kubectl_create_secret(
 
 
 def kubectl(
-    log: Logger, args: list, namespace: str = None
+    log: Logger, args: list, namespace: str | None = None
 ) -> subprocess.CompletedProcess:
     cmd = ["kubectl", "--kubeconfig", str(KUBECONF)]
     if namespace:
@@ -146,7 +145,7 @@ def kubectl(
     cmd += args
 
     log.debug(f"Executing command {colors.bold(' '.join(cmd))}")
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     result.check_returncode()
     return result
 
@@ -159,7 +158,10 @@ def kubectl_init(args):
     KUBECONF.parent.mkdir(parents=True, exist_ok=True)
 
     result = subprocess.run(
-        ["kubectl", "config", "view", "--raw"], capture_output=True, text=True
+        ["kubectl", "config", "view", "--raw"],
+        capture_output=True,
+        text=True,
+        check=False,
     )
     result.check_returncode()
 
@@ -170,10 +172,10 @@ def kubectl_init(args):
 def parse_kubectrl_apply(
     log,
     stdout,
-    manifests: dict = None,
-    fake_ns: str = None,
-    default_ns: str = None,
-    deployment_ns: str = None,
+    manifests: dict | None = None,
+    fake_ns: str | None = None,
+    default_ns: str | None = None,
+    deployment_ns: str | None = None,
     prefix="...",
 ):
     # If there is no fake_ns, we need to determine by comparing existing namespaces
@@ -244,7 +246,7 @@ def parse_kubectrl_apply(
             )
 
 
-def kubectl_get_current_api_server_url(log: Logger) -> Optional[str]:
+def kubectl_get_current_api_server_url(log: Logger) -> str | None:
     args = [
         "config",
         "view",

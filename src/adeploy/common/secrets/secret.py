@@ -4,22 +4,21 @@ import json
 import shutil
 import subprocess
 import warnings
-
 from abc import ABC, abstractmethod
 from logging import Logger
 from pathlib import Path
 from pickle import dump, load
-from typing import Union
+from typing import ClassVar
 
 from adeploy.common import colors
 from adeploy.common.errors import RenderError
-from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
 from adeploy.common.kubectl import (
-    parse_kubectrl_apply,
-    kubectl_get_secret,
-    kubectl_delete_secret,
     kubectl,
+    kubectl_delete_secret,
+    kubectl_get_secret,
+    parse_kubectrl_apply,
 )
+from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
 from adeploy.common.secrets_provider.provider import SecretsProvider
 from adeploy.common.secrets_provider.shell_command_provider import (
     ShellCommandSecretProvider,
@@ -35,7 +34,7 @@ class Secret(ABC):
     custom_cmd: bool = False  # Deprecated
 
     _name_prefix = "secret-"
-    _secrets = {}
+    _secrets: ClassVar[dict] = {}
 
     @staticmethod
     def get_secret_dir(build_dir: Path, deployment_name: str):
@@ -55,7 +54,7 @@ class Secret(ABC):
 
     @staticmethod
     def register(s):
-        key = f"{str(s.deployment)}/{s.name}"
+        key = f"{s.deployment!s}/{s.name}"
         if key not in Secret._secrets:
             Secret._secrets[key] = s
             return True
@@ -80,12 +79,12 @@ class Secret(ABC):
             key = str(s.deployment)
             deployments[key] = deployments.get(key, []) + [s]
 
-        for d, secrets in deployments.items():
-            if len(secrets) > 0:
+        for d, dep_secrets in deployments.items():
+            if len(dep_secrets) > 0:
                 log.info(
                     f'Checking for orphaned secrets of deployment "{colors.blue(d)}" ...'
                 )
-                d = secrets[0].deployment
+                d = dep_secrets[0].deployment
                 result = kubectl(
                     log,
                     [
@@ -101,7 +100,7 @@ class Secret(ABC):
                 secrets_existing = [
                     s for s in result.stdout.replace("'", "").split(" ") if len(s) > 0
                 ]
-                secrets_created = [s.name for s in secrets]
+                secrets_created = [s.name for s in dep_secrets]
 
                 secrets_existing.sort()
                 secrets_created.sort()
@@ -134,9 +133,9 @@ class Secret(ABC):
 
     def __deprecated_get_value(
         self,
-        data: Union[Path, str],
-        log: Logger = None,
-        dry_run: Union[bool, str] = False,
+        data: Path | str,
+        log: Logger | None = None,
+        dry_run: bool | str = False,
     ) -> str:
         if dry_run:
             warnings.warn("Using deprecated value retrieval", FutureWarning)
@@ -169,9 +168,9 @@ class Secret(ABC):
 
     def get_value(
         self,
-        data: Union[Path, str, SecretsProvider],
-        log: Logger = None,
-        dry_run: Union[bool, str] = False,
+        data: Path | str | SecretsProvider,
+        log: Logger | None = None,
+        dry_run: bool | str = False,
     ) -> str:
         if not isinstance(data, SecretsProvider):
             return self.__deprecated_get_value(data, log, dry_run)
@@ -186,7 +185,7 @@ class Secret(ABC):
     def __init__(
         self,
         deployment,
-        name: str = None,
+        name: str | None = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,
         custom_cmd: bool = False,
@@ -317,6 +316,9 @@ class Secret(ABC):
 
     @abstractmethod
     def create(
-        self, log: Logger = None, dry_run: str = None, output: str = None
+        self,
+        log: Logger | None = None,
+        dry_run: str | None = None,
+        output: str | None = None,
     ) -> subprocess.CompletedProcess:
         pass

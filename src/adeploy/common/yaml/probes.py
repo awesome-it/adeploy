@@ -1,4 +1,5 @@
 import copy
+
 from adeploy.common import colors
 from adeploy.common.helpers import dict_update_recursive
 
@@ -19,7 +20,7 @@ def update_probes(log, doc, deployment):
                 if default_probe:
                     log.debug(
                         f"...... Updating {colors.bold(type)} probe "
-                        f'for "{colors.bold(doc_name)}": {str(default_probe)}'
+                        f'for "{colors.bold(doc_name)}": {default_probe!s}'
                     )
 
                     for k, v in default_probe.items():

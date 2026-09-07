@@ -3,15 +3,16 @@ import logging
 import os
 import pkgutil
 import subprocess
+from collections import namedtuple
 from pathlib import PosixPath
 
 import yaml
 
-from collections import namedtuple
-from adeploy import providers
-
-import adeploy.common.colors as colors
 import adeploy.common.jinja.env as jinja_env
+from adeploy import providers
+from adeploy.common import colors
+
+_log = logging.getLogger(__name__)
 
 
 def get_submodules(pkg):
@@ -21,9 +22,7 @@ def get_submodules(pkg):
     ):
         module_spec = module_finder.find_spec(name)
         module = module_spec.loader.load_module()
-        class_name = list(filter(lambda m: module.__name__ == m.lower(), dir(module)))[
-            0
-        ]
+        class_name = next(filter(lambda m: module.__name__ == m.lower(), dir(module)))
         modules.append((module, class_name))
 
     return modules
@@ -42,10 +41,10 @@ def get_providers() -> dict:
             module_spec = module_finder.find_spec(name)
             module = module_spec.loader.load_module()
             found[name] = namedtuple("Provider", "renderer tester deployer watcher")(
-                renderer=getattr(module, "Renderer"),
-                tester=getattr(module, "Tester"),
-                deployer=getattr(module, "Deployer"),
-                watcher=getattr(module, "Watcher"),
+                renderer=module.Renderer,
+                tester=module.Tester,
+                deployer=module.Deployer,
+                watcher=module.Watcher,
             )
     return found
 
@@ -62,7 +61,7 @@ def get_defaults(
         files = defaults_files
     defaults = {}
     for file in files:
-        logging.debug(f"Loading defaults from {file}")
+        _log.debug(f"Loading defaults from {file}")
         env = jinja_env.create([file.parent], deployment=deployment, log=log)
         # Make best to load defaults
         template_values_default = {
@@ -83,7 +82,7 @@ def run_command(log, cmd) -> subprocess.CompletedProcess:
     # Convert possible Paths to strings
     cmd = [str(c) for c in cmd]
     log.debug(f"Executing command {colors.bold(' '.join(cmd))}")
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     result.check_returncode()
     return result
 

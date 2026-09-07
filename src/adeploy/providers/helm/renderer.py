@@ -11,12 +11,13 @@ import yaml
 
 from adeploy.common import colors
 from adeploy.common.errors import RenderError
+
 from .common import (
+    HelmProvider,
+    get_defaults,
     helm_repo_add,
     helm_repo_pull,
     helm_template,
-    HelmProvider,
-    get_defaults,
 )
 
 
@@ -185,7 +186,11 @@ class Renderer(HelmProvider):
 
                 try:
                     result = subprocess.run(
-                        cmd, cwd=str(self.hooks_dir), capture_output=True, text=True
+                        cmd,
+                        cwd=str(self.hooks_dir),
+                        capture_output=True,
+                        text=True,
+                        check=False,
                     )
                     result.check_returncode()
                     self.log.debug(f"... {result.stdout}")
@@ -196,7 +201,7 @@ class Renderer(HelmProvider):
                             f'Error when running hook "{colors.bold(hook.stem)}": {e.stderr}'
                         )
                     )
-                    raise e
+                    raise
 
     def run(self):
         self.log.debug(f'Working on deployment "{self.name}" ...')
