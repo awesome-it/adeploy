@@ -133,7 +133,7 @@ class Secret(ABC):
     def __deprecated_get_value(
         self,
         data: Path | str,
-        log: Logger = None,
+        log: Logger | None = None,
         dry_run: bool | str = False,
     ) -> str:
         if dry_run:
@@ -168,7 +168,7 @@ class Secret(ABC):
     def get_value(
         self,
         data: Path | str | SecretsProvider,
-        log: Logger = None,
+        log: Logger | None = None,
         dry_run: bool | str = False,
     ) -> str:
         if not isinstance(data, SecretsProvider):
@@ -184,7 +184,7 @@ class Secret(ABC):
     def __init__(
         self,
         deployment,
-        name: str = None,
+        name: str | None = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,
         custom_cmd: bool = False,
@@ -315,6 +315,9 @@ class Secret(ABC):
 
     @abstractmethod
     def create(
-        self, log: Logger = None, dry_run: str = None, output: str = None
+        self,
+        log: Logger | None = None,
+        dry_run: str | None = None,
+        output: str | None = None,
     ) -> subprocess.CompletedProcess:
         pass

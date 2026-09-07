@@ -118,7 +118,7 @@ class Watcher(Provider):
 
     def run(self):
         self.log.debug(f'Working on deployment "{self.name}" ...')
-        template_dir, templates = self.renderer.load_templates()
+        _template_dir, templates = self.renderer.load_templates()
         for deployment in self.renderer.load_deployments():
             self.log.debug(
                 f"Clean build dirs: {[colors.bold(d) for d in deployment.clean_build_dir()]}"

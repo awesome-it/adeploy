@@ -81,7 +81,7 @@ class TlsSecret(Secret):
         deployment,
         cert: SecretsProvider | str,
         key: SecretsProvider | str,
-        name: str = None,
+        name: str | None = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,
         custom_cmd: bool = False,
@@ -91,7 +91,10 @@ class TlsSecret(Secret):
         super().__init__(deployment, name, use_pass, use_gopass_cat, custom_cmd)
 
     def create(
-        self, log: Logger = None, dry_run: str = None, output: str = None
+        self,
+        log: Logger | None = None,
+        dry_run: str | None = None,
+        output: str | None = None,
     ) -> subprocess.CompletedProcess:
         cert_data = (
             _DUMMY_DATA_CRT

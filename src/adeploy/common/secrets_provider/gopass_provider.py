@@ -71,7 +71,7 @@ class GopassSecretProvider(SecretsProvider):
                     return False
         return True
 
-    def _get_value(self, log: Logger = None) -> str:
+    def _get_value(self, log: Logger | None = None) -> str:
         if not self.__check_for_usable_gopass():
             raise InputError("Gopass is not installed. Please install Gopass first.")
         if not log:

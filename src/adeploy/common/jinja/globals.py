@@ -31,8 +31,8 @@ class Handler:
         self,
         env: jinja2.Environment,
         deployment=None,
-        log: Logger = None,
-        templates_dir: str = None,
+        log: Logger | None = None,
+        templates_dir: str | None = None,
     ):
         self.env = env
         self.deployment = deployment
@@ -42,8 +42,8 @@ class Handler:
     def from_json_or_yaml(
         self,
         path: str,
-        jq_query: str = None,
-        force_type: Literal["json", "yaml"] = None,
+        jq_query: str | None = None,
+        force_type: Literal["json", "yaml"] | None = None,
     ) -> dict | str | list:
         """Include data from an external JSON or YAML file in your defaults.yml or namespace / release configuration.
         Optionally apply a jq query. Useful if a var is not in the `defaults.yml` or in the namespace / release
@@ -205,13 +205,13 @@ class Handler:
 
     def create_labels(
         self,
-        name: str = None,
-        instance: str = None,
-        version: str = None,
-        component: str = None,
-        part_of: str = None,
+        name: str | None = None,
+        instance: str | None = None,
+        version: str | None = None,
+        component: str | None = None,
+        part_of: str | None = None,
         managed_by: str = "adeploy",
-        labels: dict | list = None,
+        labels: dict | list | None = None,
         **kwargs: dict,
     ) -> str:
         """Creates a dict of custom and common labels
@@ -288,8 +288,8 @@ class Handler:
         direct: bool = False,
         render: bool = True,
         indent: int = 4,
-        skip: list[str] = None,
-        escape: list[str] = None,
+        skip: list[str] | None = None,
+        escape: list[str] | None = None,
     ) -> str:
         """Include and optionally render arbitrary files into your manifest
 
@@ -409,8 +409,8 @@ class Handler:
         direct: bool = False,
         render: bool = True,
         indent: int = 4,
-        skip: list[str] = None,
-        escape: list[str] = None,
+        skip: list[str] | None = None,
+        escape: list[str] | None = None,
     ) -> dict:
         """Include files from a directory
 
@@ -454,12 +454,12 @@ class Handler:
 
     def create_secret(
         self,
-        name: str = None,
+        name: str | None = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,
         custom_cmd: bool = False,
         as_ref: bool = False,
-        data: dict = None,
+        data: dict | None = None,
         **kwargs: dict[str, "SecretsProvider"],
     ) -> str:
         """Creates k8s secrets
@@ -573,13 +573,13 @@ class Handler:
                 "You must specify at least a secret key if using create_secret() with key_ref = True"
             )
 
-        return json.dumps({"name": s.name, "key": list(keys)[0]})
+        return json.dumps({"name": s.name, "key": next(iter(keys))})
 
     def create_tls_secret(
         self,
         cert: Union[str, "SecretsProvider"],
         key: Union[str, "SecretsProvider"],
-        name: str = None,
+        name: str | None = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,
         custom_cmd: bool = False,
@@ -645,8 +645,8 @@ class Handler:
         server: str,
         username: str,
         password: Union["SecretsProvider", str],
-        email: str = None,
-        name: str = None,
+        email: str | None = None,
+        name: str | None = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,
         custom_cmd: bool = False,
