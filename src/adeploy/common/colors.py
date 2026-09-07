@@ -1,4 +1,4 @@
-from colorama import Style, Fore
+from colorama import Fore, Style
 
 _skip_colors = False
 

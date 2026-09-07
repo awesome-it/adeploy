@@ -3,29 +3,28 @@ The following functions are globally available in the `default.yml`, the namespa
 in the Jinja templates in your `templates` folder.
 """
 
+import json
 import os
 import pathlib
-import sys
-import uuid
-import shortuuid
-import jq
 import string
-import json
+import sys
 import textwrap
 import urllib.request
-import jinja2
-
+import uuid
 from logging import Logger
-from typing import Dict, List, Literal, Union
+from typing import Literal, Union
+
+import jinja2
+import jq
+import shortuuid
 from ruamel.yaml import YAML
 
-import adeploy.common.colors as colors
 import adeploy.common.secrets as secret
-import adeploy.common.errors as errors
+from adeploy.common import colors, errors
 from adeploy.common.secrets_provider.provider import SecretsProvider
 
 
-class Handler(object):
+class Handler:
     named_passwords = {}
 
     def __init__(
@@ -45,7 +44,7 @@ class Handler(object):
         path: str,
         jq_query: str = None,
         force_type: Literal["json", "yaml"] = None,
-    ) -> Union[dict, str, list]:
+    ) -> dict | str | list:
         """Include data from an external JSON or YAML file in your defaults.yml or namespace / release configuration.
         Optionally apply a jq query. Useful if a var is not in the `defaults.yml` or in the namespace / release
         configuration but in an external file - for example an ansible hostvars file.
@@ -212,7 +211,7 @@ class Handler(object):
         component: str = None,
         part_of: str = None,
         managed_by: str = "adeploy",
-        labels: Union[dict, list] = None,
+        labels: dict | list = None,
         **kwargs: dict,
     ) -> str:
         """Creates a dict of custom and common labels
@@ -289,8 +288,8 @@ class Handler(object):
         direct: bool = False,
         render: bool = True,
         indent: int = 4,
-        skip: List[str] = None,
-        escape: List[str] = None,
+        skip: list[str] = None,
+        escape: list[str] = None,
     ) -> str:
         """Include and optionally render arbitrary files into your manifest
 
@@ -410,8 +409,8 @@ class Handler(object):
         direct: bool = False,
         render: bool = True,
         indent: int = 4,
-        skip: List[str] = None,
-        escape: List[str] = None,
+        skip: list[str] = None,
+        escape: list[str] = None,
     ) -> dict:
         """Include files from a directory
 
@@ -461,7 +460,7 @@ class Handler(object):
         custom_cmd: bool = False,
         as_ref: bool = False,
         data: dict = None,
-        **kwargs: Dict[str, "SecretsProvider"],
+        **kwargs: dict[str, "SecretsProvider"],
     ) -> str:
         """Creates k8s secrets
 

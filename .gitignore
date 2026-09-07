@@ -108,3 +108,4 @@ venv.bak/
 .idea/
 .asandbox/
 bin
+code-quality-report.json

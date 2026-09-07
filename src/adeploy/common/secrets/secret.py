@@ -4,22 +4,20 @@ import json
 import shutil
 import subprocess
 import warnings
-
 from abc import ABC, abstractmethod
 from logging import Logger
 from pathlib import Path
 from pickle import dump, load
-from typing import Union
 
 from adeploy.common import colors
 from adeploy.common.errors import RenderError
-from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
 from adeploy.common.kubectl import (
-    parse_kubectrl_apply,
-    kubectl_get_secret,
-    kubectl_delete_secret,
     kubectl,
+    kubectl_delete_secret,
+    kubectl_get_secret,
+    parse_kubectrl_apply,
 )
+from adeploy.common.secrets_provider.gopass_provider import GopassSecretProvider
 from adeploy.common.secrets_provider.provider import SecretsProvider
 from adeploy.common.secrets_provider.shell_command_provider import (
     ShellCommandSecretProvider,
@@ -55,7 +53,7 @@ class Secret(ABC):
 
     @staticmethod
     def register(s):
-        key = f"{str(s.deployment)}/{s.name}"
+        key = f"{s.deployment!s}/{s.name}"
         if key not in Secret._secrets:
             Secret._secrets[key] = s
             return True
@@ -134,9 +132,9 @@ class Secret(ABC):
 
     def __deprecated_get_value(
         self,
-        data: Union[Path, str],
+        data: Path | str,
         log: Logger = None,
-        dry_run: Union[bool, str] = False,
+        dry_run: bool | str = False,
     ) -> str:
         if dry_run:
             warnings.warn("Using deprecated value retrieval", FutureWarning)
@@ -169,9 +167,9 @@ class Secret(ABC):
 
     def get_value(
         self,
-        data: Union[Path, str, SecretsProvider],
+        data: Path | str | SecretsProvider,
         log: Logger = None,
-        dry_run: Union[bool, str] = False,
+        dry_run: bool | str = False,
     ) -> str:
         if not isinstance(data, SecretsProvider):
             return self.__deprecated_get_value(data, log, dry_run)

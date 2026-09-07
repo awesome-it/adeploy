@@ -9,13 +9,13 @@ import yaml
 from yaml.scanner import ScannerError
 
 from adeploy.common import colors
-from adeploy.common.kubectl import kubectl_apply, parse_kubectrl_apply
 from adeploy.common.errors import TestError
+from adeploy.common.kubectl import kubectl_apply, parse_kubectrl_apply
 from adeploy.providers.helm.common import (
-    helm_install,
     HelmOutput,
     HelmProvider,
     get_defaults,
+    helm_install,
 )
 
 
@@ -209,7 +209,6 @@ class Tester(HelmProvider):
                     self.log.warning(
                         "Helm install might work anyways, so ignore and continue."
                     )
-                    pass
 
                 except ScannerError as e:
                     keep_files.append(

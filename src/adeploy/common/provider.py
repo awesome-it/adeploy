@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from argparse import Namespace
 from logging import Logger
 from pathlib import Path
-from typing import Optional
 
 from packaging.version import parse as parse_version
 
@@ -73,7 +72,7 @@ class Provider(ABC):
                 paths.append(path)
         return paths
 
-    def get_defaults_file(self) -> Optional[Path]:
+    def get_defaults_file(self) -> Path | None:
         if self.defaults_path.exists():
             # <defaults_path>
             if self.defaults_path.is_file():

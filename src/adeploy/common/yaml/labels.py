@@ -1,4 +1,3 @@
-from typing import Union
 from adeploy.common.helpers import dict_update_recursive
 
 
@@ -10,7 +9,7 @@ def update_labels(log, doc, deployment):
             dict_update_recursive(label, default_labels)
 
 
-def find_labels(doc: Union[list, dict], kind=None, labels=None):
+def find_labels(doc: list | dict, kind=None, labels=None):
     if labels is None:
         labels = []
 

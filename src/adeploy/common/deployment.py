@@ -7,10 +7,11 @@ import yaml
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
+from adeploy.common import colors
 from adeploy.common.errors import Error
 from adeploy.common.helpers import dict_update_recursive, get_defaults
-from adeploy.common.jinja import env as jinja_env, dict as jinja_dict
-from adeploy.common import colors
+from adeploy.common.jinja import dict as jinja_dict
+from adeploy.common.jinja import env as jinja_env
 from adeploy.common.secrets_provider.provider import SecretsProvider
 
 

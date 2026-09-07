@@ -2,7 +2,6 @@ import os
 import subprocess
 import tempfile
 from logging import Logger
-from typing import Union
 
 from adeploy.common.kubectl import kubectl_create_secret
 from adeploy.common.secrets.secret import Secret
@@ -80,8 +79,8 @@ class TlsSecret(Secret):
     def __init__(
         self,
         deployment,
-        cert: Union[SecretsProvider, str],
-        key: Union[SecretsProvider, str],
+        cert: SecretsProvider | str,
+        key: SecretsProvider | str,
         name: str = None,
         use_pass: bool = True,
         use_gopass_cat: bool = True,

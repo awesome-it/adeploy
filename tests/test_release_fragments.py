@@ -1,9 +1,9 @@
 import logging
 from argparse import Namespace
 
-import adeploy.main  # noqa: F401 - initializes package imports in CLI order.
 import pytest
 
+import adeploy.main  # noqa: F401 - initializes package imports in CLI order.
 from adeploy.common.errors import RenderError
 from adeploy.common.helpers import dict_update_recursive
 from adeploy.common.provider import Provider
