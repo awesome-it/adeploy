@@ -7,8 +7,6 @@ class PlaintextSecretProvider(SecretsProvider):
     As a plaintext secret is not secret this if for testing purposes only.
     """
 
-    __named_passwords = {}
-
     def __init__(self, plaintext_secret: str, log=None):
         if not plaintext_secret:
             raise ValueError("Plaintext secret cannot be empty")

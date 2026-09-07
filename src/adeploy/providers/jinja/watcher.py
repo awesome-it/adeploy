@@ -3,6 +3,7 @@ import os
 import time
 from logging import Logger
 from pathlib import Path
+from typing import ClassVar
 
 from watchdog.events import FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
@@ -18,7 +19,7 @@ class Watcher(Provider):
     auto_test: bool = False
     auto_deploy: bool = False
     deploy_on_start: bool = False
-    watchers: list = []
+    watchers: ClassVar[list] = []
     restart_rendering = False
     renderer = None
     tester = None

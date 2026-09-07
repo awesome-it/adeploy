@@ -37,7 +37,7 @@ class GenericSecret(Secret):
         temp_files = []
         for k, v in self.data.items():
             data = self.get_value(v, log, dry_run=dry_run)
-            fd = tempfile.NamedTemporaryFile(
+            fd = tempfile.NamedTemporaryFile(  # noqa: SIM115
                 delete=False, mode="wb" if isinstance(data, (bytes, bytearray)) else "w"
             )
             fd.write(data)

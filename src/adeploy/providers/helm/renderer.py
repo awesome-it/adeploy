@@ -186,7 +186,11 @@ class Renderer(HelmProvider):
 
                 try:
                     result = subprocess.run(
-                        cmd, cwd=str(self.hooks_dir), capture_output=True, text=True
+                        cmd,
+                        cwd=str(self.hooks_dir),
+                        capture_output=True,
+                        text=True,
+                        check=False,
                     )
                     result.check_returncode()
                     self.log.debug(f"... {result.stdout}")

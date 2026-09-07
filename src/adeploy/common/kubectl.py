@@ -116,7 +116,7 @@ def kubectl_create_secret(
     # Add labels
     manifest = dict_update_recursive(manifest, {"metadata": {"labels": labels}})
 
-    fd = tempfile.NamedTemporaryFile(delete=False, mode="w")
+    fd = tempfile.NamedTemporaryFile(delete=False, mode="w")  # noqa: SIM115
     yaml.dump(manifest, fd)
     fd.close()
 
@@ -145,7 +145,7 @@ def kubectl(
     cmd += args
 
     log.debug(f"Executing command {colors.bold(' '.join(cmd))}")
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     result.check_returncode()
     return result
 
@@ -158,7 +158,10 @@ def kubectl_init(args):
     KUBECONF.parent.mkdir(parents=True, exist_ok=True)
 
     result = subprocess.run(
-        ["kubectl", "config", "view", "--raw"], capture_output=True, text=True
+        ["kubectl", "config", "view", "--raw"],
+        capture_output=True,
+        text=True,
+        check=False,
     )
     result.check_returncode()
 

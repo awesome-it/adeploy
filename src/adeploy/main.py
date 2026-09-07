@@ -18,7 +18,7 @@ log = get_logger("adeploy")
 
 
 def main():
-    if not os.getenv("CI", False):
+    if not os.getenv("CI"):
         init(autoreset=True)
 
     parser = setup_parser()

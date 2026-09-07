@@ -1,6 +1,6 @@
 import sys
 from abc import ABC, abstractmethod
-from typing import final
+from typing import ClassVar, final
 
 from adeploy.common import colors
 from adeploy.common.logging import get_logger
@@ -14,7 +14,7 @@ class SecretsProvider(ABC):
     It provides the ability to reference a secret without the need of actually decrypting it.
     """
 
-    __created_secrets = {}
+    __created_secrets: ClassVar[dict] = {}
 
     def __init__(self, name, log, ltrim: bool = False, rtrim: bool = False):
         if not log:

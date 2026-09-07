@@ -12,6 +12,8 @@ import adeploy.common.jinja.env as jinja_env
 from adeploy import providers
 from adeploy.common import colors
 
+_log = logging.getLogger(__name__)
+
 
 def get_submodules(pkg):
     modules = []
@@ -59,7 +61,7 @@ def get_defaults(
         files = defaults_files
     defaults = {}
     for file in files:
-        logging.debug(f"Loading defaults from {file}")
+        _log.debug(f"Loading defaults from {file}")
         env = jinja_env.create([file.parent], deployment=deployment, log=log)
         # Make best to load defaults
         template_values_default = {
@@ -80,7 +82,7 @@ def run_command(log, cmd) -> subprocess.CompletedProcess:
     # Convert possible Paths to strings
     cmd = [str(c) for c in cmd]
     log.debug(f"Executing command {colors.bold(' '.join(cmd))}")
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     result.check_returncode()
     return result
 

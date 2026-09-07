@@ -12,7 +12,7 @@ import textwrap
 import urllib.request
 import uuid
 from logging import Logger
-from typing import Literal, Union
+from typing import ClassVar, Literal, Union
 
 import jinja2
 import jq
@@ -25,7 +25,7 @@ from adeploy.common.secrets_provider.provider import SecretsProvider
 
 
 class Handler:
-    named_passwords = {}
+    named_passwords: ClassVar[dict] = {}
 
     def __init__(
         self,
@@ -126,7 +126,7 @@ class Handler:
         # Apply jq-like query to the data
         try:
             results = jq.all(jq_query, data)  # Get all matches
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.log.error(f"Error applying query: {jq_query}. Error: {e}")
             sys.exit(1)
 

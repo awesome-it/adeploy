@@ -125,7 +125,7 @@ class Tester(HelmProvider):
                     with open(manifest_path) as fd_in:
                         for manifest in fd_in.read().split("---\n"):
                             if len(manifest.replace("\n", "").strip()) > 0:
-                                fd_out = tempfile.NamedTemporaryFile(
+                                fd_out = tempfile.NamedTemporaryFile(  # noqa: SIM115
                                     delete=False, mode="w"
                                 )
                                 fd_out.write(manifest)

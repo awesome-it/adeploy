@@ -11,7 +11,6 @@ __unknown_args: argparse.Namespace
 
 
 def get_args():
-    global __args
     return __args
 
 

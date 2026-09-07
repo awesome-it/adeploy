@@ -115,7 +115,7 @@ class GopassSecretProvider(SecretsProvider):
         if gopass_repos and len(gopass_repos) > 0:
             repos += [r[0] for r in gopass_repos]
 
-        elif os.getenv("ADEPLOY_GOPASS_REPOS", False):
+        elif os.getenv("ADEPLOY_GOPASS_REPOS"):
             repos += os.getenv("ADEPLOY_GOPASS_REPOS", "").split(",")
 
         return repos
@@ -150,7 +150,7 @@ class GopassSecretProvider(SecretsProvider):
             + [str(repo_path)]
         )
         log.debug(f"Executing command {colors.bold(' '.join(cmd))}")
-        result = subprocess.run(cmd, capture_output=True)
+        result = subprocess.run(cmd, capture_output=True, check=False)
         log.debug(
             f"... command exited with return code {colors.bold(result.returncode)}"
         )

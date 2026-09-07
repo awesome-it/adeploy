@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from logging import Logger
 from pathlib import Path
 from pickle import dump, load
+from typing import ClassVar
 
 from adeploy.common import colors
 from adeploy.common.errors import RenderError
@@ -33,7 +34,7 @@ class Secret(ABC):
     custom_cmd: bool = False  # Deprecated
 
     _name_prefix = "secret-"
-    _secrets = {}
+    _secrets: ClassVar[dict] = {}
 
     @staticmethod
     def get_secret_dir(build_dir: Path, deployment_name: str):
@@ -78,12 +79,12 @@ class Secret(ABC):
             key = str(s.deployment)
             deployments[key] = deployments.get(key, []) + [s]
 
-        for d, secrets in deployments.items():
-            if len(secrets) > 0:
+        for d, dep_secrets in deployments.items():
+            if len(dep_secrets) > 0:
                 log.info(
                     f'Checking for orphaned secrets of deployment "{colors.blue(d)}" ...'
                 )
-                d = secrets[0].deployment
+                d = dep_secrets[0].deployment
                 result = kubectl(
                     log,
                     [
@@ -99,7 +100,7 @@ class Secret(ABC):
                 secrets_existing = [
                     s for s in result.stdout.replace("'", "").split(" ") if len(s) > 0
                 ]
-                secrets_created = [s.name for s in secrets]
+                secrets_created = [s.name for s in dep_secrets]
 
                 secrets_existing.sort()
                 secrets_created.sort()
