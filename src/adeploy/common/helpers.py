@@ -1,6 +1,6 @@
 import collections.abc
+import importlib
 import logging
-import os
 import pkgutil
 import subprocess
 from collections import namedtuple
@@ -17,12 +17,18 @@ _log = logging.getLogger(__name__)
 
 def get_submodules(pkg):
     modules = []
-    for module_finder, name, ispkg in pkgutil.iter_modules(
-        [os.path.dirname(pkg.__file__)]
-    ):
-        module_spec = module_finder.find_spec(name)
-        module = module_spec.loader.load_module()
-        class_name = next(filter(lambda m: module.__name__ == m.lower(), dir(module)))
+    for _, name, ispkg in _iter_submodules(pkg):
+        if ispkg:
+            continue
+        module = importlib.import_module(f"{pkg.__name__}.{name}")
+        class_name = next(
+            (m for m in dir(module) if m.lower() == name and m[0].isupper()),
+            None,
+        )
+        if class_name is None:
+            _log.debug(f'Skipping submodule "{name}" without matching step class')
+            continue
+        module.__name__ = name
         modules.append((module, class_name))
 
     return modules
@@ -34,12 +40,9 @@ def get_provider(name):
 
 def get_providers() -> dict:
     found = {}
-    for module_finder, name, ispkg in pkgutil.iter_modules(
-        [os.path.dirname(providers.__file__)]
-    ):
+    for _, name, ispkg in _iter_submodules(providers):
         if ispkg:
-            module_spec = module_finder.find_spec(name)
-            module = module_spec.loader.load_module()
+            module = importlib.import_module(f"{providers.__name__}.{name}")
             found[name] = namedtuple("Provider", "renderer tester deployer watcher")(
                 renderer=module.Renderer,
                 tester=module.Tester,
@@ -47,6 +50,15 @@ def get_providers() -> dict:
                 watcher=module.Watcher,
             )
     return found
+
+
+def _iter_submodules(pkg):
+    """List direct submodules/packages of a package.
+
+    Uses ``pkgutil.iter_modules`` over the package's ``__path__`` to discover
+    candidates; each name is later resolved through ``importlib``.
+    """
+    return pkgutil.iter_modules(pkg.__path__)
 
 
 def get_defaults(

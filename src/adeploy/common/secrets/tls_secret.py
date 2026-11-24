@@ -101,25 +101,25 @@ class TlsSecret(Secret):
             if dry_run
             else self.get_value(self.cert, log, dry_run=False)
         )
-        cert = tempfile.NamedTemporaryFile(  # noqa: SIM115
-            delete=False,
-            mode="wb" if isinstance(cert_data, (bytes, bytearray)) else "w",
-        )
-        cert.write(cert_data)
-        cert.close()
-
         key_data = (
             _DUMMY_DATA_KEY if dry_run else self.get_value(self.key, log, dry_run=False)
         )
-        key = tempfile.NamedTemporaryFile(  # noqa: SIM115
-            delete=False, mode="wb" if isinstance(key_data, (bytes, bytearray)) else "w"
-        )
-        key.write(key_data)
-        key.close()
+
+        cert_fd, cert_path = tempfile.mkstemp(suffix=".crt")
+        with os.fdopen(
+            cert_fd, "wb" if isinstance(cert_data, (bytes, bytearray)) else "w"
+        ) as f:
+            f.write(cert_data)
+
+        key_fd, key_path = tempfile.mkstemp(suffix=".key")
+        with os.fdopen(
+            key_fd, "wb" if isinstance(key_data, (bytes, bytearray)) else "w"
+        ) as f:
+            f.write(key_data)
 
         args = [
-            f"--cert={cert.name}",
-            f"--key={key.name}",
+            f"--cert={cert_path}",
+            f"--key={key_path}",
         ]
 
         try:
@@ -137,7 +137,7 @@ class TlsSecret(Secret):
             )
 
         finally:
-            os.remove(cert.name)
-            os.remove(key.name)
+            os.remove(cert_path)
+            os.remove(key_path)
 
         return result

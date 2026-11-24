@@ -104,3 +104,18 @@ adeploy-test-python3.14:
     - when: manual
       allow_failure: true
 
+adeploy-test-python3.15:
+  stage: test
+  image: registry.awesome-it.de/upstream-dockerhub/python:3.15
+  script:
+    - *install_common
+    - *install_kubectl
+    - *install_adeploy
+    - *test_adeploy_jinja
+    - *install_helm
+    - *test_adeploy_helm
+  rules:
+    - if: ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'main' || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'master')
+    - when: manual
+      allow_failure: true
+

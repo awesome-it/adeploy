@@ -94,7 +94,7 @@ class Watcher(Provider):
             src_dir=src_dir,
             build_dir=build_dir,
             namespaces_dir=self.args.namespaces_dir,
-            defaults_paths=str(self.args.defaults_path),
+            defaults_paths=self.args.defaults,
             args=self.args,
             log=self.log,
         )
@@ -103,7 +103,7 @@ class Watcher(Provider):
             src_dir=src_dir,
             build_dir=build_dir,
             namespaces_dir=self.args.namespaces_dir,
-            defaults_paths=self.args.defaults_path,
+            defaults_paths=self.args.defaults,
             args=self.args,
             log=self.log,
         )
@@ -112,7 +112,7 @@ class Watcher(Provider):
             src_dir=src_dir,
             build_dir=build_dir,
             namespaces_dir=self.args.namespaces_dir,
-            defaults_paths=self.args.defaults_path,
+            defaults_paths=self.args.defaults,
             args=self.args,
             log=self.log,
         )
@@ -159,7 +159,7 @@ class Watcher(Provider):
         self.create_restart_watcher(
             path=os.path.join(self.src_dir, self.templates_dir), recursive=True
         )
-        self.create_restart_watcher(path=str(self.defaults_path), recursive=False)
+        self.create_restart_watcher(path=str(self.defaults_paths[0]), recursive=False)
         self.log.info("Startup finished. Watching for changes ...")
         try:
             while True:

@@ -37,14 +37,14 @@ class GenericSecret(Secret):
         temp_files = []
         for k, v in self.data.items():
             data = self.get_value(v, log, dry_run=dry_run)
-            fd = tempfile.NamedTemporaryFile(  # noqa: SIM115
-                delete=False, mode="wb" if isinstance(data, (bytes, bytearray)) else "w"
-            )
-            fd.write(data)
-            fd.close()
+            fd, path = tempfile.mkstemp()
+            with os.fdopen(
+                fd, "wb" if isinstance(data, (bytes, bytearray)) else "w"
+            ) as f:
+                f.write(data)
 
-            temp_files.append(fd.name)
-            args.append(f"--from-file={k}={fd.name}")
+            temp_files.append(path)
+            args.append(f"--from-file={k}={path}")
 
         try:
             result = kubectl_create_secret(

@@ -116,9 +116,9 @@ def kubectl_create_secret(
     # Add labels
     manifest = dict_update_recursive(manifest, {"metadata": {"labels": labels}})
 
-    fd = tempfile.NamedTemporaryFile(delete=False, mode="w")  # noqa: SIM115
-    yaml.dump(manifest, fd)
-    fd.close()
+    fd, tmp_path = tempfile.mkstemp(suffix=".yml")
+    with os.fdopen(fd, "w") as f:
+        yaml.dump(manifest, f)
 
     # Apply manifest
     args = []
@@ -129,9 +129,9 @@ def kubectl_create_secret(
         args += ["-o", output]
 
     try:
-        result = kubectl(log, ["apply", "-f", fd.name] + args, namespace)
+        result = kubectl(log, ["apply", "-f", tmp_path] + args, namespace)
     finally:
-        os.remove(fd.name)
+        os.remove(tmp_path)
 
     return result
 

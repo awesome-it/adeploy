@@ -109,3 +109,4 @@ venv.bak/
 .asandbox/
 bin
 code-quality-report.json
+Dockerfile.test
